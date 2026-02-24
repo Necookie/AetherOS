@@ -8,7 +8,7 @@ import { useKernelStore } from '../stores/useKernelStore'
 export default function TerminalWindow({ onClose }: { onClose: () => void }) {
     const terminalRef = useRef<HTMLDivElement>(null)
     const termInstance = useRef<Terminal | null>(null)
-    const { processes, spawnProcess, killProcess } = useKernelStore()
+    const { spawnProcess, killProcess } = useKernelStore()
 
     useEffect(() => {
         if (!terminalRef.current) return

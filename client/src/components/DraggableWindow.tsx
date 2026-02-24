@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { X } from 'lucide-react'
+import { X, Minus, Square } from 'lucide-react'
 
 interface DraggableWindowProps {
     title: string
@@ -47,7 +47,7 @@ export default function DraggableWindow({ title, children, onClose, initialPos =
 
     return (
         <div
-            className="absolute bg-gray-900 border border-white/20 rounded-xl overflow-hidden shadow-2xl flex flex-col"
+            className="absolute glass-panel rounded-2xl overflow-hidden flex flex-col transition-shadow duration-300 hover:shadow-2xl border border-white/60"
             style={{
                 left: pos.x,
                 top: pos.y,
@@ -56,15 +56,27 @@ export default function DraggableWindow({ title, children, onClose, initialPos =
             }}
         >
             <div
-                className="h-10 bg-gray-800 flex items-center justify-between px-4 cursor-grab active:cursor-grabbing border-b border-white/10 select-none"
+                className="h-10 bg-white/50 backdrop-blur-md flex items-center justify-between px-3 cursor-grab active:cursor-grabbing border-b border-white/40 select-none"
                 onMouseDown={handleMouseDown}
             >
-                <div className="font-semibold text-sm text-gray-200">{title}</div>
-                <button onClick={onClose} className="p-1 hover:bg-white/10 rounded">
-                    <X className="w-4 h-4 text-gray-300" />
-                </button>
+                <div className="font-semibold text-xs text-gray-700 ml-2 flex items-center space-x-2">
+                    {title}
+                </div>
+
+                <div className="flex space-x-1">
+                    <button className="p-1.5 hover:bg-black/5 rounded-md text-gray-600 transition-colors">
+                        <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <button className="p-1.5 hover:bg-black/5 rounded-md text-gray-600 transition-colors">
+                        <Square className="w-3 h-3" />
+                    </button>
+                    <button onClick={onClose} className="p-1.5 hover:bg-red-500 hover:text-white rounded-md text-gray-600 transition-colors">
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
             </div>
-            <div className="flex-1 overflow-auto bg-black/50 p-1">
+
+            <div className="flex-1 overflow-auto bg-gray-50/50 p-2">
                 {children}
             </div>
         </div>

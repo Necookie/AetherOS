@@ -4,6 +4,17 @@
 
 @layer base {
   body {
-    @apply bg-gray-900 text-slate-100;
+    @apply bg-[#e6e6fa] text-gray-800 overflow-hidden;
+    /* A soft pastel lavender background matching the Win12 aesthetic */
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-white/40 backdrop-blur-xl border border-white/40 shadow-xl;
+  }
+
+  .glass-orb {
+    @apply absolute rounded-full shadow-orb border border-white/30 backdrop-blur-sm mix-blend-multiply;
   }
 }
