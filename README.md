@@ -1,6 +1,8 @@
 # AetherOS
 
 > AI-Integrated Web-Based Operating System Simulator
+> 
+> 🌐 **Live Demo:** [aetheros.necookie.dev](https://aetheros.necookie.dev)
 
 Welcome to the AetherOS monorepo. Based on **PRD v4.0**, this project aims to provide a deterministic OS laboratory bridging systems theory, visual simulation, and conversational AI. The project serves as an educational and diagnostic platform demonstrating full-stack engineering capabilities.
 
@@ -9,7 +11,7 @@ Welcome to the AetherOS monorepo. Based on **PRD v4.0**, this project aims to pr
 - **Kernel Simulation**: A persistent, tick-based Web Worker acting as the "kernel". It handles deterministic state like processes and CPU metrics, offloading computation from the main thread.
 - **Backend API**: Node.js & Fastify API to proxy requests to an AI Agent (OpenAI API).
 - **Persistence (Planned)**: Self-hosted Supabase and PostgreSQL database via Docker.
-- **CDN & Deployment (Planned)**: The project will be deployed globally using Cloudflare at `aetheros.necookie.dev`.
+- **CDN & Deployment**: The frontend is deployed globally via Cloudflare Pages at [aetheros.necookie.dev](https://aetheros.necookie.dev).
 
 ## Supported Features (80/20 Implementation)
 Currently implemented features (Minimal Scaffolding Phase):
