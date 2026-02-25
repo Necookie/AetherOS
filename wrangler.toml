@@ -1,0 +1,11 @@
+name = "aetheros"
+pages_build_output_dir = "client/dist"
+
+[build]
+command = "npm run build"
+cwd = "client"
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
