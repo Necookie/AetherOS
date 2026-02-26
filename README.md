@@ -10,18 +10,29 @@ Welcome to the AetherOS monorepo. Based on **PRD v4.0**, this project aims to pr
 - **Frontend Desktop UI**: Powered by React, Vite, Tailwind CSS, and Zustand.
 - **Kernel Simulation**: A persistent, tick-based Web Worker acting as the "kernel". It handles deterministic state like processes and CPU metrics, offloading computation from the main thread.
 - **Backend API**: Node.js & Fastify API to proxy requests to an AI Agent (OpenAI API).
+- **Virtual File System (VFS)**: In-memory filesystem with seeded OS-like directories and files.
 - **Persistence (Planned)**: Self-hosted Supabase and PostgreSQL database via Docker.
 - **CDN & Deployment**: The frontend is deployed globally via Cloudflare Pages at [aetheros.necookie.dev](https://aetheros.necookie.dev).
 
+## Current OS Status (Feb 26, 2026)
+- Boot flow: loading screen -> login -> desktop
+- Desktop shell with wallpaper, icons, and taskbar
+- Window manager with drag, resize, minimize/maximize, and z-order focus
+- Core apps: Terminal, Task Manager, File Manager
+- Kernel simulation via Web Worker (process list + CPU/mem/disk/net metrics)
+- In-memory VFS backing the File Manager
+
 ## Supported Features (80/20 Implementation)
 Currently implemented features (Minimal Scaffolding Phase):
-- [x] Command Line Interface (Stubbed using `xterm.js`)
-- [x] Task Manager (Basic PID inspection via state)
-- [x] AI Assistant (Tested against simple mock Fastify backend)
-- [ ] Desktop Shell (Draggable window bounds)
-- [ ] File Manager (Pending architecture)
+- [x] Boot + Login flow (loading screen -> login -> desktop)
+- [x] Desktop Shell (taskbar, wallpaper, icons, window focus/z-order)
+- [x] Window Manager (drag/resize/minimize/maximize)
+- [x] Command Line Interface (`xterm.js` + core commands)
+- [x] Task Manager (process list + performance metrics)
+- [x] AI Assistant (mock/live via Fastify proxy)
+- [x] File Manager (VFS-backed, icon/details views, rename/delete)
 - [ ] Web Browser Sandboxing (Pending iframe handling)
-- [ ] System Settings panel
+- [ ] System Settings panel (desktop icon only)
 
 ## Security Notes
 - The `OPENAI_API_KEY` resides strictly on the server-side proxy server (`server` package). The client never touches it.
