@@ -1,14 +1,12 @@
-import { useKernelStore } from '../stores/useKernelStore'
 import { Monitor, Terminal, Settings, LayoutGrid, Search, Wifi, Volume2, BatteryCharging } from 'lucide-react'
+import type { DesktopWindowDef } from '../types/window'
 
 interface TaskbarProps {
-    windows: any[]
+    windows: DesktopWindowDef[]
     toggleWindow: (id: string) => void
 }
 
 export default function Taskbar({ windows, toggleWindow }: TaskbarProps) {
-    const { } = useKernelStore()
-
     return (
         <div className="h-14 glass-panel rounded-2xl flex items-center px-4 justify-between transition-all w-max mx-auto shadow-2xl border-white/60 mb-2">
 
