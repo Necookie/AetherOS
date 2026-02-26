@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import type { WindowData, WindowBounds, AppDefinition } from '../types/windowManager'
-import { DEFAULT_APPS } from '../config/windows'
 
 interface WindowStore {
     windows: Record<string, WindowData>
@@ -18,32 +17,9 @@ interface WindowStore {
     getZIndex: (id: string) => number
 }
 
-// Initialize with default apps open
+// Start with a clean desktop — no windows open by default
 const initialWindows: Record<string, WindowData> = {}
 const initialOrder: string[] = []
-
-DEFAULT_APPS.forEach(app => {
-    // Hack: Don't open explorer by default
-    if (app.id !== 'explorer') {
-        initialWindows[app.id] = {
-            id: app.id,
-            title: app.title,
-            component: app.component,
-            bounds: app.defaultBounds || { x: 100, y: 100, width: 600, height: 400 },
-            state: {
-                isMinimized: false,
-                isMaximized: false,
-                isFocused: false
-            }
-        }
-        initialOrder.push(app.id)
-    }
-})
-// Focus the last one
-if (initialOrder.length > 0) {
-    const lastId = initialOrder[initialOrder.length - 1]
-    initialWindows[lastId].state.isFocused = true
-}
 
 export const useWindowStore = create<WindowStore>((set, get) => ({
     windows: initialWindows,

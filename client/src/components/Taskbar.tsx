@@ -1,4 +1,4 @@
-import { Monitor, Terminal, Settings, LayoutGrid, Search, Wifi, Volume2, BatteryCharging } from 'lucide-react'
+import { Monitor, Terminal, Settings, LayoutGrid, Search, Wifi, Volume2, BatteryCharging, Activity, Globe } from 'lucide-react'
 import { useWindowStore } from '../stores/windowStore'
 import { DEFAULT_APPS } from '../config/windows'
 
@@ -53,6 +53,10 @@ export default function Taskbar() {
                                 <Terminal className={`w-5 h-5 ${isOpen && !isMinimized ? 'text-gray-800' : 'text-gray-600'}`} />
                             ) : app.id === 'explorer' ? (
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`${isOpen && !isMinimized ? 'text-gray-800' : 'text-gray-600'}`}><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" /></svg>
+                            ) : app.id === 'taskmgr' ? (
+                                <Activity className={`w-5 h-5 ${isOpen && !isMinimized ? 'text-gray-800' : 'text-gray-600'}`} />
+                            ) : app.id === 'browser' ? (
+                                <Globe className={`w-5 h-5 ${isOpen && !isMinimized ? 'text-gray-800' : 'text-gray-600'}`} />
                             ) : (
                                 <Settings className={`w-5 h-5 ${isOpen && !isMinimized ? 'text-gray-800' : 'text-gray-600'}`} />
                             )}
