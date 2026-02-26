@@ -5,6 +5,8 @@ export interface Process {
     name: string
     cpu: number
     mem: number
+    disk: number
+    net: number
     status: 'running' | 'waiting' | 'terminated'
 }
 
@@ -13,6 +15,8 @@ interface KernelState {
     cpuUsage: number
     memUsage: number
     diskUsage: number
+    netUsage: number
+    networkLatencyMs: number
     worker: Worker | null
     initKernel: () => void
     killProcess: (pid: number) => void
@@ -24,6 +28,8 @@ export const useKernelStore = create<KernelState>((set, get) => ({
     cpuUsage: 0,
     memUsage: 0,
     diskUsage: 0,
+    netUsage: 0,
+    networkLatencyMs: 0,
     worker: null,
     initKernel: () => {
         if (get().worker) return
@@ -39,7 +45,9 @@ export const useKernelStore = create<KernelState>((set, get) => ({
                     processes: payload.processes,
                     cpuUsage: payload.cpuUsage,
                     memUsage: payload.memUsage,
-                    diskUsage: payload.diskUsage
+                    diskUsage: payload.diskUsage,
+                    netUsage: payload.netUsage,
+                    networkLatencyMs: payload.networkLatencyMs
                 })
             }
         }

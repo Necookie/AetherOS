@@ -4,10 +4,10 @@ const HELP_TEXT =
     'Available commands: help, clear, ps, kill <pid>, spawn <name>, mem, disk, about, ai <prompt>'
 
 function writeProcesses(ctx: TerminalContext) {
-    ctx.term.writeln('PID\tNAME\t\tCPU\tRAM\tSTATUS')
+    ctx.term.writeln('PID\tNAME\t\tCPU\tRAM\tDISK\tNET\tSTATUS')
     ctx.getProcesses().forEach(p => {
         ctx.term.writeln(
-            `${p.pid}\t${p.name.padEnd(10, ' ')}\t${p.cpu.toFixed(1)}\t${p.mem.toFixed(1)}\t${p.status}`
+            `${p.pid}\t${p.name.padEnd(10, ' ')}\t${p.cpu.toFixed(1)}\t${p.mem.toFixed(1)}\t${p.disk.toFixed(1)}\t${p.net.toFixed(1)}\t${p.status}`
         )
     })
 }
