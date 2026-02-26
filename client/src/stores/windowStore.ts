@@ -23,18 +23,21 @@ const initialWindows: Record<string, WindowData> = {}
 const initialOrder: string[] = []
 
 DEFAULT_APPS.forEach(app => {
-    initialWindows[app.id] = {
-        id: app.id,
-        title: app.title,
-        component: app.component,
-        bounds: app.defaultBounds || { x: 100, y: 100, width: 600, height: 400 },
-        state: {
-            isMinimized: false,
-            isMaximized: false,
-            isFocused: false
+    // Hack: Don't open explorer by default
+    if (app.id !== 'explorer') {
+        initialWindows[app.id] = {
+            id: app.id,
+            title: app.title,
+            component: app.component,
+            bounds: app.defaultBounds || { x: 100, y: 100, width: 600, height: 400 },
+            state: {
+                isMinimized: false,
+                isMaximized: false,
+                isFocused: false
+            }
         }
+        initialOrder.push(app.id)
     }
-    initialOrder.push(app.id)
 })
 // Focus the last one
 if (initialOrder.length > 0) {

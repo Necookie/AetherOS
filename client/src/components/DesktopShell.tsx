@@ -13,7 +13,7 @@ export default function DesktopShell() {
             <DesktopWindows />
 
             {/* Taskbar */}
-            <div className="z-50 pointer-events-auto pointer-events-none flex justify-center pb-4">
+            <div className="relative z-[9999] pointer-events-none flex justify-center pb-4">
                 <div className="pointer-events-auto">
                     <Taskbar />
                 </div>
