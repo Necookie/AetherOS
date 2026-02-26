@@ -40,9 +40,10 @@ export default function FilePane() {
     return (
         <div
             ref={paneRef}
-            className="flex-1 overflow-y-auto relative bg-[#1e1e24] outline-none"
+            className="flex-1 overflow-y-auto relative bg-transparent outline-none"
             onClick={handlePaneClick}
             onContextMenu={handleContextMenu}
+            tabIndex={0}
         >
             {error && (
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-red-900/80 text-white px-4 py-2 rounded shadow flex items-center gap-4">

@@ -6,7 +6,7 @@ const TABS = ['Processes', 'Performance', 'Network', 'Disk'] as const
 type Tab = typeof TABS[number]
 
 const tabClasses = (active: boolean) =>
-    `px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${active ? 'bg-white/80 text-gray-900 shadow' : 'text-gray-200 hover:bg-white/10'}`
+    `px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${active ? 'bg-white text-blue-700 shadow shadow-sm border border-gray-100' : 'text-gray-600 hover:bg-black/5'}`
 
 export default function TaskManagerWindow({ id }: { id: string }) {
     const { processes, killProcess, cpuUsage, memUsage, diskUsage, netUsage, networkLatencyMs } = useKernelStore()
@@ -25,39 +25,39 @@ export default function TaskManagerWindow({ id }: { id: string }) {
 
     return (
         <Window id={id} title="Task Manager">
-            <div className="w-full h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-sm text-gray-300 flex flex-col">
-                <div className="px-4 py-3 border-b border-white/10 bg-white/5">
+            <div className="w-full h-full bg-gradient-to-br from-white via-slate-50 to-white text-sm text-gray-800 flex flex-col font-sans">
+                <div className="px-5 py-4 border-b border-gray-200 bg-white/50 backdrop-blur-md">
                     <div className="flex items-center justify-between">
-                        <div className="text-xs uppercase tracking-[0.25em] text-gray-300/70">AetherOS Monitor</div>
-                        <div className="flex gap-2">
+                        <div className="text-xs uppercase tracking-[0.25em] text-gray-500 font-bold">AetherOS Monitor</div>
+                        <div className="flex gap-2 p-1 bg-gray-100 rounded-xl border border-gray-200">
                             <button className={tabClasses(tab === 'Processes')} onClick={() => setTab('Processes')}>Processes</button>
                             <button className={tabClasses(tab === 'Performance')} onClick={() => setTab('Performance')}>Performance</button>
                             <button className={tabClasses(tab === 'Network')} onClick={() => setTab('Network')}>Internet</button>
                         </div>
                     </div>
-                    <div className="mt-3 grid grid-cols-4 gap-2 text-[11px]">
-                        <div className="rounded-lg bg-white/10 px-2 py-1.5">
-                            <div className="text-gray-300/70">Processes</div>
-                            <div className="text-white font-semibold">{totals.procCount}</div>
+                    <div className="mt-4 grid grid-cols-4 gap-3 text-xs">
+                        <div className="rounded-xl bg-white border border-gray-100 shadow-sm px-3 py-2">
+                            <div className="text-gray-500 font-medium mb-1">Processes</div>
+                            <div className="text-blue-600 font-bold text-lg">{totals.procCount}</div>
                         </div>
-                        <div className="rounded-lg bg-white/10 px-2 py-1.5">
-                            <div className="text-gray-300/70">CPU</div>
-                            <div className="text-white font-semibold">{totals.cpu.toFixed(1)}%</div>
+                        <div className="rounded-xl bg-white border border-gray-100 shadow-sm px-3 py-2">
+                            <div className="text-gray-500 font-medium mb-1">CPU</div>
+                            <div className="text-emerald-600 font-bold text-lg">{totals.cpu.toFixed(1)}%</div>
                         </div>
-                        <div className="rounded-lg bg-white/10 px-2 py-1.5">
-                            <div className="text-gray-300/70">Memory</div>
-                            <div className="text-white font-semibold">{totals.mem.toFixed(1)}%</div>
+                        <div className="rounded-xl bg-white border border-gray-100 shadow-sm px-3 py-2">
+                            <div className="text-gray-500 font-medium mb-1">Memory</div>
+                            <div className="text-purple-600 font-bold text-lg">{totals.mem.toFixed(1)}%</div>
                         </div>
-                        <div className="rounded-lg bg-white/10 px-2 py-1.5">
-                            <div className="text-gray-300/70">Disk</div>
-                            <div className="text-white font-semibold">{totals.disk.toFixed(1)}%</div>
+                        <div className="rounded-xl bg-white border border-gray-100 shadow-sm px-3 py-2">
+                            <div className="text-gray-500 font-medium mb-1">Disk</div>
+                            <div className="text-amber-600 font-bold text-lg">{totals.disk.toFixed(1)}%</div>
                         </div>
                     </div>
                 </div>
 
                 {tab === 'Processes' && (
-                    <div className="flex-1 overflow-auto p-2">
-                        <div className="grid grid-cols-7 gap-2 font-semibold border-b border-white/10 px-4 py-2 bg-white/5 sticky top-0">
+                    <div className="flex-1 overflow-auto">
+                        <div className="grid grid-cols-7 gap-2 font-semibold border-b border-gray-200 px-5 py-2.5 bg-gray-50/80 sticky top-0 text-gray-600 text-xs uppercase tracking-wider">
                             <div>PID</div>
                             <div>Name</div>
                             <div>CPU %</div>
@@ -67,17 +67,17 @@ export default function TaskManagerWindow({ id }: { id: string }) {
                             <div>Action</div>
                         </div>
                         {processes.map(p => (
-                            <div key={p.pid} className="grid grid-cols-7 gap-2 items-center px-3 py-2 hover:bg-white/5 rounded">
-                                <div className="font-mono">{p.pid}</div>
-                                <div>{p.name}</div>
-                                <div className="font-mono">{p.cpu.toFixed(1)}</div>
-                                <div className="font-mono">{p.mem.toFixed(1)}</div>
-                                <div className="font-mono">{p.disk.toFixed(1)}</div>
-                                <div className="font-mono">{p.net.toFixed(1)}</div>
+                            <div key={p.pid} className="grid grid-cols-7 gap-2 items-center px-5 py-2.5 hover:bg-black/5 border-b border-gray-100 last:border-0 transition-colors">
+                                <div className="font-mono text-gray-500">{p.pid}</div>
+                                <div className="font-medium text-gray-900">{p.name}</div>
+                                <div className="font-mono text-gray-600">{p.cpu.toFixed(1)}</div>
+                                <div className="font-mono text-gray-600">{p.mem.toFixed(1)}</div>
+                                <div className="font-mono text-gray-600">{p.disk.toFixed(1)}</div>
+                                <div className="font-mono text-gray-600">{p.net.toFixed(1)}</div>
                                 <div>
                                     <button
                                         onClick={() => killProcess(p.pid)}
-                                        className="text-red-300 hover:text-red-200 hover:bg-red-400/10 px-2 py-1 rounded text-xs transition-colors"
+                                        className="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded-md text-xs font-medium transition-colors border border-transparent hover:border-red-200"
                                     >
                                         Kill
                                     </button>
@@ -91,21 +91,21 @@ export default function TaskManagerWindow({ id }: { id: string }) {
                 )}
 
                 {tab === 'Performance' && (
-                    <div className="flex-1 overflow-auto p-4 space-y-4">
+                    <div className="flex-1 overflow-auto p-5 space-y-4 bg-gray-50/50">
                         {[
-                            { label: 'CPU', value: totals.cpu },
-                            { label: 'Memory', value: totals.mem },
-                            { label: 'Disk', value: totals.disk },
-                            { label: 'Network', value: totals.net }
+                            { label: 'CPU', value: totals.cpu, color: 'from-emerald-400 to-emerald-500' },
+                            { label: 'Memory', value: totals.mem, color: 'from-purple-400 to-purple-500' },
+                            { label: 'Disk', value: totals.disk, color: 'from-amber-400 to-amber-500' },
+                            { label: 'Network', value: totals.net, color: 'from-blue-400 to-blue-500' }
                         ].map(stat => (
-                            <div key={stat.label} className="rounded-xl bg-white/5 p-4 border border-white/10">
-                                <div className="flex items-center justify-between text-xs uppercase tracking-widest text-gray-300/70">
+                            <div key={stat.label} className="rounded-xl bg-white p-4 border border-gray-200 shadow-sm">
+                                <div className="flex items-center justify-between text-xs uppercase tracking-widest text-gray-500 font-bold">
                                     <span>{stat.label}</span>
-                                    <span className="text-white font-semibold">{stat.value.toFixed(1)}%</span>
+                                    <span className="text-gray-900 font-bold">{stat.value.toFixed(1)}%</span>
                                 </div>
-                                <div className="mt-3 h-2 rounded-full bg-white/10 overflow-hidden">
+                                <div className="mt-3 h-2.5 rounded-full bg-gray-100 overflow-hidden border border-gray-200/50">
                                     <div
-                                        className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500"
+                                        className={`h-full rounded-full bg-gradient-to-r ${stat.color} shadow-sm`}
                                         style={{ width: `${Math.min(100, stat.value)}%` }}
                                     ></div>
                                 </div>
@@ -115,24 +115,29 @@ export default function TaskManagerWindow({ id }: { id: string }) {
                 )}
 
                 {tab === 'Network' && (
-                    <div className="flex-1 overflow-auto p-4 space-y-4">
-                        <div className="rounded-2xl bg-white/5 p-5 border border-white/10">
-                            <div className="text-xs uppercase tracking-[0.3em] text-gray-300/70">Latency</div>
-                            <div className="mt-2 text-3xl font-semibold text-white">{networkLatencyMs} ms</div>
-                            <div className="mt-2 text-[11px] text-gray-300/60">
-                                Simulated ping to AetherOS backbone.
+                    <div className="flex-1 overflow-auto p-5 space-y-4 bg-gray-50/50">
+                        <div className="rounded-xl bg-white p-6 border border-gray-200 shadow-sm">
+                            <div className="text-xs uppercase tracking-[0.3em] text-gray-500 font-bold flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                Live Latency
+                            </div>
+                            <div className="mt-3 text-4xl font-light text-gray-900">{networkLatencyMs} <span className="text-xl text-gray-400">ms</span></div>
+                            <div className="mt-2 text-xs text-gray-400">
+                                Simulated ping to AetherOS backbone infrastructure.
                             </div>
                         </div>
-                        <div className="rounded-xl bg-white/5 p-4 border border-white/10">
-                            <div className="flex items-center justify-between text-xs uppercase tracking-widest text-gray-300/70">
+                        <div className="rounded-xl bg-white p-5 border border-gray-200 shadow-sm">
+                            <div className="flex items-center justify-between text-xs uppercase tracking-widest text-gray-500 font-bold">
                                 <span>Network Utilization</span>
-                                <span className="text-white font-semibold">{totals.net.toFixed(1)}%</span>
+                                <span className="text-blue-600 font-bold">{totals.net.toFixed(1)}%</span>
                             </div>
-                            <div className="mt-3 h-2 rounded-full bg-white/10 overflow-hidden">
+                            <div className="mt-4 h-3 rounded-full bg-gray-100 overflow-hidden border border-gray-200/50">
                                 <div
-                                    className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-500"
+                                    className="h-full rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 shadow-sm relative overflow-hidden"
                                     style={{ width: `${Math.min(100, totals.net)}%` }}
-                                ></div>
+                                >
+                                    <div className="absolute inset-0 bg-white/20 w-full animate-[shimmer_2s_infinite]"></div>
+                                </div>
                             </div>
                         </div>
                     </div>

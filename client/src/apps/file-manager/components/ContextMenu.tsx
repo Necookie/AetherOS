@@ -85,8 +85,7 @@ export default function ContextMenu({ onClose, position, targetId }: ContextMenu
 
     const MenuItem = ({ icon, label, onClick, disabled = false, showCheck = false }: any) => (
         <button
-            className={`w-full flex items-center gap-3 px-4 py-1.5 text-sm text-left ${disabled ? 'opacity-50 cursor-not-allowed text-gray-500' : 'hover:bg-blue-600/60 text-gray-200'
-                }`}
+            className={`w-full flex items-center gap-3 px-4 py-1.5 text-sm text-left ${disabled ? 'opacity-50 cursor-not-allowed text-gray-400' : 'hover:bg-blue-50 hover:text-blue-900 text-gray-700'}`}
             onClick={disabled ? undefined : (e) => { e.stopPropagation(); onClick(); }}
             disabled={disabled}
         >
@@ -97,7 +96,7 @@ export default function ContextMenu({ onClose, position, targetId }: ContextMenu
         </button>
     );
 
-    const Separator = () => <div className="h-px bg-[#3f3f46] my-1 mx-2" />;
+    const Separator = () => <div className="h-px bg-gray-100 my-1 mx-2" />;
 
     const onEmptySpace = !targetId;
     const hasSelection = selectedIds.length > 0;
@@ -107,7 +106,7 @@ export default function ContextMenu({ onClose, position, targetId }: ContextMenu
         <div
             ref={menuRef}
             style={style}
-            className="fixed z-50 w-56 bg-[#27272a]/95 backdrop-blur-sm border border-[#3f3f46] rounded-md shadow-2xl py-1 outline-none text-gray-200"
+            className="fixed z-50 w-56 bg-white/95 backdrop-blur-sm border border-gray-200 rounded-md shadow-xl py-1 outline-none text-gray-800"
             onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
         >
             {onEmptySpace ? (

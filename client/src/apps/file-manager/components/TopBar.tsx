@@ -17,26 +17,26 @@ export default function TopBar() {
     };
 
     return (
-        <div className="flex items-center gap-2 p-2 bg-[#27272a] border-b border-[#3f3f46]">
+        <div className="flex items-center gap-2 p-2 bg-transparent border-b border-gray-200">
             <div className="flex items-center gap-1">
                 <button
                     onClick={goBack}
                     disabled={!canGoBack}
-                    className="p-1 rounded hover:bg-white/10 text-gray-300 disabled:opacity-30 disabled:hover:bg-transparent"
+                    className="p-1 rounded hover:bg-black/5 text-gray-700 disabled:opacity-30 disabled:hover:bg-transparent"
                 >
                     <ChevronLeft size={20} />
                 </button>
                 <button
                     onClick={goForward}
                     disabled={!canGoForward}
-                    className="p-1 rounded hover:bg-white/10 text-gray-300 disabled:opacity-30 disabled:hover:bg-transparent"
+                    className="p-1 rounded hover:bg-black/5 text-gray-700 disabled:opacity-30 disabled:hover:bg-transparent"
                 >
                     <ChevronRight size={20} />
                 </button>
                 <button
                     onClick={goUp}
                     disabled={!canGoUp}
-                    className="p-1 rounded hover:bg-white/10 text-gray-300 disabled:opacity-30 disabled:hover:bg-transparent ml-1"
+                    className="p-1 rounded hover:bg-black/5 text-gray-700 disabled:opacity-30 disabled:hover:bg-transparent ml-1"
                 >
                     <ArrowUp size={20} />
                 </button>
@@ -54,7 +54,7 @@ export default function TopBar() {
                         setSearchInput(e.target.value);
                         if (e.target.value === '') setSearchQuery(''); // Live clear
                     }}
-                    className="w-full bg-[#1e1e24] border border-[#3f3f46] text-sm pl-7 pr-2 py-1 rounded text-gray-200 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-white border border-gray-200 text-sm pl-7 pr-2 py-1 rounded text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
                 />
             </form>
         </div>

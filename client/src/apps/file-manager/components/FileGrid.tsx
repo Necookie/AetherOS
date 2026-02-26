@@ -32,7 +32,7 @@ export default function FileGrid({ items }: { items: VfsNode[] }) {
                     <div
                         key={item.id}
                         data-id={item.id}
-                        className={`w-24 h-28 flex flex-col items-center justify-start p-2 rounded cursor-pointer transition-colors ${isSelected ? 'bg-blue-600/40 outline outline-1 outline-blue-400' : 'hover:bg-white/5'
+                        className={`w-24 h-28 flex flex-col items-center justify-start p-2 rounded cursor-pointer transition-colors ${isSelected ? 'bg-blue-100 outline outline-1 outline-blue-300' : 'hover:bg-black/5'
                             }`}
                         onClick={(e) => {
                             e.stopPropagation();
@@ -46,7 +46,7 @@ export default function FileGrid({ items }: { items: VfsNode[] }) {
                         <div className="h-14 flex items-center justify-center pointer-events-none mb-1 shadow-sm">
                             {getIcon(item.type, item.name)}
                         </div>
-                        <div className={`text-center text-xs break-words w-full line-clamp-2 px-1 pointer-events-none ${isSelected ? 'text-white' : 'text-gray-300'}`}>
+                        <div className={`text-center text-xs break-words w-full line-clamp-2 px-1 pointer-events-none ${isSelected ? 'text-blue-900 font-medium' : 'text-gray-800'}`}>
                             {item.name}
                         </div>
                     </div>

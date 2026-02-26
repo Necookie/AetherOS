@@ -54,7 +54,7 @@ export default function FileDetails({ items }: { items: VfsNode[] }) {
     return (
         <div className="flex flex-col w-full h-full min-w-max text-sm relative outline-none select-none">
             {/* Headers row - sticky if we want */}
-            <div className="flex sticky top-0 bg-[#1e1e24] shadow-sm z-10 border-b border-[#3f3f46] text-xs font-semibold text-gray-400 py-1 pl-6">
+            <div className="flex sticky top-0 bg-white/70 backdrop-blur-md shadow-sm z-10 border-b border-gray-200 text-xs font-semibold text-gray-600 py-1 pl-6">
                 <div className="flex-1 min-w-[200px] cursor-pointer hover:bg-white/5 px-2" onClick={() => handleSort('name')}>
                     Name {sortCol === 'name' && (sortAsc ? '▲' : '▼')}
                 </div>
@@ -77,7 +77,7 @@ export default function FileDetails({ items }: { items: VfsNode[] }) {
                         <div
                             key={item.id}
                             data-id={item.id}
-                            className={`flex items-center group cursor-pointer border-b border-transparent pl-4 ${isSelected ? 'bg-blue-600/40 border-blue-600/50' : 'hover:bg-white/5'
+                            className={`flex items-center group cursor-pointer border-b border-transparent pl-4 ${isSelected ? 'bg-blue-100 border-blue-200' : 'hover:bg-black/5'
                                 }`}
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -91,16 +91,16 @@ export default function FileDetails({ items }: { items: VfsNode[] }) {
                             <div className="w-4 flex justify-center -ml-2 text-gray-500 opacity-80 pointer-events-none">
                                 {item.type === VfsNodeType.DIR ? <Folder size={14} fill="currentColor" fillOpacity={0.2} className="text-blue-400" /> : <FileIcon size={14} className="text-gray-400" />}
                             </div>
-                            <div className={`flex-1 min-w-[200px] truncate py-1.5 px-2 pointer-events-none ${isSelected ? 'text-white' : 'text-gray-200'}`}>
+                            <div className={`flex-1 min-w-[200px] truncate py-1.5 px-2 pointer-events-none ${isSelected ? 'text-blue-900 font-medium' : 'text-gray-800'}`}>
                                 {item.name}
                             </div>
-                            <div className={`w-32 truncate py-1.5 px-2 pointer-events-none text-xs ${isSelected ? 'text-blue-100' : 'text-gray-400'}`}>
+                            <div className={`w-32 truncate py-1.5 px-2 pointer-events-none text-xs ${isSelected ? 'text-blue-800' : 'text-gray-500'}`}>
                                 {formatModified(item.modifiedAt)}
                             </div>
-                            <div className={`w-32 truncate py-1.5 px-2 pointer-events-none text-xs ${isSelected ? 'text-blue-100' : 'text-gray-400'}`}>
+                            <div className={`w-32 truncate py-1.5 px-2 pointer-events-none text-xs ${isSelected ? 'text-blue-800' : 'text-gray-500'}`}>
                                 {item.type === VfsNodeType.DIR ? 'File folder' : 'File'}
                             </div>
-                            <div className={`w-24 truncate py-1.5 px-2 pointer-events-none text-right text-xs ${isSelected ? 'text-blue-100' : 'text-gray-400'}`}>
+                            <div className={`w-24 truncate py-1.5 px-2 pointer-events-none text-right text-xs ${isSelected ? 'text-blue-800' : 'text-gray-500'}`}>
                                 {formatSize(item.size, item.type)}
                             </div>
                         </div>

@@ -41,6 +41,13 @@ export default function AddressBar() {
         setEditPath(currentPath);
     };
 
+    const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Escape') {
+            setIsEditing(false);
+            setEditPath(currentPath);
+        }
+    };
+
     if (isEditing) {
         return (
             <form onSubmit={handleSubmit} className="flex-1 max-w-2xl">
@@ -50,7 +57,8 @@ export default function AddressBar() {
                     value={editPath}
                     onChange={(e) => setEditPath(e.target.value)}
                     onBlur={handleBlur}
-                    className="w-full bg-[#1e1e24] border border-[#3f3f46] text-sm px-2 py-1 rounded text-gray-200 focus:outline-none focus:border-blue-500"
+                    onKeyDown={handleInputKeyDown}
+                    className="w-full bg-white border border-blue-400 text-sm px-2 py-1 rounded text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-400"
                 />
             </form>
         );
@@ -60,19 +68,26 @@ export default function AddressBar() {
 
     return (
         <div
-            className="flex-1 max-w-2xl flex items-center bg-[#1e1e24] border border-[#3f3f46] rounded px-2 py-1 cursor-text overflow-hidden hover:border-[#52525b]"
-            onClick={() => setIsEditing(true)}
+            className="flex-1 max-w-2xl flex items-center bg-white/70 border border-gray-200 rounded px-2 py-1 cursor-text overflow-hidden hover:border-gray-300 shadow-inner"
+            onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                    setIsEditing(true);
+                }
+            }}
         >
-            <div className="flex items-center text-sm font-medium hover:bg-white/10 px-1 rounded cursor-pointer" onClick={(e) => { e.stopPropagation(); navigate('/'); }}>
+            <div
+                className="flex items-center text-sm font-medium px-1.5 py-0.5 rounded hover:bg-black/5 cursor-pointer text-gray-700 hover:text-gray-900"
+                onClick={(e) => { e.stopPropagation(); navigate('/'); }}
+            >
                 Root
             </div>
             {parts.map((part, idx) => {
                 const path = '/' + parts.slice(0, idx + 1).join('/');
                 return (
                     <React.Fragment key={path}>
-                        <ChevronRight size={14} className="mx-0.5 text-gray-500" />
+                        <ChevronRight className="w-4 h-4 text-gray-400 mx-0.5" />
                         <div
-                            className="flex items-center text-sm font-medium hover:bg-white/10 px-1 rounded cursor-pointer"
+                            className="px-1.5 py-0.5 rounded hover:bg-black/5 cursor-pointer text-gray-700 hover:text-gray-900 truncate max-w-[150px]"
                             onClick={(e) => { e.stopPropagation(); navigate(path); }}
                         >
                             {part}
