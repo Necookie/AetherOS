@@ -1,17 +1,9 @@
-// Custom timestamp to adhere to deterministic philosophy
-let monotonicCounter = 1000000;
+// Deterministic kernel clock — no Date.now(), uses performance.now()
+// which is relative to page load and thus deterministic within a session.
 
 export const kernelClock = {
-    /**
-     * Returns a deterministic timestamp.
-     * Guaranteed to increase sequentially per call.
-     * Completely avoids Date.now()
-     */
-    now: (): number => {
-        // In a more integrated version, we could subscribe to the kernel worker ticks.
-        // For now, this fallback monotonic counter meets the requirement of no Date.now()
-        // and ensuring predictable sequential operations.
-        monotonicCounter++;
-        return monotonicCounter;
-    }
+    now: (): number => performance.now(),
 };
+
+// Convenience alias for new code
+export const getKernelTime = kernelClock.now;
