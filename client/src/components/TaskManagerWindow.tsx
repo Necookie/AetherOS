@@ -1,15 +1,16 @@
-import { useMemo, useState } from 'react'
-import DraggableWindow from './DraggableWindow'
+import { useState, useMemo } from 'react'
 import { useKernelStore } from '../stores/useKernelStore'
+import Window from './system/Window'
 
-type TaskTab = 'processes' | 'performance' | 'network'
+const TABS = ['Processes', 'Performance', 'Network', 'Disk'] as const
+type Tab = typeof TABS[number]
 
 const tabClasses = (active: boolean) =>
     `px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${active ? 'bg-white/80 text-gray-900 shadow' : 'text-gray-200 hover:bg-white/10'}`
 
-export default function TaskManagerWindow({ onClose }: { onClose: () => void }) {
+export default function TaskManagerWindow({ id }: { id: string }) {
     const { processes, killProcess, cpuUsage, memUsage, diskUsage, netUsage, networkLatencyMs } = useKernelStore()
-    const [tab, setTab] = useState<TaskTab>('processes')
+    const [tab, setTab] = useState<Tab>('Processes')
 
     const totals = useMemo(() => {
         const procCount = processes.length
@@ -23,15 +24,15 @@ export default function TaskManagerWindow({ onClose }: { onClose: () => void }) 
     }, [processes.length, cpuUsage, memUsage, diskUsage, netUsage])
 
     return (
-        <DraggableWindow title="Task Manager" onClose={onClose} initialPos={{ x: 700, y: 100 }} size={{ w: 520, h: 420 }}>
+        <Window id={id} title="Task Manager">
             <div className="w-full h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-sm text-gray-300 flex flex-col">
                 <div className="px-4 py-3 border-b border-white/10 bg-white/5">
                     <div className="flex items-center justify-between">
                         <div className="text-xs uppercase tracking-[0.25em] text-gray-300/70">AetherOS Monitor</div>
                         <div className="flex gap-2">
-                            <button className={tabClasses(tab === 'processes')} onClick={() => setTab('processes')}>Processes</button>
-                            <button className={tabClasses(tab === 'performance')} onClick={() => setTab('performance')}>Performance</button>
-                            <button className={tabClasses(tab === 'network')} onClick={() => setTab('network')}>Internet</button>
+                            <button className={tabClasses(tab === 'Processes')} onClick={() => setTab('Processes')}>Processes</button>
+                            <button className={tabClasses(tab === 'Performance')} onClick={() => setTab('Performance')}>Performance</button>
+                            <button className={tabClasses(tab === 'Network')} onClick={() => setTab('Network')}>Internet</button>
                         </div>
                     </div>
                     <div className="mt-3 grid grid-cols-4 gap-2 text-[11px]">
@@ -54,7 +55,7 @@ export default function TaskManagerWindow({ onClose }: { onClose: () => void }) 
                     </div>
                 </div>
 
-                {tab === 'processes' && (
+                {tab === 'Processes' && (
                     <div className="flex-1 overflow-auto p-2">
                         <div className="grid grid-cols-7 gap-2 font-semibold border-b border-white/10 px-4 py-2 bg-white/5 sticky top-0">
                             <div>PID</div>
@@ -89,7 +90,7 @@ export default function TaskManagerWindow({ onClose }: { onClose: () => void }) 
                     </div>
                 )}
 
-                {tab === 'performance' && (
+                {tab === 'Performance' && (
                     <div className="flex-1 overflow-auto p-4 space-y-4">
                         {[
                             { label: 'CPU', value: totals.cpu },
@@ -113,7 +114,7 @@ export default function TaskManagerWindow({ onClose }: { onClose: () => void }) 
                     </div>
                 )}
 
-                {tab === 'network' && (
+                {tab === 'Network' && (
                     <div className="flex-1 overflow-auto p-4 space-y-4">
                         <div className="rounded-2xl bg-white/5 p-5 border border-white/10">
                             <div className="text-xs uppercase tracking-[0.3em] text-gray-300/70">Latency</div>
@@ -137,6 +138,6 @@ export default function TaskManagerWindow({ onClose }: { onClose: () => void }) 
                     </div>
                 )}
             </div>
-        </DraggableWindow>
+        </Window>
     )
 }

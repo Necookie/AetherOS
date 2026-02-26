@@ -1,12 +1,12 @@
 import { Monitor, Terminal, Settings, LayoutGrid, Search, Wifi, Volume2, BatteryCharging } from 'lucide-react'
-import type { DesktopWindowDef } from '../types/window'
+import { useWindowStore } from '../stores/windowStore'
+import { DEFAULT_APPS } from '../config/windows'
 
-interface TaskbarProps {
-    windows: DesktopWindowDef[]
-    toggleWindow: (id: string) => void
-}
+export default function Taskbar() {
+    const windows = useWindowStore(state => state.windows)
+    const toggleMinimize = useWindowStore(state => state.toggleMinimize)
+    const openWindow = useWindowStore(state => state.openWindow)
 
-export default function Taskbar({ windows, toggleWindow }: TaskbarProps) {
     return (
         <div className="h-14 glass-panel rounded-2xl flex items-center px-4 justify-between transition-all w-max mx-auto shadow-2xl border-white/60 mb-2">
 
@@ -28,17 +28,38 @@ export default function Taskbar({ windows, toggleWindow }: TaskbarProps) {
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-500"></div>
                 </button>
 
-                {windows.map(w => (
-                    <button
-                        key={w.id}
-                        onClick={() => toggleWindow(w.id)}
-                        className={`p-2 rounded-xl transition-all relative ${w.isOpen ? 'bg-white/50 border border-white/60 shadow-sm hover:bg-white/70' : 'hover:bg-white/40'}`}
-                        title={w.title}
-                    >
-                        {w.id === 'term' ? <Terminal className={`w-5 h-5 ${w.isOpen ? 'text-gray-800' : 'text-gray-600'}`} /> : <Settings className={`w-5 h-5 ${w.isOpen ? 'text-gray-800' : 'text-gray-600'}`} />}
-                        {w.isOpen && <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-gray-600"></div>}
-                    </button>
-                ))}
+                {DEFAULT_APPS.map(app => {
+                    const isOpen = !!windows[app.id]
+                    const winState = windows[app.id]?.state
+                    const isFocused = winState?.isFocused
+                    const isMinimized = winState?.isMinimized
+
+                    const handleClick = () => {
+                        if (!isOpen) {
+                            openWindow(app)
+                        } else {
+                            toggleMinimize(app.id)
+                        }
+                    }
+
+                    return (
+                        <button
+                            key={app.id}
+                            onClick={handleClick}
+                            className={`p-2 rounded-xl transition-all relative ${isFocused ? 'bg-white/50 border border-white/60 shadow-sm hover:bg-white/70' : 'hover:bg-white/40'}`}
+                            title={app.title}
+                        >
+                            {app.id === 'term' ? (
+                                <Terminal className={`w-5 h-5 ${isOpen && !isMinimized ? 'text-gray-800' : 'text-gray-600'}`} />
+                            ) : (
+                                <Settings className={`w-5 h-5 ${isOpen && !isMinimized ? 'text-gray-800' : 'text-gray-600'}`} />
+                            )}
+                            {isOpen && (
+                                <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 rounded-full ${isFocused ? 'w-2 bg-gray-600' : 'w-1 bg-gray-400'}`}></div>
+                            )}
+                        </button>
+                    )
+                })}
             </div>
 
             {/* Right Side System Tray */}

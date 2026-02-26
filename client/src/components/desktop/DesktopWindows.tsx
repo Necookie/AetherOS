@@ -1,18 +1,14 @@
-import type { DesktopWindowDef } from '../../types/window'
+import { useWindowStore } from '../../stores/windowStore'
 
-interface DesktopWindowsProps {
-    windows: DesktopWindowDef[]
-    onToggle: (id: string) => void
-}
+export default function DesktopWindows() {
+    const windows = useWindowStore(state => state.windows)
 
-export default function DesktopWindows({ windows, onToggle }: DesktopWindowsProps) {
     return (
         <div className="flex-1 relative z-20 pointer-events-auto">
-            {windows.map(w =>
-                w.isOpen ? (
-                    <w.component key={w.id} onClose={() => onToggle(w.id)} />
-                ) : null
-            )}
+            {Object.values(windows).map(w => (
+                <w.component key={w.id} id={w.id} />
+            ))}
         </div>
     )
 }
+

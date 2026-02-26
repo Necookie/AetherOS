@@ -1,11 +1,11 @@
 import { useCallback, useRef } from 'react'
-import DraggableWindow from './DraggableWindow'
+import Window from './system/Window'
 import { useKernelStore } from '../stores/useKernelStore'
 import { queryAi } from '../services/aiClient'
 import { handleTerminalCommand } from './terminal/terminalCommands'
 import { useTerminal } from './terminal/useTerminal'
 
-export default function TerminalWindow({ onClose }: { onClose: () => void }) {
+export default function TerminalWindow({ id }: { id: string }) {
     const terminalRef = useRef<HTMLDivElement>(null)
     const termInstance = useRef<import('xterm').Terminal | null>(null)
     const { spawnProcess, killProcess } = useKernelStore()
@@ -39,8 +39,9 @@ export default function TerminalWindow({ onClose }: { onClose: () => void }) {
     })
 
     return (
-        <DraggableWindow title="Terminal" onClose={onClose} initialPos={{ x: 50, y: 50 }}>
+        <Window id={id} title="Terminal">
             <div ref={terminalRef} className="w-full h-full p-2" />
-        </DraggableWindow>
+        </Window>
     )
 }
+
