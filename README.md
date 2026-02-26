@@ -71,3 +71,15 @@ npm run lint
 - Implement FAT-style file allocation and disk storage mock logic.
 - Elaborate upon the kernel round-robin scheduler inside the `kernel.worker.ts`.
 - Replace basic PostgreSQL Docker layer with complete local Supabase instance.
+
+## Recommendations To Make It Feel Real
+- Add a window manager: z-order focus, minimize/maximize, snap, and multi-monitor layout.
+- Introduce a file system simulation: directory tree, file metadata, permissions, and an indexed search.
+- Persist OS state: boot resumes last session, open apps, window positions, and user settings.
+- Simulate app lifecycles: cold start delays, background tasks, and graceful shutdown.
+- Add a notification center with badges, toasts, and system alerts.
+- Build a system settings app: theme, time, language, network, and power profiles.
+- Create a system audio layer: volume mixer per app and alert sounds.
+- Add a browser sandbox: tabs, history, downloads, and safe iframe isolation.
+- Improve resource realism: per-process disk and network spikes, plus throttling under load.
+- Add user accounts and lock screen: login profiles, permissions, and fast user switching.
