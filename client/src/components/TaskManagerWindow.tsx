@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { shallow } from 'zustand/shallow'
 import { useKernelStore } from '../stores/useKernelStore'
 import Window from './system/Window'
 
@@ -9,19 +10,24 @@ const tabClasses = (active: boolean) =>
     `px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${active ? 'bg-white text-blue-700 shadow shadow-sm border border-gray-100' : 'text-gray-600 hover:bg-black/5'}`
 
 export default function TaskManagerWindow({ id }: { id: string }) {
-    const { processes, killProcess, cpuUsage, memUsage, diskUsage, netUsage, networkLatencyMs } = useKernelStore()
+    const { processes, killProcess, cpuUsage, memUsage, diskUsage, netUsage, networkLatencyMs } = useKernelStore((state) => ({
+        processes: state.processes,
+        killProcess: state.killProcess,
+        cpuUsage: state.cpuUsage,
+        memUsage: state.memUsage,
+        diskUsage: state.diskUsage,
+        netUsage: state.netUsage,
+        networkLatencyMs: state.networkLatencyMs,
+    }), shallow)
     const [tab, setTab] = useState<Tab>('Processes')
 
-    const totals = useMemo(() => {
-        const procCount = processes.length
-        return {
-            procCount,
-            cpu: cpuUsage,
-            mem: memUsage,
-            disk: diskUsage,
-            net: netUsage
-        }
-    }, [processes.length, cpuUsage, memUsage, diskUsage, netUsage])
+    const totals = useMemo(() => ({
+        procCount: processes.length,
+        cpu: cpuUsage,
+        mem: memUsage,
+        disk: diskUsage,
+        net: netUsage,
+    }), [processes.length, cpuUsage, memUsage, diskUsage, netUsage])
 
     return (
         <Window id={id} title="Task Manager">
@@ -66,17 +72,17 @@ export default function TaskManagerWindow({ id }: { id: string }) {
                             <div>Net</div>
                             <div>Action</div>
                         </div>
-                        {processes.map(p => (
-                            <div key={p.pid} className="grid grid-cols-7 gap-2 items-center px-5 py-2.5 hover:bg-black/5 border-b border-gray-100 last:border-0 transition-colors">
-                                <div className="font-mono text-gray-500">{p.pid}</div>
-                                <div className="font-medium text-gray-900">{p.name}</div>
-                                <div className="font-mono text-gray-600">{p.cpu.toFixed(1)}</div>
-                                <div className="font-mono text-gray-600">{p.mem.toFixed(1)}</div>
-                                <div className="font-mono text-gray-600">{p.disk.toFixed(1)}</div>
-                                <div className="font-mono text-gray-600">{p.net.toFixed(1)}</div>
+                        {processes.map((process) => (
+                            <div key={process.pid} className="grid grid-cols-7 gap-2 items-center px-5 py-2.5 hover:bg-black/5 border-b border-gray-100 last:border-0 transition-colors">
+                                <div className="font-mono text-gray-500">{process.pid}</div>
+                                <div className="font-medium text-gray-900">{process.name}</div>
+                                <div className="font-mono text-gray-600">{process.cpu.toFixed(1)}</div>
+                                <div className="font-mono text-gray-600">{process.mem.toFixed(1)}</div>
+                                <div className="font-mono text-gray-600">{process.disk.toFixed(1)}</div>
+                                <div className="font-mono text-gray-600">{process.net.toFixed(1)}</div>
                                 <div>
                                     <button
-                                        onClick={() => killProcess(p.pid)}
+                                        onClick={() => killProcess(process.pid)}
                                         className="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded-md text-xs font-medium transition-colors border border-transparent hover:border-red-200"
                                     >
                                         Kill
@@ -96,8 +102,8 @@ export default function TaskManagerWindow({ id }: { id: string }) {
                             { label: 'CPU', value: totals.cpu, color: 'from-emerald-400 to-emerald-500' },
                             { label: 'Memory', value: totals.mem, color: 'from-purple-400 to-purple-500' },
                             { label: 'Disk', value: totals.disk, color: 'from-amber-400 to-amber-500' },
-                            { label: 'Network', value: totals.net, color: 'from-blue-400 to-blue-500' }
-                        ].map(stat => (
+                            { label: 'Network', value: totals.net, color: 'from-blue-400 to-blue-500' },
+                        ].map((stat) => (
                             <div key={stat.label} className="rounded-xl bg-white p-4 border border-gray-200 shadow-sm">
                                 <div className="flex items-center justify-between text-xs uppercase tracking-widest text-gray-500 font-bold">
                                     <span>{stat.label}</span>

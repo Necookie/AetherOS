@@ -1,19 +1,25 @@
 import { useCallback, useRef } from 'react'
-import Window from './system/Window'
+import { shallow } from 'zustand/shallow'
 import { useKernelStore } from '../stores/useKernelStore'
 import { queryAi } from '../services/aiClient'
+import Window from './system/Window'
 import { handleTerminalCommand } from './terminal/terminalCommands'
 import { useTerminal } from './terminal/useTerminal'
 
 export default function TerminalWindow({ id }: { id: string }) {
     const terminalRef = useRef<HTMLDivElement>(null)
     const termInstance = useRef<import('xterm').Terminal | null>(null)
-    const { spawnProcess, killProcess } = useKernelStore()
+    const { spawnProcess, killProcess } = useKernelStore((state) => ({
+        spawnProcess: state.spawnProcess,
+        killProcess: state.killProcess,
+    }), shallow)
 
     const onCommand = useCallback(
         async (input: string) => {
             const term = termInstance.current
-            if (!term) return
+            if (!term) {
+                return
+            }
 
             await handleTerminalCommand(
                 {
@@ -22,12 +28,12 @@ export default function TerminalWindow({ id }: { id: string }) {
                     spawnProcess,
                     killProcess,
                     getProcesses: () => useKernelStore.getState().processes,
-                    queryAi
+                    queryAi,
                 },
-                input
+                input,
             )
         },
-        [killProcess, spawnProcess]
+        [killProcess, spawnProcess],
     )
 
     useTerminal({
@@ -35,7 +41,7 @@ export default function TerminalWindow({ id }: { id: string }) {
         onCommand,
         onReady: (term) => {
             termInstance.current = term
-        }
+        },
     })
 
     return (
@@ -44,4 +50,3 @@ export default function TerminalWindow({ id }: { id: string }) {
         </Window>
     )
 }
-

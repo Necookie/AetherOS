@@ -1,6 +1,11 @@
 import { create } from 'zustand';
-import { getKernelTime } from '../lib/kernelClock';
-import { TabState, HistoryEntry, BrowserSettings, TabMode, SearchEngine } from '../types/browser';
+import {
+    createExternalTabState,
+    createHistoryEntry,
+    createTabId,
+    createTabState,
+} from '../apps/browser/browserState';
+import { BrowserSettings, HistoryEntry, SearchEngine, TabMode, TabState } from '../types/browser';
 
 interface BrowserStore {
     tabsById: Record<string, TabState>;
@@ -8,8 +13,6 @@ interface BrowserStore {
     activeTabId: string | null;
     settings: BrowserSettings;
     historyGlobal: HistoryEntry[];
-
-    // Actions
     newTab: (args?: { url?: string; mode?: TabMode }) => void;
     closeTab: (id: string) => void;
     setActiveTab: (id: string) => void;
@@ -23,8 +26,6 @@ interface BrowserStore {
     recordHistory: (entry: Omit<HistoryEntry, 'timestamp'>) => void;
 }
 
-const generateId = () => `tab_${Math.random().toString(36).substring(2, 9)}`;
-
 export const useBrowserStore = create<BrowserStore>((set, get) => ({
     tabsById: {},
     tabOrder: [],
@@ -33,90 +34,59 @@ export const useBrowserStore = create<BrowserStore>((set, get) => ({
         defaultSearchEngine: 'duckduckgo',
     },
     historyGlobal: [],
-
     newTab: (args = {}) => {
-        const id = generateId();
-        const { url = '', mode = 'internal' } = args;
-        const newTab: TabState = {
-            id,
-            title: url ? url : 'New Tab',
-            url,
-            displayUrl: url,
-            mode,
-            isLoading: false,
-            backStack: [],
-            forwardStack: []
-        };
+        const id = createTabId();
+        const newTab = createTabState(id, args);
 
         set((state) => ({
             tabsById: { ...state.tabsById, [id]: newTab },
             tabOrder: [...state.tabOrder, id],
-            activeTabId: id
+            activeTabId: id,
         }));
     },
-
     closeTab: (id) => {
         set((state) => {
-            const { tabsById, tabOrder, activeTabId } = state;
-            const newTabsById = { ...tabsById };
+            const newTabsById = { ...state.tabsById };
             delete newTabsById[id];
 
-            const newTabOrder = tabOrder.filter(tId => tId !== id);
+            const newTabOrder = state.tabOrder.filter((tabId) => tabId !== id);
+            let newActiveTabId = state.activeTabId;
 
-            // If closed the active tab, try to activate the one before it
-            let newActiveTabId = activeTabId;
-            if (activeTabId === id) {
+            if (state.activeTabId === id) {
                 if (newTabOrder.length > 0) {
-                    const closedIdx = tabOrder.indexOf(id);
-                    const newIdx = Math.max(0, closedIdx - 1);
-                    newActiveTabId = newTabOrder[newIdx];
+                    const closedIndex = state.tabOrder.indexOf(id);
+                    newActiveTabId = newTabOrder[Math.max(0, closedIndex - 1)];
                 } else {
                     newActiveTabId = null;
                 }
             }
 
-            // Always ensure at least one tab or let component handle empty state?
             if (newTabOrder.length === 0) {
-                // Auto spawn new tab if last is closed
-                const newId = generateId();
+                const newId = createTabId();
                 return {
-                    tabsById: {
-                        [newId]: {
-                            id: newId,
-                            title: 'New Tab',
-                            url: '',
-                            displayUrl: '',
-                            mode: 'internal',
-                            isLoading: false,
-                            backStack: [],
-                            forwardStack: []
-                        }
-                    },
+                    tabsById: { [newId]: createTabState(newId) },
                     tabOrder: [newId],
-                    activeTabId: newId
-                }
+                    activeTabId: newId,
+                };
             }
 
             return {
                 tabsById: newTabsById,
                 tabOrder: newTabOrder,
-                activeTabId: newActiveTabId
+                activeTabId: newActiveTabId,
             };
         });
     },
-
     setActiveTab: (id) => set({ activeTabId: id }),
-
     navigate: (id, inputString) => {
-        // Will be connected to urlUtils shortly!
-        // For now dummy call
         get().navigateToUrl(id, inputString);
     },
-
     navigateToUrl: (id, url) => {
         set((state) => {
             const tab = state.tabsById[id];
-            if (!tab) return state;
+            if (!tab) {
+                return state;
+            }
 
             return {
                 tabsById: {
@@ -124,58 +94,42 @@ export const useBrowserStore = create<BrowserStore>((set, get) => ({
                     [id]: {
                         ...tab,
                         backStack: tab.url ? [...tab.backStack, tab.url] : tab.backStack,
-                        forwardStack: [], // clear forward stack on new navigation
+                        forwardStack: [],
                         url,
                         displayUrl: url,
-                        isLoading: true, // will be finished by webview loading eagerly
-                    }
-                }
+                        isLoading: true,
+                    },
+                },
             };
         });
     },
-
     openExternal: (url, opts = {}) => {
-        const { reuseTabId } = opts;
-
-        // Use existing or spawn new external tab
-        const tabId = reuseTabId || generateId();
+        const tabId = opts.reuseTabId || createTabId();
 
         set((state) => {
             const existingTab = state.tabsById[tabId];
-            const newTab: TabState = {
-                id: tabId,
-                title: new URL(url).hostname || 'External Link',
-                url,
-                displayUrl: url,
-                mode: 'external',
-                externalUrl: url,
-                openedAt: getKernelTime(),
-                isLoading: false,
-                backStack: existingTab ? existingTab.backStack : [],
-                forwardStack: existingTab ? existingTab.forwardStack : []
-            };
-
+            const newTab = createExternalTabState(tabId, url, existingTab);
             const newTabOrder = existingTab ? state.tabOrder : [...state.tabOrder, tabId];
 
             return {
                 tabsById: { ...state.tabsById, [tabId]: newTab },
                 tabOrder: newTabOrder,
-                activeTabId: tabId
+                activeTabId: tabId,
             };
         });
 
-        // The actual side effect!
         try {
-            window.open(url, "_blank", "noopener,noreferrer");
-        } catch (e) {
-            console.error('Failed to open _blank tab', e);
+            window.open(url, '_blank', 'noopener,noreferrer');
+        } catch (error) {
+            console.error('Failed to open _blank tab', error);
         }
     },
-
     back: (id) => {
         set((state) => {
             const tab = state.tabsById[id];
-            if (!tab || tab.backStack.length === 0) return state;
+            if (!tab || tab.backStack.length === 0) {
+                return state;
+            }
 
             const newBackStack = [...tab.backStack];
             const previousUrl = newBackStack.pop()!;
@@ -189,17 +143,18 @@ export const useBrowserStore = create<BrowserStore>((set, get) => ({
                         forwardStack: tab.url ? [...tab.forwardStack, tab.url] : tab.forwardStack,
                         url: previousUrl,
                         displayUrl: previousUrl,
-                        isLoading: true
-                    }
-                }
+                        isLoading: true,
+                    },
+                },
             };
         });
     },
-
     forward: (id) => {
         set((state) => {
             const tab = state.tabsById[id];
-            if (!tab || tab.forwardStack.length === 0) return state;
+            if (!tab || tab.forwardStack.length === 0) {
+                return state;
+            }
 
             const newForwardStack = [...tab.forwardStack];
             const nextUrl = newForwardStack.pop()!;
@@ -213,17 +168,18 @@ export const useBrowserStore = create<BrowserStore>((set, get) => ({
                         backStack: tab.url ? [...tab.backStack, tab.url] : tab.backStack,
                         url: nextUrl,
                         displayUrl: nextUrl,
-                        isLoading: true
-                    }
-                }
+                        isLoading: true,
+                    },
+                },
             };
         });
     },
-
     reload: (id) => {
         set((state) => {
             const tab = state.tabsById[id];
-            if (!tab) return state;
+            if (!tab) {
+                return state;
+            }
 
             return {
                 tabsById: {
@@ -231,23 +187,15 @@ export const useBrowserStore = create<BrowserStore>((set, get) => ({
                     [id]: {
                         ...tab,
                         isLoading: true,
-                        // A neat trick to force iframe reload in React is toggling a key or url minimally
-                        // For our store we just flip isLoading to true
-                    }
-                }
+                    },
+                },
             };
         });
     },
-
     setSearchEngine: (engine) => set((state) => ({
-        settings: { ...state.settings, defaultSearchEngine: engine }
+        settings: { ...state.settings, defaultSearchEngine: engine },
     })),
-
     recordHistory: (entry) => set((state) => ({
-        historyGlobal: [
-            ...state.historyGlobal,
-            { ...entry, timestamp: getKernelTime() }
-        ]
-    }))
-
+        historyGlobal: [...state.historyGlobal, createHistoryEntry(entry)],
+    })),
 }));

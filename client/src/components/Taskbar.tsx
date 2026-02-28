@@ -1,16 +1,17 @@
-import { Monitor, Terminal, Settings, LayoutGrid, Search, Wifi, Volume2, BatteryCharging, Activity, Globe } from 'lucide-react'
-import { useWindowStore } from '../stores/windowStore'
+import { Activity, BatteryCharging, Globe, LayoutGrid, Monitor, Search, Settings, Terminal, Volume2, Wifi } from 'lucide-react'
+import { shallow } from 'zustand/shallow'
 import { DEFAULT_APPS } from '../config/windows'
+import { useWindowStore } from '../stores/windowStore'
 
 export default function Taskbar() {
-    const windows = useWindowStore(state => state.windows)
-    const toggleMinimize = useWindowStore(state => state.toggleMinimize)
-    const openWindow = useWindowStore(state => state.openWindow)
+    const { windows, toggleMinimize, openWindow } = useWindowStore((state) => ({
+        windows: state.windows,
+        toggleMinimize: state.toggleMinimize,
+        openWindow: state.openWindow,
+    }), shallow)
 
     return (
         <div className="h-14 glass-panel rounded-2xl flex items-center px-4 justify-between transition-all w-max mx-auto shadow-2xl border-white/60 mb-2">
-
-            {/* Left Side App Launchers */}
             <div className="flex items-center space-x-1 mr-8">
                 <button className="p-2 hover:bg-white/40 rounded-xl transition-all group">
                     <div className="w-6 h-6 rounded bg-gradient-to-br from-blue-500 to-indigo-600 shadow-sm group-hover:scale-110 transition-transform flex items-center justify-center">
@@ -22,13 +23,12 @@ export default function Taskbar() {
                     <Search className="w-5 h-5 text-gray-600" />
                 </button>
 
-                {/* Simulated Open Apps */}
                 <button className="p-2 bg-white/50 rounded-xl shadow-sm border border-white/60 hover:bg-white/70 transition-all relative">
                     <Monitor className="w-5 h-5 text-blue-500" />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-500"></div>
                 </button>
 
-                {DEFAULT_APPS.map(app => {
+                {DEFAULT_APPS.map((app) => {
                     const isOpen = !!windows[app.id]
                     const winState = windows[app.id]?.state
                     const isFocused = winState?.isFocused
@@ -68,7 +68,6 @@ export default function Taskbar() {
                 })}
             </div>
 
-            {/* Right Side System Tray */}
             <div className="flex items-center space-x-2 pl-4 border-l border-gray-400/30">
                 <div className="flex space-x-1 px-2 py-1 hover:bg-white/40 rounded-lg cursor-pointer transition-colors">
                     <Wifi className="w-4 h-4 text-gray-700" />
@@ -81,7 +80,6 @@ export default function Taskbar() {
                     <span>{new Date().toLocaleDateString()}</span>
                 </div>
             </div>
-
         </div>
     )
 }

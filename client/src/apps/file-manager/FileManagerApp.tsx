@@ -1,18 +1,27 @@
 import { useEffect } from 'react';
-import { useFsStore } from '../../stores/fsStore';
-import TopBar from './components/TopBar';
-import Sidebar from './components/Sidebar';
-import FilePane from './components/FilePane';
+import { shallow } from 'zustand/shallow';
 import Window from '../../components/system/Window';
+import { useFsStore } from '../../stores/fsStore';
+import FilePane from './components/FilePane';
+import Sidebar from './components/Sidebar';
+import TopBar from './components/TopBar';
 
 export default function FileManagerApp({ id }: { id: string }) {
-    const { refresh, items, selectedIds, currentPath, toggleHidden, setViewMode, deleteItems, renameItem } = useFsStore();
+    const { refresh, items, selectedIds, currentPath, toggleHidden, setViewMode, deleteItems, renameItem } = useFsStore((state) => ({
+        refresh: state.refresh,
+        items: state.items,
+        selectedIds: state.selectedIds,
+        currentPath: state.currentPath,
+        toggleHidden: state.toggleHidden,
+        setViewMode: state.setViewMode,
+        deleteItems: state.deleteItems,
+        renameItem: state.renameItem,
+    }), shallow);
 
     useEffect(() => {
         refresh();
     }, [refresh, currentPath]);
 
-    // Global App Hotkeys
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             const target = e.target as HTMLElement;
@@ -39,12 +48,15 @@ export default function FileManagerApp({ id }: { id: string }) {
             if (e.key === 'F2' && !isInput && selectedIds.length === 1) {
                 e.preventDefault();
                 const newName = prompt('Enter new name:');
-                if (newName) renameItem(selectedIds[0], newName);
+                if (newName) {
+                    renameItem(selectedIds[0], newName);
+                }
             }
         };
+
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [toggleHidden, setViewMode]);
+    }, [deleteItems, renameItem, selectedIds, setViewMode, toggleHidden]);
 
     return (
         <Window id={id} title="File Manager">
@@ -54,7 +66,6 @@ export default function FileManagerApp({ id }: { id: string }) {
                     <Sidebar />
                     <FilePane />
                 </div>
-                {/* Status Bar */}
                 <div className="h-6 flex items-center justify-between px-4 bg-white/50 border-t border-gray-200 text-xs text-gray-600 z-10 shrink-0 backdrop-blur">
                     <div className="flex gap-4">
                         <span>{items.length} item{items.length !== 1 ? 's' : ''}</span>

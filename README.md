@@ -1,96 +1,167 @@
 # AetherOS
 
-> AI-Integrated Web-Based Operating System Simulator
-> 
-> 🌐 **Live Demo:** [aetheros.necookie.dev](https://aetheros.necookie.dev)
+AI-integrated web-based operating system simulator built as a TypeScript monorepo.
 
-Welcome to the AetherOS monorepo. Based on **PRD v4.0**, this project aims to provide a deterministic OS laboratory bridging systems theory, visual simulation, and conversational AI. The project serves as an educational and diagnostic platform demonstrating full-stack engineering capabilities.
+Live demo: [aetheros.necookie.dev](https://aetheros.necookie.dev)
 
-## Architecture Highlights
-- **Frontend Desktop UI**: Powered by React, Vite, Tailwind CSS, and Zustand.
-- **Kernel Simulation**: A persistent, tick-based Web Worker acting as the "kernel". It handles deterministic state like processes and CPU metrics, offloading computation from the main thread.
-- **Backend API**: Node.js & Fastify API to proxy requests to an AI Agent (OpenAI API).
-- **Virtual File System (VFS)**: In-memory filesystem with seeded OS-like directories and files.
-- **Persistence (Planned)**: Self-hosted Supabase and PostgreSQL database via Docker.
-- **CDN & Deployment**: The frontend is deployed globally via Cloudflare Pages at [aetheros.necookie.dev](https://aetheros.necookie.dev).
+## What It Is
 
-## Current OS Status (Feb 26, 2026)
-- Boot flow: loading screen -> login -> desktop
+AetherOS simulates a desktop shell in the browser:
+- boot flow from loading screen to login to desktop
+- floating window manager with focus, z-order, drag, resize, minimize, and maximize
+- terminal, task manager, file manager, and browser-style app surfaces
+- kernel metrics generated in a Web Worker
+- in-memory virtual filesystem for file-manager interactions
+- Fastify server that proxies AI requests and falls back to mock mode when no OpenAI key is present
+
+## Architecture
+
+Root workspaces:
+- `client`: React 18, Vite, Zustand, Tailwind, xterm.js
+- `server`: Fastify, TypeScript, OpenAI proxy wrapper
+
+Current folder map:
+```text
+client/
+  src/
+    apps/
+      browser/
+      file-manager/
+    components/
+    features/
+      kernel/
+      vfs/
+      window-manager/
+    stores/
+    vfs/
+    worker/
+server/
+  src/
+    config/
+    plugins/
+    routes/
+    services/
+docs/
+  architecture.md
+  refactor-notes.md
+  refactor-plan.md
+```
+
+Runtime overview:
+- `client/src/App.tsx` owns loading/login/desktop flow.
+- `client/src/stores/windowStore.ts` delegates window lifecycle transitions to feature helpers.
+- `client/src/worker/kernel.worker.ts` emits typed kernel tick messages to `client/src/stores/useKernelStore.ts`.
+- `client/src/vfs/*` provides the filesystem core, while `client/src/stores/fsStore.ts` adapts it for UI state.
+- `server/src/server.ts` assembles Fastify plugins and routes.
+- `server/src/routes/ai.ts` keeps the existing `POST /api/ai` shape and delegates mock/live behavior to `server/src/services/aiService.ts`.
+
+## What Works Now
+
+- Boot and login flow
 - Desktop shell with wallpaper, icons, and taskbar
-- Window manager with drag, resize, minimize/maximize, and z-order focus
-- Core apps: Terminal, Task Manager, File Manager
-- Kernel simulation via Web Worker (process list + CPU/mem/disk/net metrics)
-- In-memory VFS backing the File Manager
+- Window manager behavior for drag, resize, minimize, maximize, focus, and z-order
+- Terminal app with existing command handling and AI command path
+- Task Manager with live process, CPU, memory, disk, and network metrics
+- File Manager with icon/details views, navigation, rename, and delete on the in-memory VFS
+- Browser app with tabs, embed/external fallback behavior, and URL safety checks
+- AI proxy mock mode when `OPENAI_API_KEY` is unset
 
-## Supported Features (80/20 Implementation)
-Currently implemented features (Minimal Scaffolding Phase):
-- [x] Boot + Login flow (loading screen -> login -> desktop)
-- [x] Desktop Shell (taskbar, wallpaper, icons, window focus/z-order)
-- [x] Window Manager (drag/resize/minimize/maximize)
-- [x] Command Line Interface (`xterm.js` + core commands)
-- [x] Task Manager (process list + performance metrics)
-- [x] AI Assistant (mock/live via Fastify proxy)
-- [x] File Manager (VFS-backed, icon/details views, rename/delete)
-- [ ] Web Browser Sandboxing (Pending iframe handling)
-- [ ] System Settings panel (desktop icon only)
+## What Is Still Pending
 
-## Security Notes
-- The `OPENAI_API_KEY` resides strictly on the server-side proxy server (`server` package). The client never touches it.
-- Basic API rate limiting (100req/min) and CORS strategies are configured via Fastify.
+- True browser sandboxing and richer site compatibility
+- Settings application implementation behind the desktop affordances
+- Persistence layer for session state, VFS state, and user settings
+- Stronger shared contracts if client and server begin sharing repo-level types
 
----
+## Local Development
 
-## Local Development Guide
+Prerequisites:
+- Node.js 18+
+- npm
+- Docker only if you want the optional local Postgres container
 
-### Prerequisites
-- Node.js (v18+)
-- Docker (for PostgreSQL database)
+Install:
+```bash
+npm install
+```
 
-### Setup Steps
-1. **Clone the repository.**
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-3. **Setup environment variables:**
-   - In `client/`, copy `.env.example` to `.env`.
-   - In `server/`, copy `.env.example` to `.env`. Add your `OPENAI_API_KEY` if testing live AI mode, or leave empty to use safe mock mode.
-4. **Boot up Postgres Database (Optional):**
-   *(Note: Full Supabase parity is not integrated yet. This represents the basic database infrastructure.)*
-   ```bash
-   docker-compose up -d
-   ```
+Environment:
+```bash
+cp client/.env.example client/.env
+cp server/.env.example server/.env
+```
 
-### Running the App
-The project uses `concurrently` (via npm workspaces) to launch everything in a single terminal.
+Defaults:
+- `client/.env.example` sets `VITE_API_URL=http://localhost:3000`
+- `server/.env.example` sets `PORT=3000`
+- Leave `OPENAI_API_KEY` empty to use safe mock responses
 
+Run:
 ```bash
 npm run dev
 ```
 
-- **Frontend**: `http://localhost:5173`
-- **Backend**: `http://localhost:3000`
+Workspace URLs:
+- client: `http://localhost:5173`
+- server: `http://localhost:3000`
 
-### Build and Lint
-To verify the project is production ready:
+Validation:
 ```bash
-npm run build
 npm run lint
+npm run build
 ```
 
-## Next Steps
-- Implement FAT-style file allocation and disk storage mock logic.
-- Elaborate upon the kernel round-robin scheduler inside the `kernel.worker.ts`.
-- Replace basic PostgreSQL Docker layer with complete local Supabase instance.
+Optional local Postgres container:
+```bash
+docker-compose up -d
+```
 
-## Recommendations To Make It Feel Real
-- Add a window manager: z-order focus, minimize/maximize, snap, and multi-monitor layout.
-- Introduce a file system simulation: directory tree, file metadata, permissions, and an indexed search.
-- Persist OS state: boot resumes last session, open apps, window positions, and user settings.
-- Simulate app lifecycles: cold start delays, background tasks, and graceful shutdown.
-- Add a notification center with badges, toasts, and system alerts.
-- Build a system settings app: theme, time, language, network, and power profiles.
-- Create a system audio layer: volume mixer per app and alert sounds.
-- Add a browser sandbox: tabs, history, downloads, and safe iframe isolation.
-- Improve resource realism: per-process disk and network spikes, plus throttling under load.
-- Add user accounts and lock screen: login profiles, permissions, and fast user switching.
+Current Docker scope:
+- Docker starts a standalone Postgres instance only.
+- The running app does not yet persist AetherOS state into that database.
+
+## Security Notes
+
+- `OPENAI_API_KEY` stays server-side only.
+- Client requests go to the Fastify proxy at `POST /api/ai`.
+- Fastify registers permissive CORS and a basic rate limit of `100` requests per minute.
+- Without an API key, the AI route returns mock responses instead of failing open.
+
+## Recommended Next Features
+
+Recommended means not implemented yet.
+
+Realism:
+- `M` Session resume for open windows, bounds, and active app state. Dependency: persistence layer.
+- `M` Better process modeling in the kernel worker with stable per-app profiles and lifecycle states. Dependency: current worker protocol.
+- `L` VFS persistence with seeded system directories plus user-writable overlays. Dependency: storage design.
+
+Security:
+- `M` Harden browser isolation with clearer allow/block rules and sandbox diagnostics. Dependency: browser feature work.
+- `S` Add server-side request schema validation for `/api/ai`. Dependency: none.
+- `M` Restrict CORS by environment instead of `*`. Dependency: deployment env values.
+
+Persistence:
+- `S` Save browser history and settings locally. Dependency: storage choice.
+- `M` Persist file-manager mutations across reloads. Dependency: VFS serialization.
+- `L` Add multi-user profiles with separate home directories and session state. Dependency: persistence plus auth model.
+
+UX:
+- `S` Build the Settings app already hinted at by the desktop/taskbar shell. Dependency: none.
+- `M` Add window snapping and keyboard shortcuts for layout control. Dependency: window-manager helpers already extracted.
+- `M` Add notifications/toasts at shell level instead of per-app only. Dependency: shared desktop event channel.
+
+DevEx:
+- `S` Add lightweight route and worker protocol validation tests without introducing a large framework. Dependency: pick existing tooling strategy.
+- `M` Promote shared client-worker contracts into a dedicated `shared/` package if server reuse appears. Dependency: broader cross-runtime type reuse.
+- `S` Add CI for `lint`, TypeScript checks, and build verification. Dependency: target CI provider.
+
+## Verification Snapshot
+
+Verified during this refactor:
+- `npm run lint`
+- `npx tsc -p client/tsconfig.json --noEmit`
+- `npx tsc -p server/tsconfig.json --noEmit`
+
+Known limitation in this sandbox:
+- `npm run build` is blocked here during the client Vite step because the sandbox denies the `esbuild` child-process spawn used by Vite config loading.

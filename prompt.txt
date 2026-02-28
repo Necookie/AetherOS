@@ -1,0 +1,182 @@
+You are an expert staff-level full-stack engineer + performance-focused refactoring specialist.
+
+Repo: AetherOS — AI-Integrated Web-Based Operating System Simulator (monorepo)
+
+Goal:
+Refactor the whole codebase to be more modular, cleaner, and faster WITHOUT changing behavior. Then update README to match the real current state + add scope-aligned recommended features.
+
+Non-negotiables:
+- Zero user-facing behavior changes (same UI/UX, same outputs, same flows).
+- Deterministic kernel tick loop must stay deterministic.
+- OPENAI_API_KEY stays server-side only.
+- No heavy new dependencies. Prefer existing tooling.
+- Keep styling/visuals unchanged.
+
+========================
+CLEAN CODE RULES (ENFORCE)
+========================
+- Prefer small pure functions, clear names, and explicit types.
+- No “god files”: split by feature and domain.
+- Avoid deep prop drilling; use stable Zustand selectors or context only where appropriate.
+- No duplicate logic: extract shared helpers/utilities.
+- Keep side effects isolated (IO, timers, worker messaging, server calls).
+- Keep module boundaries strict:
+  - UI components should not own domain logic.
+  - Domain logic should be testable in isolation (even if no tests are added).
+- Performance hygiene:
+  - Prevent unnecessary re-renders (memo, stable selectors, shallow compare).
+  - Avoid recreating objects/functions in render paths.
+  - Avoid expensive work on main thread; use worker or memoized computations.
+- Type safety:
+  - No `any` unless truly unavoidable and documented.
+  - Centralize types used across worker/client/server in shared types.
+- Comments:
+  - Only comment “why”, not “what”.
+  - Add docs for tricky deterministic behavior and messaging protocol.
+
+========================
+TASKS (DO ALL)
+========================
+
+(0) Baseline + repo scan
+- Inspect repo structure and workspaces setup.
+- Identify entry points for:
+  - client (React/Vite)
+  - kernel worker
+  - window manager
+  - desktop shell
+  - VFS + file manager
+  - server (Fastify AI proxy)
+- Run baseline commands (as available):
+  - install
+  - lint
+  - typecheck (if exists)
+  - build
+  - dev smoke run
+- Create /docs/refactor-notes.md with:
+  - baseline findings (hotspots, large payloads, render churn)
+  - risks/constraints
+  - intended improvements (safe list)
+
+(1) Refactor plan + architecture docs
+- Add /docs/architecture.md and /docs/refactor-plan.md
+- Create clear module map:
+  - client/src/features/{desktop,window-manager,kernel,vfs,apps}
+  - server/{routes,plugins,services}
+  - shared/{types,utils} (if applicable)
+- Keep the plan aligned to “behavior-preserving” refactors.
+
+(2) Client modularization (behavior-preserving)
+- Window Manager:
+  - Split state/actions, geometry helpers, z-order logic, and window lifecycle.
+  - Ensure drag/resize/min/max/focus order identical.
+- Desktop shell:
+  - Separate taskbar, icons, wallpaper, session state.
+- Apps:
+  - Each app in its own folder with entry + domain logic + UI components + types.
+  - Terminal: keep commands intact.
+  - Task Manager: keep metrics display intact.
+  - File Manager: keep VFS behavior + views intact.
+- Kernel bridge:
+  - Establish explicit worker protocol:
+    - message types (request/response/event)
+    - protocolVersion
+    - validation guards (lightweight)
+  - Avoid sending huge snapshots unnecessarily if it won’t change behavior.
+- VFS:
+  - Split VFS core, metadata/types, and UI adapters/selectors.
+
+(3) Performance improvements (safe only)
+- Reduce rerenders:
+  - Zustand selectors w/ shallow compare
+  - memoize expensive lists, window collections, file lists
+  - stable callbacks in hot components
+- Worker messaging:
+  - minimize payload size (compact types, deltas if safe)
+  - ensure UI still updates at same perceived cadence
+- Build-level improvements:
+  - code splitting/lazy load apps if already supported and doesn’t change UX timing
+  - avoid introducing “loading spinners” unless it already exists
+
+(4) Server modularization (Fastify)
+- Split into:
+  - plugins (cors, rate-limit, env validation)
+  - routes (ai proxy)
+  - services (OpenAI wrapper + mock)
+- Keep behavior identical:
+  - same route paths
+  - same response shapes
+  - same rate limits/cors intent
+
+(5) Repo hygiene
+- Ensure:
+  - npm run dev
+  - npm run build
+  - npm run lint
+  still work.
+- Introduce path aliases ONLY if fully supported (TS + Vite) and non-breaking.
+- Improve naming consistency and remove dead code (only if truly unused).
+- If tests exist, keep passing. If not, do not introduce test framework.
+
+(6) README update (accurate + scoped recommendations)
+Rewrite README.md to match the actual codebase after refactor:
+- What it is + live demo
+- Architecture overview + folder map
+- What works now (boot/login/desktop, window manager, terminal/task manager/file manager, kernel worker metrics, VFS)
+- What’s pending (browser sandboxing, settings panel, persistence layer if not done)
+- Local dev instructions + env setup + docker if applicable
+- Security notes (key server-side, cors/rate limit)
+- Recommended Next Features (Scoped):
+  - grouped by realism/security/persistence/UX/devex
+  - each with (S/M/L) effort + dependencies
+  - clearly labeled “recommended” not “implemented”
+
+(7) Verification checklist
+- Manual smoke checklist:
+  - boot flow works
+  - window drag/resize/min/max identical feel
+  - z-order/focus correct
+  - terminal commands still work
+  - task manager metrics update correctly
+  - file manager rename/delete/views unchanged
+  - AI proxy still works in mock mode (no key)
+
+========================
+COMMIT STRATEGY + COMMIT MESSAGE IDEAS
+========================
+Work in SMALL commits. Use Conventional Commits style:
+- feat: only if truly new (avoid)
+- refactor: behavior-preserving restructuring
+- perf: behavior-preserving performance improvement
+- docs: documentation updates
+- chore: tooling, cleanup, non-runtime changes
+- fix: only if you discover an actual bug that existed before (document it)
+
+Suggested commit sequence (use as you work):
+1) chore(docs): add refactor notes + baseline architecture scan
+2) refactor(client): reorganize feature folders (no logic changes)
+3) refactor(window-manager): extract geometry + z-order helpers
+4) refactor(kernel): formalize worker protocol types + message layer
+5) refactor(vfs): split core filesystem + ui adapters
+6) refactor(apps): isolate Terminal/TaskManager/FileManager modules
+7) perf(client): reduce rerenders with selectors + memoization
+8) refactor(server): modularize fastify plugins/routes/services
+9) docs(readme): update README to current state + roadmap recommendations
+10) chore: final cleanup (dead code removal, consistent naming, minor lint fixes)
+
+Rules:
+- Each commit must build.
+- Keep diffs reviewable.
+- If a change is risky, isolate it in its own commit and document reasoning in /docs/refactor-notes.md.
+
+========================
+OUTPUT REQUIREMENTS
+========================
+After completion, print:
+1) Changelog summary
+2) New folder structure
+3) Verification commands
+4) Any migration notes (env vars, scripts)
+5) Known trade-offs / future refactor targets
+
+Now begin by scanning the repository tree, mapping modules, and writing /docs/refactor-notes.md + /docs/refactor-plan.md before touching runtime logic.

@@ -1,14 +1,14 @@
+import { selectOrderedWindows } from '../../features/window-manager/selectors'
 import { useWindowStore } from '../../stores/windowStore'
 
 export default function DesktopWindows() {
-    const windows = useWindowStore(state => state.windows)
+    const windows = useWindowStore(selectOrderedWindows)
 
     return (
         <div className="flex-1 relative z-20 pointer-events-auto">
-            {Object.values(windows).map(w => (
-                <w.component key={w.id} id={w.id} />
+            {windows.map((windowData) => (
+                <windowData.component key={windowData.id} id={windowData.id} />
             ))}
         </div>
     )
 }
-

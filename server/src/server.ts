@@ -1,14 +1,14 @@
 import Fastify from 'fastify'
-import cors from '@fastify/cors'
-import rateLimit from '@fastify/rate-limit'
-import { healthRoute } from './routes/health'
+import { registerCors } from './plugins/cors'
+import { registerRateLimit } from './plugins/rateLimit'
 import { aiRoute } from './routes/ai'
+import { healthRoute } from './routes/health'
 
 export function buildServer() {
     const fastify = Fastify({ logger: true })
 
-    fastify.register(cors, { origin: '*' })
-    fastify.register(rateLimit, { max: 100, timeWindow: '1 minute' })
+    fastify.register(registerCors)
+    fastify.register(registerRateLimit)
     fastify.register(healthRoute)
     fastify.register(aiRoute, { prefix: '/api' })
 

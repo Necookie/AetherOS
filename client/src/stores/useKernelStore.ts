@@ -1,14 +1,12 @@
 import { create } from 'zustand'
+import {
+    isKernelCommandMessage,
+    isKernelEventMessage,
+    type KernelCommandMessage,
+} from '../features/kernel/protocol'
+import type { Process } from '../features/kernel/types'
 
-export interface Process {
-    pid: number
-    name: string
-    cpu: number
-    mem: number
-    disk: number
-    net: number
-    status: 'running' | 'waiting' | 'terminated'
-}
+export type { Process } from '../features/kernel/types'
 
 interface KernelState {
     processes: Process[]
@@ -32,32 +30,42 @@ export const useKernelStore = create<KernelState>((set, get) => ({
     networkLatencyMs: 0,
     worker: null,
     initKernel: () => {
-        if (get().worker) return
+        if (get().worker) {
+            return
+        }
 
         const worker = new Worker(new URL('../worker/kernel.worker.ts', import.meta.url), {
-            type: 'module'
+            type: 'module',
         })
 
         worker.onmessage = (e) => {
-            const { type, payload } = e.data
-            if (type === 'TICK') {
-                set({
-                    processes: payload.processes,
-                    cpuUsage: payload.cpuUsage,
-                    memUsage: payload.memUsage,
-                    diskUsage: payload.diskUsage,
-                    netUsage: payload.netUsage,
-                    networkLatencyMs: payload.networkLatencyMs
-                })
+            if (!isKernelEventMessage(e.data)) {
+                return
             }
+
+            const { payload } = e.data
+            set({
+                processes: payload.processes,
+                cpuUsage: payload.cpuUsage,
+                memUsage: payload.memUsage,
+                diskUsage: payload.diskUsage,
+                netUsage: payload.netUsage,
+                networkLatencyMs: payload.networkLatencyMs,
+            })
         }
 
         set({ worker })
     },
-    killProcess: (pid: number) => {
-        get().worker?.postMessage({ type: 'KILL_PROCESS', payload: { pid } })
+    killProcess: (pid) => {
+        const message: KernelCommandMessage = { type: 'KILL_PROCESS', payload: { pid } }
+        if (isKernelCommandMessage(message)) {
+            get().worker?.postMessage(message)
+        }
     },
-    spawnProcess: (name: string) => {
-        get().worker?.postMessage({ type: 'SPAWN_PROCESS', payload: { name } })
-    }
+    spawnProcess: (name) => {
+        const message: KernelCommandMessage = { type: 'SPAWN_PROCESS', payload: { name } }
+        if (isKernelCommandMessage(message)) {
+            get().worker?.postMessage(message)
+        }
+    },
 }))
