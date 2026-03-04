@@ -1,5 +1,5 @@
-import { vfs } from '../../vfs/vfsService'
-import { VfsNodeType, type VfsNode } from '../../vfs/types'
+import { vfs } from './vfsService'
+import { VfsNodeType, type VfsNode } from './types'
 
 export type FsNavigationState = {
     currentPath: string

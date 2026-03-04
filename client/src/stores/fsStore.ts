@@ -4,7 +4,7 @@ import {
     getVisibleItems,
     navigateToPath,
     stepHistory,
-} from '../features/vfs/fsState';
+} from '../vfs/fsState';
 import { vfs } from '../vfs/vfsService';
 import { VfsNode, VfsNodeType } from '../vfs/types';
 
