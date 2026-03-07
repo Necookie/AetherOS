@@ -20,30 +20,17 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     };
 
     return (
-        <div className="fixed inset-0 overflow-hidden text-white flex flex-col items-center justify-center font-sans tracking-wide">
+        <div className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden tracking-wide text-slate-100">
             <LoginBackground />
-
-            {/* Main Content Area */}
             <div className={`relative z-10 flex flex-col items-center transition-opacity duration-700 ${isLoggingIn ? 'opacity-80' : 'opacity-100'}`}>
-
-                {/* Avatar */}
                 <LoginAvatar />
-
-                {/* Username */}
-                <h1 className="text-3xl font-light mb-8 drop-shadow-md">Administrator</h1>
-
-                {/* Login Controls */}
+                <h1 className="mb-8 text-3xl font-light">Administrator</h1>
                 <LoginControls isLoggingIn={isLoggingIn} onLogin={handleLoginClick} />
             </div>
-
-            {/* Dark Overlay when logging in */}
             {isLoggingIn && (
-                <div className="absolute inset-0 z-0 bg-black/40 transition-opacity duration-1000 animate-fade-in"></div>
+                <div className="absolute inset-0 z-0 animate-fade-in bg-black/40 transition-opacity duration-1000"></div>
             )}
-
-            {/* Bottom Right Controls */}
             <LoginFooter />
-
         </div>
     );
 };

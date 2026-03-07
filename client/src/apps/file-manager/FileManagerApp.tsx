@@ -60,13 +60,13 @@ export default function FileManagerApp({ id }: { id: string }) {
 
     return (
         <Window id={id} title="File Manager">
-            <div className="flex flex-col h-full w-full bg-white/80 backdrop-blur-md text-gray-800 text-sm select-none font-sans overflow-hidden rounded-b-xl">
+            <div className="flex h-full w-full select-none flex-col overflow-hidden rounded-b-lg text-sm text-slate-200">
                 <TopBar />
                 <div className="flex flex-1 overflow-hidden relative">
                     <Sidebar />
                     <FilePane />
                 </div>
-                <div className="h-6 flex items-center justify-between px-4 bg-white/50 border-t border-gray-200 text-xs text-gray-600 z-10 shrink-0 backdrop-blur">
+                <div className="z-10 flex h-6 shrink-0 items-center justify-between border-t border-slate-700 bg-slate-900/85 px-4 text-xs text-slate-400 backdrop-blur">
                     <div className="flex gap-4">
                         <span>{items.length} item{items.length !== 1 ? 's' : ''}</span>
                         {selectedIds.length > 0 && (

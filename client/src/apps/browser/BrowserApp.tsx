@@ -85,7 +85,7 @@ export default function BrowserApp({ id }: { id: string }) {
 
     return (
         <Window id={id} title="Aether Browser">
-            <div className="flex flex-col h-full w-full bg-white/80 backdrop-blur-md text-gray-800 text-sm select-none font-sans overflow-hidden rounded-b-xl">
+            <div className="flex h-full w-full select-none flex-col overflow-hidden rounded-b-lg text-sm text-slate-200">
                 <TabStrip />
                 <Toolbar
                     activeTabId={activeTabId}
@@ -95,7 +95,7 @@ export default function BrowserApp({ id }: { id: string }) {
                 <div className="flex-1 relative overflow-hidden">
                     {activeTab?.isLoading && (
                         <div className="absolute top-0 left-0 right-0 h-0.5 z-50">
-                            <div className="h-full bg-indigo-400 rounded-r animate-pulse" style={{ width: '60%' }} />
+                            <div className="h-full rounded-r bg-indigo-400 animate-pulse" style={{ width: '60%' }} />
                         </div>
                     )}
                     {renderContent()}

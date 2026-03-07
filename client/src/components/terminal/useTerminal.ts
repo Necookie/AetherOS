@@ -16,9 +16,14 @@ export function useTerminal({ terminalRef, onCommand, onReady }: UseTerminalOpti
         if (!terminalRef.current) return
 
         const term = new Terminal({
-            theme: { background: '#00000000' },
+            theme: {
+                background: '#00000000',
+                foreground: '#f8fafc',
+                cursor: '#6366f1',
+                selectionBackground: '#334155',
+            },
             cursorBlink: true,
-            fontFamily: 'monospace'
+            fontFamily: 'JetBrains Mono, Cascadia Code, Fira Code, monospace'
         })
         const fitAddon = new FitAddon()
         term.loadAddon(fitAddon)
