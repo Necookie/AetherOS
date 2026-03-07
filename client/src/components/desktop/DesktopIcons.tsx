@@ -1,19 +1,29 @@
 import { DESKTOP_ICONS } from '../../config/desktop'
+import { Folder, Monitor, Settings } from 'lucide-react'
+import type { ComponentType } from 'react'
+
+const ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
+    pc: Monitor,
+    settings: Settings,
+}
 
 export default function DesktopIcons() {
     return (
-        <div className="absolute left-4 top-4 bottom-24 flex flex-col space-y-4 z-10 w-24">
+        <div className="absolute left-5 top-5 z-20 grid grid-cols-1 gap-3">
             {DESKTOP_ICONS.map(icon => (
                 <button
                     key={icon.id}
-                    className="flex flex-col items-center p-2 rounded-xl hover:bg-white/30 transition-colors group"
+                    className="group flex w-24 flex-col items-center rounded-lg p-2 transition-colors hover:bg-white/10"
                 >
-                    <img
-                        src={icon.iconUrl}
-                        alt={icon.alt}
-                        className="w-10 h-10 drop-shadow-md group-hover:scale-110 transition-transform"
-                    />
-                    <span className="text-xs font-semibold text-gray-700 mt-1 text-center drop-shadow-sm">
+                    {(() => {
+                        const Icon = ICON_MAP[icon.id] ?? Folder
+                        return (
+                            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-600/80 bg-slate-900/70 text-slate-200 shadow-lg">
+                                <Icon className="h-6 w-6" />
+                            </div>
+                        )
+                    })()}
+                    <span className="mt-1.5 text-center text-[12px] font-medium text-slate-100">
                         {icon.label}
                     </span>
                 </button>

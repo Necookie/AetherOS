@@ -15,28 +15,29 @@ export default function TopBar() {
         e.preventDefault();
         setSearchQuery(searchInput);
     };
+    const navBtnClass = 'os-hover-motion rounded p-1 text-slate-300 transition-colors hover:bg-slate-800/70 disabled:opacity-30 disabled:hover:bg-transparent';
 
     return (
-        <div className="flex items-center gap-2 p-2 bg-transparent border-b border-gray-200">
+        <div className="os-panel-motion flex items-center gap-2 border-b border-slate-700 bg-slate-900/85 p-2">
             <div className="flex items-center gap-1">
                 <button
                     onClick={goBack}
                     disabled={!canGoBack}
-                    className="p-1 rounded hover:bg-black/5 text-gray-700 disabled:opacity-30 disabled:hover:bg-transparent"
+                    className={navBtnClass}
                 >
                     <ChevronLeft size={20} />
                 </button>
                 <button
                     onClick={goForward}
                     disabled={!canGoForward}
-                    className="p-1 rounded hover:bg-black/5 text-gray-700 disabled:opacity-30 disabled:hover:bg-transparent"
+                    className={navBtnClass}
                 >
                     <ChevronRight size={20} />
                 </button>
                 <button
                     onClick={goUp}
                     disabled={!canGoUp}
-                    className="p-1 rounded hover:bg-black/5 text-gray-700 disabled:opacity-30 disabled:hover:bg-transparent ml-1"
+                    className={`${navBtnClass} ml-1`}
                 >
                     <ArrowUp size={20} />
                 </button>
@@ -45,7 +46,7 @@ export default function TopBar() {
             <AddressBar />
 
             <form onSubmit={handleSearch} className="relative ml-auto w-48">
-                <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-500" />
                 <input
                     type="text"
                     placeholder="Search..."
@@ -54,7 +55,7 @@ export default function TopBar() {
                         setSearchInput(e.target.value);
                         if (e.target.value === '') setSearchQuery(''); // Live clear
                     }}
-                    className="w-full bg-white border border-gray-200 text-sm pl-7 pr-2 py-1 rounded text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                    className="w-full rounded border border-slate-700 bg-slate-950 py-1 pl-7 pr-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
                 />
             </form>
         </div>

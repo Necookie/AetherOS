@@ -1,19 +1,14 @@
 import Taskbar from './Taskbar'
 import DesktopIcons from './desktop/DesktopIcons'
 import DesktopWindows from './desktop/DesktopWindows'
-import { DESKTOP_WALLPAPER_URL } from '../config/desktop'
 
 export default function DesktopShell() {
     return (
-        <div
-            className="relative w-full h-full flex flex-col overflow-hidden bg-[#e0dbea] bg-cover bg-center"
-            style={{ backgroundImage: `url('${DESKTOP_WALLPAPER_URL}')` }}
-        >
+        <div className="os-desktop-bg relative h-full w-full overflow-hidden">
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
             <DesktopIcons />
             <DesktopWindows />
-
-            {/* Taskbar */}
-            <div className="relative z-[9999] pointer-events-none flex justify-center pb-4">
+            <div className="pointer-events-none absolute inset-x-0 bottom-3 z-[9999] flex justify-center px-4">
                 <div className="pointer-events-auto">
                     <Taskbar />
                 </div>

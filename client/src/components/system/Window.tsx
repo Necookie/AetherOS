@@ -1,5 +1,4 @@
 import React from 'react'
-import { Minus, Square, X } from 'lucide-react'
 import { getResizedWindowBounds } from '../../features/window-manager/dragBounds'
 import { selectWindowById, selectWindowZIndex } from '../../features/window-manager/selectors'
 import { useWindowManager } from '../../hooks/useWindowManager'
@@ -27,13 +26,14 @@ export default function Window({ id, title, children }: WindowProps) {
 
     const { bounds, state } = windowState
     const { isFocused, isMaximized } = state
+    const RESIZE_EDGE_GUTTER = 14
+    const RESIZE_STEP = 26
 
     return (
         <div
-            className={`absolute flex flex-col overflow-hidden transition-all duration-150 ease-out
-                ${isMaximized ? 'rounded-none' : 'rounded-2xl'}
-                ${isFocused ? 'shadow-2xl border-white/80 brightness-105' : 'shadow-lg border-white/40 opacity-95'}
-                bg-white/40 backdrop-blur-md border border-white/60
+            className={`animate-os-window-in os-window-motion absolute flex flex-col overflow-hidden border transition-[left,top,width,height,opacity,transform]
+                ${isMaximized ? 'rounded-none' : 'rounded-lg'}
+                ${isFocused ? 'brightness-100' : 'opacity-95'}
             `}
             style={{
                 left: bounds.x,
@@ -42,46 +42,80 @@ export default function Window({ id, title, children }: WindowProps) {
                 height: bounds.height,
                 zIndex,
                 visibility: state.isMinimized ? 'hidden' : 'visible',
+                background: 'color-mix(in oklab, var(--os-surface-0) 94%, black 6%)',
+                borderColor: 'color-mix(in oklab, var(--os-border) 70%, black 30%)',
+                boxShadow: isFocused ? '0 24px 56px rgba(2, 6, 23, 0.62)' : '0 10px 28px rgba(2, 6, 23, 0.35)',
             }}
             onPointerDown={() => focusWindow(id)}
+            onWheel={(e) => {
+                if (isMaximized) {
+                    return
+                }
+
+                const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect()
+                const nearRight = rect.right - e.clientX <= RESIZE_EDGE_GUTTER
+                const nearBottom = rect.bottom - e.clientY <= RESIZE_EDGE_GUTTER
+
+                if (!nearRight && !nearBottom) {
+                    return
+                }
+
+                e.preventDefault()
+                focusWindow(id)
+
+                const delta = Math.sign(Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX)
+                if (delta === 0) {
+                    return
+                }
+
+                const step = delta * RESIZE_STEP
+                updateBounds(id, {
+                    ...(nearRight ? { width: Math.max(320, bounds.width + step) } : {}),
+                    ...(nearBottom ? { height: Math.max(200, bounds.height + step) } : {}),
+                })
+            }}
         >
             <div
-                className="h-10 bg-white/40 backdrop-blur-md flex items-center justify-between px-3 select-none border-b border-white/30"
-                style={{ cursor: isMaximized ? 'default' : 'grab' }}
+                className="flex h-10 select-none items-center justify-between border-b px-3"
+                style={{
+                    borderColor: 'color-mix(in oklab, var(--os-border) 65%, black 35%)',
+                    cursor: isMaximized ? 'default' : 'grab',
+                }}
                 onPointerDown={isMaximized ? undefined : handlePointerDown}
                 onPointerMove={isMaximized ? undefined : handlePointerMove}
                 onPointerUp={isMaximized ? undefined : handlePointerUp}
                 onPointerCancel={isMaximized ? undefined : handlePointerUp}
                 onDoubleClick={() => toggleMaximize(id)}
             >
-                <div className="flex-shrink-0 w-4 h-4 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 shadow-sm ml-1" />
-                <div className="flex-1 text-center font-semibold text-xs text-gray-800 pointer-events-none truncate px-4">
+                <div className="flex items-center gap-2 pl-0.5" data-drag-handle="false">
+                    <button
+                        onClick={(e) => { e.stopPropagation(); closeWindow(id) }}
+                        className="os-hover-motion h-3 w-3 rounded-full bg-[var(--os-danger)]/90 transition-opacity hover:opacity-100"
+                        title="Close"
+                    />
+                    <button
+                        onClick={(e) => { e.stopPropagation(); toggleMinimize(id) }}
+                        className="os-hover-motion h-3 w-3 rounded-full bg-[var(--os-warn)]/90 transition-opacity hover:opacity-100"
+                        title="Minimize"
+                    />
+                    <button
+                        onClick={(e) => { e.stopPropagation(); toggleMaximize(id) }}
+                        className="os-hover-motion h-3 w-3 rounded-full bg-[var(--os-success)]/90 transition-opacity hover:opacity-100"
+                        title="Maximize"
+                    />
+                </div>
+
+                <div className="pointer-events-none flex-1 truncate px-4 text-center text-[13px] font-medium text-slate-100">
                     {title}
                 </div>
 
-                <div className="flex space-x-1 flex-shrink-0" data-drag-handle="false">
-                    <button
-                        onClick={(e) => { e.stopPropagation(); toggleMinimize(id) }}
-                        className="p-1.5 hover:bg-black/10 rounded-full text-gray-700 transition-all hover:scale-110 active:scale-95"
-                    >
-                        <Minus className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); toggleMaximize(id) }}
-                        className="p-1.5 hover:bg-black/10 rounded-full text-gray-700 transition-all hover:scale-110 active:scale-95"
-                    >
-                        <Square className="w-3 h-3" />
-                    </button>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); closeWindow(id) }}
-                        className="p-1.5 hover:bg-red-500 hover:text-white rounded-full text-gray-700 transition-all hover:scale-110 active:scale-95"
-                    >
-                        <X className="w-4 h-4" />
-                    </button>
-                </div>
+                <div className="w-[52px]" />
             </div>
 
-            <div className="flex-1 overflow-auto bg-gray-50/60 relative">
+            <div
+                className="relative flex-1 overflow-auto"
+                style={{ background: 'color-mix(in oklab, var(--os-surface-0) 88%, black 12%)' }}
+            >
                 {children}
             </div>
 
@@ -114,7 +148,7 @@ export default function Window({ id, title, children }: WindowProps) {
                         window.addEventListener('pointerup', onUp)
                     }}
                 >
-                    <div className="absolute bottom-1 right-1 w-2 h-2 border-r-2 border-b-2 border-gray-400/50 rounded-br-[2px]" />
+                    <div className="absolute bottom-1 right-1 h-2 w-2 rounded-br-[2px] border-b-2 border-r-2 border-slate-500/70" />
                 </div>
             )}
         </div>

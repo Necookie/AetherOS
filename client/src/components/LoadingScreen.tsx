@@ -25,13 +25,13 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
     }, [onComplete]);
 
     return (
-        <div className="fixed inset-0 bg-slate-50 flex flex-col items-center justify-center z-50">
+        <div className="os-desktop-bg fixed inset-0 z-50 flex flex-col items-center justify-center">
             <LoadingLogo />
             <LoadingSpinner />
-            <div className="mt-8 text-sm font-semibold tracking-[0.3em] uppercase text-gray-500 animate-pulse">
+            <div className="mt-8 animate-pulse text-sm font-semibold uppercase tracking-[0.3em] text-slate-300">
                 INITIALIZING AETHER...
             </div>
-            <div className="mt-2 text-[10px] text-gray-400 font-mono">
+            <div className="font-term mt-2 text-[10px] text-slate-400">
                 {Math.min(100, progress)}% / VFS ROOT MOUNTED
             </div>
         </div>

@@ -15,7 +15,7 @@ function App() {
     }, [initKernel])
 
     return (
-        <div className="h-screen w-screen overflow-hidden bg-slate-50 text-gray-900 font-sans">
+        <div className="h-screen w-screen overflow-hidden text-[var(--os-text-0)]">
             {appState === 'loading' && <LoadingScreen onComplete={() => setAppState('login')} />}
             {appState === 'login' && <LoginScreen onLogin={() => setAppState('desktop')} />}
             {appState === 'desktop' && <DesktopShell />}
