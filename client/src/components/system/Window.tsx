@@ -26,10 +26,12 @@ export default function Window({ id, title, children }: WindowProps) {
 
     const { bounds, state } = windowState
     const { isFocused, isMaximized } = state
+    const RESIZE_EDGE_GUTTER = 14
+    const RESIZE_STEP = 26
 
     return (
         <div
-            className={`absolute flex flex-col overflow-hidden border transition-all duration-[120ms] ease-out
+            className={`animate-os-window-in os-window-motion absolute flex flex-col overflow-hidden border transition-[left,top,width,height,opacity,transform]
                 ${isMaximized ? 'rounded-none' : 'rounded-lg'}
                 ${isFocused ? 'brightness-100' : 'opacity-95'}
             `}
@@ -45,6 +47,33 @@ export default function Window({ id, title, children }: WindowProps) {
                 boxShadow: isFocused ? '0 24px 56px rgba(2, 6, 23, 0.62)' : '0 10px 28px rgba(2, 6, 23, 0.35)',
             }}
             onPointerDown={() => focusWindow(id)}
+            onWheel={(e) => {
+                if (isMaximized) {
+                    return
+                }
+
+                const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect()
+                const nearRight = rect.right - e.clientX <= RESIZE_EDGE_GUTTER
+                const nearBottom = rect.bottom - e.clientY <= RESIZE_EDGE_GUTTER
+
+                if (!nearRight && !nearBottom) {
+                    return
+                }
+
+                e.preventDefault()
+                focusWindow(id)
+
+                const delta = Math.sign(Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX)
+                if (delta === 0) {
+                    return
+                }
+
+                const step = delta * RESIZE_STEP
+                updateBounds(id, {
+                    ...(nearRight ? { width: Math.max(320, bounds.width + step) } : {}),
+                    ...(nearBottom ? { height: Math.max(200, bounds.height + step) } : {}),
+                })
+            }}
         >
             <div
                 className="flex h-10 select-none items-center justify-between border-b px-3"
@@ -61,17 +90,17 @@ export default function Window({ id, title, children }: WindowProps) {
                 <div className="flex items-center gap-2 pl-0.5" data-drag-handle="false">
                     <button
                         onClick={(e) => { e.stopPropagation(); closeWindow(id) }}
-                        className="h-3 w-3 rounded-full bg-[var(--os-danger)]/90 transition-opacity hover:opacity-100"
+                        className="os-hover-motion h-3 w-3 rounded-full bg-[var(--os-danger)]/90 transition-opacity hover:opacity-100"
                         title="Close"
                     />
                     <button
                         onClick={(e) => { e.stopPropagation(); toggleMinimize(id) }}
-                        className="h-3 w-3 rounded-full bg-[var(--os-warn)]/90 transition-opacity hover:opacity-100"
+                        className="os-hover-motion h-3 w-3 rounded-full bg-[var(--os-warn)]/90 transition-opacity hover:opacity-100"
                         title="Minimize"
                     />
                     <button
                         onClick={(e) => { e.stopPropagation(); toggleMaximize(id) }}
-                        className="h-3 w-3 rounded-full bg-[var(--os-success)]/90 transition-opacity hover:opacity-100"
+                        className="os-hover-motion h-3 w-3 rounded-full bg-[var(--os-success)]/90 transition-opacity hover:opacity-100"
                         title="Maximize"
                     />
                 </div>
