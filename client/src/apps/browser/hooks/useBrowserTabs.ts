@@ -185,7 +185,7 @@ export function useBrowserTabs(activeTabId: string | null, settings: BrowserSett
             };
         });
 
-        addToast('Attempting embed — some sites may block this.', 'info');
+        addToast('Attempting embed - some sites may block this.', 'info');
     }, [activeTabId, addToast]);
 
     return {
@@ -198,3 +198,4 @@ export function useBrowserTabs(activeTabId: string | null, settings: BrowserSett
         handleTryEmbed,
     };
 }
+
