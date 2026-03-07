@@ -3,13 +3,13 @@ import { useFsStore } from '../../../stores/fsStore';
 import { Folder, FileText, FileCode, Image as Img } from 'lucide-react';
 
 const getIcon = (type: VfsNodeType, name: string) => {
-    if (type === VfsNodeType.DIR) return <Folder size={48} className="text-blue-400" fill="currentColor" fillOpacity={0.2} strokeWidth={1.5} />;
+    if (type === VfsNodeType.DIR) return <Folder size={48} className="text-indigo-300" fill="currentColor" fillOpacity={0.2} strokeWidth={1.5} />;
 
     // Simple mime check via extension
-    if (name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.svg')) return <Img size={48} className="text-purple-400" strokeWidth={1.5} />;
-    if (name.endsWith('.ts') || name.endsWith('.tsx') || name.endsWith('.js') || name.endsWith('.json')) return <FileCode size={48} className="text-yellow-400" strokeWidth={1.5} />;
+    if (name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.svg')) return <Img size={48} className="text-sky-300" strokeWidth={1.5} />;
+    if (name.endsWith('.ts') || name.endsWith('.tsx') || name.endsWith('.js') || name.endsWith('.json')) return <FileCode size={48} className="text-amber-300" strokeWidth={1.5} />;
 
-    return <FileText size={48} className="text-gray-300" strokeWidth={1.5} />;
+    return <FileText size={48} className="text-slate-400" strokeWidth={1.5} />;
 };
 
 export default function FileGrid({ items }: { items: VfsNode[] }) {
@@ -32,7 +32,7 @@ export default function FileGrid({ items }: { items: VfsNode[] }) {
                     <div
                         key={item.id}
                         data-id={item.id}
-                        className={`w-24 h-28 flex flex-col items-center justify-start p-2 rounded cursor-pointer transition-colors ${isSelected ? 'bg-blue-100 outline outline-1 outline-blue-300' : 'hover:bg-black/5'
+                        className={`h-28 w-24 cursor-pointer rounded p-2 transition-colors ${isSelected ? 'bg-indigo-500/20 outline outline-1 outline-indigo-400/70' : 'hover:bg-slate-800/55'
                             }`}
                         onClick={(e) => {
                             e.stopPropagation();
@@ -43,10 +43,10 @@ export default function FileGrid({ items }: { items: VfsNode[] }) {
                             handleDoubleClick(item);
                         }}
                     >
-                        <div className="h-14 flex items-center justify-center pointer-events-none mb-1 shadow-sm">
+                        <div className="mb-1 flex h-14 items-center justify-center pointer-events-none shadow-sm">
                             {getIcon(item.type, item.name)}
                         </div>
-                        <div className={`text-center text-xs break-words w-full line-clamp-2 px-1 pointer-events-none ${isSelected ? 'text-blue-900 font-medium' : 'text-gray-800'}`}>
+                        <div className={`pointer-events-none w-full break-words px-1 text-center text-xs line-clamp-2 ${isSelected ? 'font-medium text-indigo-100' : 'text-slate-200'}`}>
                             {item.name}
                         </div>
                     </div>

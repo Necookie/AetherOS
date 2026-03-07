@@ -19,11 +19,10 @@ export default function Toolbar({ activeTabId, focusTrigger, onNavigate }: Toolb
     const canGoForward = tab ? tab.forwardStack.length > 0 : false;
 
     const navBtnClass = (enabled: boolean) =>
-        `p-1.5 rounded-lg transition-colors ${enabled ? 'text-gray-600 hover:bg-gray-200/60 active:scale-95' : 'text-gray-300 cursor-default'}`;
+        `rounded-md p-1.5 transition-colors ${enabled ? 'text-slate-300 hover:bg-slate-700/80 active:scale-95' : 'cursor-default text-slate-600'}`;
 
     return (
-        <div className="flex items-center gap-1 px-2 py-1.5 bg-white/50 backdrop-blur border-b border-gray-200/40">
-            {/* Navigation */}
+        <div className="flex items-center gap-1 border-b border-slate-700 bg-slate-900/80 px-2 py-1.5">
             <button className={navBtnClass(canGoBack)} onClick={() => activeTabId && canGoBack && back(activeTabId)} disabled={!canGoBack}>
                 <ChevronLeft className="w-4 h-4" />
             </button>
@@ -33,8 +32,6 @@ export default function Toolbar({ activeTabId, focusTrigger, onNavigate }: Toolb
             <button className={navBtnClass(!!activeTabId)} onClick={() => activeTabId && reload(activeTabId)}>
                 <RotateCw className="w-3.5 h-3.5" />
             </button>
-
-            {/* Address Bar */}
             <AddressBar
                 displayUrl={tab?.displayUrl || ''}
                 onSubmit={onNavigate}

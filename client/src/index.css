@@ -3,18 +3,100 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --os-bg-0: #020617;
+    --os-bg-1: #0f172a;
+    --os-surface-0: #111827;
+    --os-surface-1: #1f2937;
+    --os-border: #374151;
+    --os-text-0: #f8fafc;
+    --os-text-1: #94a3b8;
+    --os-accent: #6366f1;
+    --os-success: #22c55e;
+    --os-warn: #f59e0b;
+    --os-danger: #ef4444;
+    --os-shadow: 0 16px 44px rgba(2, 6, 23, 0.5);
+  }
+
+  * {
+    @apply box-border;
+  }
+
+  html,
   body {
-    @apply bg-[#e6e6fa] text-gray-800 overflow-hidden;
-    /* A soft pastel lavender background matching the Win12 aesthetic */
+    @apply m-0 h-full w-full overflow-hidden;
+    background: radial-gradient(1200px 700px at 80% -10%, #1e293b 0%, transparent 55%),
+      linear-gradient(160deg, var(--os-bg-0) 0%, var(--os-bg-1) 100%);
+    color: var(--os-text-0);
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+
+  #root {
+    @apply h-full w-full;
+  }
+
+  button,
+  input {
+    font: inherit;
+  }
+}
+
+@layer components {
+  .os-panel {
+    background: color-mix(in oklab, var(--os-surface-0) 92%, white 8%);
+    border: 1px solid color-mix(in oklab, var(--os-border) 82%, black 18%);
+    box-shadow: var(--os-shadow);
+  }
+
+  .os-subtle-panel {
+    background: color-mix(in oklab, var(--os-surface-1) 90%, white 10%);
+    border: 1px solid color-mix(in oklab, var(--os-border) 70%, black 30%);
+  }
+
+  .os-button {
+    @apply inline-flex items-center justify-center rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-100;
+    color: var(--os-text-0);
+    background: color-mix(in oklab, var(--os-surface-1) 86%, white 14%);
+    border: 1px solid color-mix(in oklab, var(--os-border) 75%, black 25%);
+  }
+
+  .os-button:hover {
+    background: color-mix(in oklab, var(--os-surface-1) 78%, white 22%);
+  }
+
+  .os-input {
+    @apply w-full rounded-md px-3 py-1.5 text-xs outline-none transition-colors duration-100;
+    color: var(--os-text-0);
+    background: color-mix(in oklab, var(--os-bg-1) 78%, black 22%);
+    border: 1px solid color-mix(in oklab, var(--os-border) 65%, black 35%);
+  }
+
+  .os-input::placeholder {
+    color: var(--os-text-1);
+  }
+
+  .os-input:focus {
+    border-color: color-mix(in oklab, var(--os-accent) 70%, white 30%);
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--os-accent) 30%, transparent);
   }
 }
 
 @layer utilities {
-  .glass-panel {
-    @apply bg-white/40 backdrop-blur-xl border border-white/40 shadow-xl;
+  .os-desktop-bg {
+    background: radial-gradient(900px 520px at 22% 12%, #1e293b 0%, transparent 65%),
+      radial-gradient(1200px 700px at 88% 78%, #172554 0%, transparent 72%),
+      linear-gradient(165deg, #020617 0%, #0f172a 58%, #111827 100%);
   }
 
-  .glass-orb {
-    @apply absolute rounded-full shadow-orb border border-white/30 backdrop-blur-sm mix-blend-multiply;
+  .os-text-muted {
+    color: var(--os-text-1);
+  }
+
+  .os-separator {
+    border-color: color-mix(in oklab, var(--os-border) 70%, black 30%);
+  }
+
+  .font-term {
+    font-family: "JetBrains Mono", "Cascadia Code", "Fira Code", monospace;
   }
 }

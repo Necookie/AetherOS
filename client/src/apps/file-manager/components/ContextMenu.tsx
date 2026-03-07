@@ -85,18 +85,18 @@ export default function ContextMenu({ onClose, position, targetId }: ContextMenu
 
     const MenuItem = ({ icon, label, onClick, disabled = false, showCheck = false }: any) => (
         <button
-            className={`w-full flex items-center gap-3 px-4 py-1.5 text-sm text-left ${disabled ? 'opacity-50 cursor-not-allowed text-gray-400' : 'hover:bg-blue-50 hover:text-blue-900 text-gray-700'}`}
+            className={`flex w-full items-center gap-3 px-4 py-1.5 text-left text-sm ${disabled ? 'cursor-not-allowed text-slate-600 opacity-50' : 'text-slate-200 hover:bg-slate-800 hover:text-slate-100'}`}
             onClick={disabled ? undefined : (e) => { e.stopPropagation(); onClick(); }}
             disabled={disabled}
         >
             <div className="w-4 flex justify-center">
-                {showCheck ? <Check size={14} className="text-gray-300" /> : icon}
+                {showCheck ? <Check size={14} className="text-slate-500" /> : icon}
             </div>
             <span>{label}</span>
         </button>
     );
 
-    const Separator = () => <div className="h-px bg-gray-100 my-1 mx-2" />;
+    const Separator = () => <div className="mx-2 my-1 h-px bg-slate-700" />;
 
     const onEmptySpace = !targetId;
     const hasSelection = selectedIds.length > 0;
@@ -106,7 +106,7 @@ export default function ContextMenu({ onClose, position, targetId }: ContextMenu
         <div
             ref={menuRef}
             style={style}
-            className="fixed z-50 w-56 bg-white/95 backdrop-blur-sm border border-gray-200 rounded-md shadow-xl py-1 outline-none text-gray-800"
+            className="fixed z-50 w-56 rounded-md border border-slate-700 bg-slate-900/95 py-1 text-slate-100 shadow-xl outline-none backdrop-blur-sm"
             onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
         >
             {onEmptySpace ? (
@@ -117,7 +117,7 @@ export default function ContextMenu({ onClose, position, targetId }: ContextMenu
                     <MenuItem icon={<EyeOff size={14} />} label="Show hidden files" onClick={() => { toggleHidden(); onClose(); }} showCheck={showHidden} />
                     <div className="relative group">
                         <MenuItem icon={<Check size={14} className="opacity-0" />} label="View " onClick={() => { }} />
-                        <div className="absolute left-full top-0 hidden group-hover:block w-40 bg-[#27272a]/95 backdrop-blur-sm border border-[#3f3f46] rounded-md shadow-2xl py-1 -ml-1">
+                        <div className="absolute left-full top-0 -ml-1 hidden w-40 rounded-md border border-slate-700 bg-slate-900/95 py-1 shadow-2xl backdrop-blur-sm group-hover:block">
                             <MenuItem label="Icons" onClick={() => { setViewMode('icons'); onClose(); }} showCheck={viewMode === 'icons'} />
                             <MenuItem label="Details" onClick={() => { setViewMode('details'); onClose(); }} showCheck={viewMode === 'details'} />
                         </div>
