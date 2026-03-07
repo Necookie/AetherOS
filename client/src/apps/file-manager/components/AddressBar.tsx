@@ -58,7 +58,7 @@ export default function AddressBar() {
                     onChange={(e) => setEditPath(e.target.value)}
                     onBlur={handleBlur}
                     onKeyDown={handleInputKeyDown}
-                    className="w-full bg-white border border-blue-400 text-sm px-2 py-1 rounded text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                    className="w-full rounded border border-indigo-400 bg-slate-950 px-2 py-1 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-400"
                 />
             </form>
         );
@@ -68,7 +68,7 @@ export default function AddressBar() {
 
     return (
         <div
-            className="flex-1 max-w-2xl flex items-center bg-white/70 border border-gray-200 rounded px-2 py-1 cursor-text overflow-hidden hover:border-gray-300 shadow-inner"
+            className="flex max-w-2xl flex-1 cursor-text items-center overflow-hidden rounded border border-slate-700 bg-slate-950/80 px-2 py-1 shadow-inner hover:border-slate-600"
             onClick={(e) => {
                 if (e.target === e.currentTarget) {
                     setIsEditing(true);
@@ -76,7 +76,7 @@ export default function AddressBar() {
             }}
         >
             <div
-                className="flex items-center text-sm font-medium px-1.5 py-0.5 rounded hover:bg-black/5 cursor-pointer text-gray-700 hover:text-gray-900"
+                className="flex cursor-pointer items-center rounded px-1.5 py-0.5 text-sm font-medium text-slate-300 hover:bg-slate-800/80 hover:text-slate-100"
                 onClick={(e) => { e.stopPropagation(); navigate('/'); }}
             >
                 Root
@@ -85,9 +85,9 @@ export default function AddressBar() {
                 const path = '/' + parts.slice(0, idx + 1).join('/');
                 return (
                     <React.Fragment key={path}>
-                        <ChevronRight className="w-4 h-4 text-gray-400 mx-0.5" />
+                        <ChevronRight className="mx-0.5 h-4 w-4 text-slate-600" />
                         <div
-                            className="px-1.5 py-0.5 rounded hover:bg-black/5 cursor-pointer text-gray-700 hover:text-gray-900 truncate max-w-[150px]"
+                            className="max-w-[150px] truncate rounded px-1.5 py-0.5 text-slate-300 hover:bg-slate-800/80 hover:text-slate-100"
                             onClick={(e) => { e.stopPropagation(); navigate(path); }}
                         >
                             {part}

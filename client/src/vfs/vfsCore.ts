@@ -3,11 +3,14 @@ import { kernelClock } from '../lib/kernelClock';
 
 export class AetherVFS {
     private nodes: Map<string, VfsNode> = new Map();
+    private childrenByName: Map<string, Map<string, string>> = new Map();
+    private readonly textEncoder = new TextEncoder();
     private rootId: string;
 
     constructor() {
         this.rootId = this.generateId();
         const now = kernelClock.now();
+
         this.nodes.set(this.rootId, {
             id: this.rootId,
             type: VfsNodeType.DIR,
@@ -21,8 +24,10 @@ export class AetherVFS {
             size: 4096,
             mime: 'inode/directory',
             content: '',
-            childrenIds: []
+            childrenIds: [],
         });
+
+        this.childrenByName.set(this.rootId, new Map());
     }
 
     public getNodes(): Record<string, VfsNode> {
@@ -45,9 +50,25 @@ export class AetherVFS {
         return crypto.randomUUID();
     }
 
+    private getByteLength(content: string): number {
+        return this.textEncoder.encode(content).length;
+    }
+
+    private getChild(parentId: string, name: string): VfsNode | null {
+        const childMap = this.childrenByName.get(parentId);
+        const childId = childMap?.get(name);
+        return childId ? this.nodes.get(childId) || null : null;
+    }
+
+    private ensureChildrenIndex(nodeId: string) {
+        if (!this.childrenByName.has(nodeId)) {
+            this.childrenByName.set(nodeId, new Map());
+        }
+    }
+
     public normalizePath(path: string): string {
         if (!path.startsWith('/')) path = '/' + path;
-        const parts = path.split('/').filter(p => p.length > 0);
+        const parts = path.split('/').filter((part) => part.length > 0);
         const resolved: string[] = [];
 
         for (const part of parts) {
@@ -58,6 +79,7 @@ export class AetherVFS {
                 resolved.push(part);
             }
         }
+
         return '/' + resolved.join('/');
     }
 
@@ -65,7 +87,7 @@ export class AetherVFS {
         const normalized = this.normalizePath(path);
         if (normalized === '/') return this.nodes.get(this.rootId)!;
 
-        const parts = normalized.split('/').filter(p => p.length > 0);
+        const parts = normalized.split('/').filter((part) => part.length > 0);
         let current = this.nodes.get(this.rootId)!;
 
         for (const part of parts) {
@@ -73,19 +95,12 @@ export class AetherVFS {
                 throw new VfsError(ErrorCodes.ENOTDIR, `Not a directory: ${part}`);
             }
 
-            let found = false;
-            for (const childId of current.childrenIds) {
-                const child = this.nodes.get(childId)!;
-                if (child.name === part) {
-                    current = child;
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found) {
+            const child = this.getChild(current.id, part);
+            if (!child) {
                 throw new VfsError(ErrorCodes.ENOENT, `No such file or directory: ${normalized}`);
             }
+
+            current = child;
         }
 
         return current;
@@ -94,7 +109,7 @@ export class AetherVFS {
     private isSystemPath(path: string): boolean {
         const normalized = this.normalizePath(path);
         const sysPaths = ['/etc', '/bin', '/usr', '/var'];
-        return sysPaths.some(sys => normalized === sys || normalized.startsWith(sys + '/'));
+        return sysPaths.some((sys) => normalized === sys || normalized.startsWith(`${sys}/`));
     }
 
     public checkWritePermission(path: string) {
@@ -109,7 +124,7 @@ export class AetherVFS {
         type: VfsNodeType,
         content: string = '',
         mime: string = '',
-        systemOverride: boolean = false
+        systemOverride: boolean = false,
     ): VfsNode {
         const parent = this.resolvePath(parentPath);
         if (parent.type !== VfsNodeType.DIR) {
@@ -119,7 +134,6 @@ export class AetherVFS {
         const fullPath = this.normalizePath(`${parentPath}/${name}`);
         if (!systemOverride) this.checkWritePermission(fullPath);
 
-        // Check for duplicates
         if (this.childExists(parent.id, name)) {
             throw new VfsError(ErrorCodes.EEXIST, `File exists: ${name}`);
         }
@@ -135,13 +149,17 @@ export class AetherVFS {
             owner: 'user',
             group: 'user',
             mode: type === VfsNodeType.DIR ? 0o755 : 0o644,
-            size: type === VfsNodeType.DIR ? 4096 : new Blob([content]).size,
+            size: type === VfsNodeType.DIR ? 4096 : this.getByteLength(content),
             mime: type === VfsNodeType.DIR ? 'inode/directory' : mime || 'text/plain',
-            content: content,
-            childrenIds: []
+            content,
+            childrenIds: [],
         };
 
         this.nodes.set(newNode.id, newNode);
+        this.ensureChildrenIndex(newNode.id);
+
+        const parentChildren = this.childrenByName.get(parent.id)!;
+        parentChildren.set(name, newNode.id);
         parent.childrenIds.push(newNode.id);
         parent.modifiedAt = now;
 
@@ -149,8 +167,7 @@ export class AetherVFS {
     }
 
     private childExists(parentId: string, name: string): boolean {
-        const parent = this.nodes.get(parentId)!;
-        return parent.childrenIds.some(childId => this.nodes.get(childId)!.name === name);
+        return this.childrenByName.get(parentId)?.has(name) ?? false;
     }
 
     public rename(path: string, newName: string, systemOverride: boolean = false): VfsNode {
@@ -159,17 +176,21 @@ export class AetherVFS {
             throw new VfsError(ErrorCodes.EINVAL, 'Cannot rename root');
         }
 
-        if (!systemOverride) this.checkWritePermission(path); // check current path
+        if (!systemOverride) this.checkWritePermission(path);
 
         const parent = this.nodes.get(node.parentId!)!;
         const newPath = this.normalizePath(`${this.getPath(parent.id)}/${newName}`);
-        if (!systemOverride) this.checkWritePermission(newPath); // check target path
+        if (!systemOverride) this.checkWritePermission(newPath);
 
         if (this.childExists(parent.id, newName)) {
             throw new VfsError(ErrorCodes.EEXIST, `File exists: ${newName}`);
         }
 
         const now = kernelClock.now();
+        const parentChildren = this.childrenByName.get(parent.id)!;
+        parentChildren.delete(node.name);
+        parentChildren.set(newName, node.id);
+
         node.name = newName;
         node.modifiedAt = now;
         parent.modifiedAt = now;
@@ -186,7 +207,8 @@ export class AetherVFS {
         if (!systemOverride) this.checkWritePermission(path);
 
         const parent = this.nodes.get(node.parentId!)!;
-        parent.childrenIds = parent.childrenIds.filter(id => id !== node.id);
+        parent.childrenIds = parent.childrenIds.filter((id) => id !== node.id);
+        this.childrenByName.get(parent.id)?.delete(node.name);
         parent.modifiedAt = kernelClock.now();
 
         this.deleteRecursive(node.id);
@@ -201,6 +223,8 @@ export class AetherVFS {
                 this.deleteRecursive(childId);
             }
         }
+
+        this.childrenByName.delete(nodeId);
         this.nodes.delete(nodeId);
     }
 
@@ -210,7 +234,7 @@ export class AetherVFS {
             throw new VfsError(ErrorCodes.ENOTDIR, `Not a directory: ${path}`);
         }
 
-        return node.childrenIds.map(id => this.nodes.get(id)!);
+        return node.childrenIds.map((id) => this.nodes.get(id)!);
     }
 
     public readFile(path: string): string {
@@ -218,6 +242,7 @@ export class AetherVFS {
         if (node.type === VfsNodeType.DIR) {
             throw new VfsError(ErrorCodes.EISDIR, `Is a directory: ${path}`);
         }
+
         return node.content;
     }
 
@@ -230,7 +255,7 @@ export class AetherVFS {
 
         const now = kernelClock.now();
         node.content = content;
-        node.size = new Blob([content]).size;
+        node.size = this.getByteLength(content);
         node.modifiedAt = now;
     }
 
