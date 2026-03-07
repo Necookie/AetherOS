@@ -19,10 +19,10 @@ export default function Toolbar({ activeTabId, focusTrigger, onNavigate }: Toolb
     const canGoForward = tab ? tab.forwardStack.length > 0 : false;
 
     const navBtnClass = (enabled: boolean) =>
-        `rounded-md p-1.5 transition-colors ${enabled ? 'text-slate-300 hover:bg-slate-700/80 active:scale-95' : 'cursor-default text-slate-600'}`;
+        `os-hover-motion rounded-md p-1.5 transition-colors ${enabled ? 'text-slate-300 hover:bg-slate-700/80 active:scale-95' : 'cursor-default text-slate-600'}`;
 
     return (
-        <div className="flex items-center gap-1 border-b border-slate-700 bg-slate-900/80 px-2 py-1.5">
+        <div className="os-panel-motion flex items-center gap-1 border-b border-slate-700 bg-slate-900/80 px-2 py-1.5">
             <button className={navBtnClass(canGoBack)} onClick={() => activeTabId && canGoBack && back(activeTabId)} disabled={!canGoBack}>
                 <ChevronLeft className="w-4 h-4" />
             </button>

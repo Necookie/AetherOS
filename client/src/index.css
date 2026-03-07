@@ -82,6 +82,29 @@
 }
 
 @layer utilities {
+  .os-hover-motion {
+    transition-duration: 80ms;
+    transition-timing-function: ease-out;
+  }
+
+  .os-window-motion {
+    transition-duration: 120ms;
+    transition-timing-function: ease-out;
+  }
+
+  .os-panel-motion {
+    transition-duration: 160ms;
+    transition-timing-function: ease-out;
+  }
+
+  .animate-os-window-in {
+    animation: os-window-in 120ms ease-out;
+  }
+
+  .animate-os-minimize {
+    animation: os-minimize 150ms ease-out;
+  }
+
   .os-desktop-bg {
     background: radial-gradient(900px 520px at 22% 12%, #1e293b 0%, transparent 65%),
       radial-gradient(1200px 700px at 88% 78%, #172554 0%, transparent 72%),
@@ -98,5 +121,29 @@
 
   .font-term {
     font-family: "JetBrains Mono", "Cascadia Code", "Fira Code", monospace;
+  }
+}
+
+@keyframes os-window-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes os-minimize {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0.5;
+    transform: scale(0.985);
   }
 }

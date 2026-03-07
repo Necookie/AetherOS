@@ -15,10 +15,10 @@ export default function TopBar() {
         e.preventDefault();
         setSearchQuery(searchInput);
     };
-    const navBtnClass = 'rounded p-1 text-slate-300 transition-colors hover:bg-slate-800/70 disabled:opacity-30 disabled:hover:bg-transparent';
+    const navBtnClass = 'os-hover-motion rounded p-1 text-slate-300 transition-colors hover:bg-slate-800/70 disabled:opacity-30 disabled:hover:bg-transparent';
 
     return (
-        <div className="flex items-center gap-2 border-b border-slate-700 bg-slate-900/85 p-2">
+        <div className="os-panel-motion flex items-center gap-2 border-b border-slate-700 bg-slate-900/85 p-2">
             <div className="flex items-center gap-1">
                 <button
                     onClick={goBack}
