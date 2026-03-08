@@ -1,5 +1,8 @@
 import type {
+    BookmarkEntry,
     BrowserSettings,
+    BrowserSessionState,
+    ConnectivityState,
     HistoryEntry,
     SearchEngine,
     TabMode,
@@ -12,6 +15,9 @@ export interface BrowserStoreState {
     activeTabId: string | null;
     settings: BrowserSettings;
     historyGlobal: HistoryEntry[];
+    bookmarks: BookmarkEntry[];
+    session: BrowserSessionState;
+    connectivity: ConnectivityState;
 }
 
 export interface BrowserStoreActions {
@@ -26,6 +32,9 @@ export interface BrowserStoreActions {
     reload: (id: string) => void;
     setSearchEngine: (engine: SearchEngine) => void;
     recordHistory: (entry: Omit<HistoryEntry, 'timestamp'>) => void;
+    toggleBookmark: (entry: { url: string; title: string }) => void;
+    setConnectivityOnline: (online: boolean) => void;
+    setConnectivityLatency: (latencyMs: number) => void;
 }
 
 export type BrowserStore = BrowserStoreState & BrowserStoreActions;
