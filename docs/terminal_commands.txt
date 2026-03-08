@@ -1,0 +1,75 @@
+AetherOS Terminal Commands (Phase 4)
+====================================
+
+Prompt
+- Format: user@aether:<cwd>$
+- Relative paths resolve from <cwd>.
+- Absolute paths start with /.
+
+Commands
+1. help
+   - Description: List available commands.
+   - Usage: help
+
+2. pwd
+   - Description: Print current working directory.
+   - Usage: pwd
+
+3. ls
+   - Description: List directory contents.
+   - Usage: ls [path]
+   - Example: ls /home/user/Documents
+
+4. cd
+   - Description: Change current directory.
+   - Usage: cd [path]
+   - Example: cd Documents
+
+5. cat
+   - Description: Print file contents.
+   - Usage: cat <path>
+   - Example: cat readme.txt
+
+6. mkdir
+   - Description: Create directories.
+   - Usage: mkdir [-p] <path>
+   - Examples:
+     - mkdir Projects
+     - mkdir -p Projects/2026/Q1
+
+7. touch
+   - Description: Create an empty file if it does not exist.
+   - Usage: touch <path>
+   - Example: touch notes.txt
+
+8. rm
+   - Description: Remove a file or directory.
+   - Usage: rm [-r] <path>
+   - Notes:
+     - Use -r to remove directories.
+   - Examples:
+     - rm notes.txt
+     - rm -r Projects
+
+9. mv
+   - Description: Move or rename files and directories.
+   - Usage: mv <source> <destination>
+   - Examples:
+     - mv notes.txt archive.txt
+     - mv notes.txt /home/user/Documents
+
+10. cp
+    - Description: Copy files and directories.
+    - Usage: cp <source> <destination>
+    - Examples:
+      - cp notes.txt notes-copy.txt
+      - cp Projects /home/user/Downloads
+
+11. clear
+    - Description: Clear terminal output.
+    - Usage: clear
+
+Keyboard features
+- Up Arrow: previous command history
+- Down Arrow: next command history
+- Tab: autocomplete command names and paths
