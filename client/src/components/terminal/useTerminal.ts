@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import 'xterm/css/xterm.css'
@@ -6,12 +6,23 @@ import 'xterm/css/xterm.css'
 type UseTerminalOptions = {
     terminalRef: React.RefObject<HTMLDivElement>
     onCommand: (input: string) => void | Promise<void>
-    onReady: (term: Terminal) => void
+    onReady: (term: Terminal, fit: () => void) => void
 }
 
 const BANNER_LINES = ['AetherOS Terminal v1.0', 'Type "help" for a list of commands.']
 
 export function useTerminal({ terminalRef, onCommand, onReady }: UseTerminalOptions) {
+    const onCommandRef = useRef(onCommand)
+    const onReadyRef = useRef(onReady)
+
+    useEffect(() => {
+        onCommandRef.current = onCommand
+    }, [onCommand])
+
+    useEffect(() => {
+        onReadyRef.current = onReady
+    }, [onReady])
+
     useEffect(() => {
         if (!terminalRef.current) return
 
@@ -28,8 +39,8 @@ export function useTerminal({ terminalRef, onCommand, onReady }: UseTerminalOpti
         const fitAddon = new FitAddon()
         term.loadAddon(fitAddon)
         term.open(terminalRef.current)
-        fitAddon.fit()
-        onReady(term)
+        requestAnimationFrame(() => fitAddon.fit())
+        onReadyRef.current(term, () => fitAddon.fit())
 
         BANNER_LINES.forEach(line => term.writeln(line))
         term.write('\r\naetheros> ')
@@ -38,7 +49,7 @@ export function useTerminal({ terminalRef, onCommand, onReady }: UseTerminalOpti
 
         const handleKey = ({ key, domEvent }: { key: string; domEvent: KeyboardEvent }) => {
             if (domEvent.key === 'Enter') {
-                onCommand(currentInput)
+                void onCommandRef.current(currentInput)
                 currentInput = ''
                 return
             }
@@ -66,5 +77,5 @@ export function useTerminal({ terminalRef, onCommand, onReady }: UseTerminalOpti
             resizeObserver.disconnect()
             term.dispose()
         }
-    }, [onCommand, onReady, terminalRef])
+    }, [terminalRef])
 }
