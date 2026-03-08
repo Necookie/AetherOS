@@ -2,6 +2,7 @@ import React from 'react'
 
 interface AppErrorBoundaryProps {
     children: React.ReactNode
+    onResetDesktop?: () => void
 }
 
 interface AppErrorBoundaryState {
@@ -33,6 +34,14 @@ export default class AppErrorBoundary extends React.Component<AppErrorBoundaryPr
         window.location.reload()
     }
 
+    private handleRecoverDesktop = () => {
+        this.props.onResetDesktop?.()
+        this.setState({
+            hasError: false,
+            message: '',
+        })
+    }
+
     render() {
         if (!this.state.hasError) {
             return this.props.children
@@ -54,6 +63,14 @@ export default class AppErrorBoundary extends React.Component<AppErrorBoundaryPr
                     >
                         Reload app
                     </button>
+                    {this.props.onResetDesktop && (
+                        <button
+                            onClick={this.handleRecoverDesktop}
+                            className="ml-2 mt-4 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                        >
+                            Reset desktop session
+                        </button>
+                    )}
                 </div>
             </div>
         )

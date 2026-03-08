@@ -63,8 +63,7 @@ function useClickOutside(
 }
 
 export default function ShellFrame() {
-    const { windows, focusedWindowId, openWindow, toggleMinimize, restoreWindow, lastGuardError } = useWindowStore((state) => ({
-        windows: state.windows,
+    const { focusedWindowId, openWindow, toggleMinimize, restoreWindow, lastGuardError } = useWindowStore((state) => ({
         focusedWindowId: state.focusedWindowId,
         openWindow: state.openWindow,
         toggleMinimize: state.toggleMinimize,
@@ -102,10 +101,6 @@ export default function ShellFrame() {
         [],
     )
     const activeAccount = getActiveAccount({ activeUserId, accounts: sessionAccounts })
-
-    if (!activeAccount) {
-        return null
-    }
 
     useClickOutside(
         [dockRef, launcherRef, quickSettingsRef, dateTimeRef, notificationCenterRef],
@@ -220,6 +215,7 @@ export default function ShellFrame() {
             return
         }
 
+        const windows = useWindowStore.getState().windows
         if (!windows[app.id]) {
             openWindow(app)
             return
@@ -236,6 +232,10 @@ export default function ShellFrame() {
     const launchFromMenu = (appId: string) => {
         handleLaunchOrToggle(appId)
         setLauncherOpen(false)
+    }
+
+    if (!activeAccount) {
+        return null
     }
 
     return (
@@ -304,7 +304,6 @@ export default function ShellFrame() {
 
             <div ref={dockRef}>
                 <Dock
-                    windows={windows}
                     taskbarPosition={taskbarPosition}
                     onLaunchOrToggle={handleLaunchOrToggle}
                     onToggleLauncher={() => {
@@ -324,7 +323,6 @@ export default function ShellFrame() {
                     <AppLauncher
                         taskbarPosition={taskbarPosition}
                         query={launcherQuery}
-                        windows={windows}
                         onQueryChange={setLauncherQuery}
                         onLaunch={launchFromMenu}
                     />

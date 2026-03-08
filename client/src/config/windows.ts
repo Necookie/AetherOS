@@ -1,28 +1,20 @@
-import TerminalWindow from '../components/TerminalWindow'
-import TaskManagerWindow from '../components/TaskManagerWindow'
-import FileManagerApp from '../apps/file-manager/FileManagerApp'
-import BrowserApp from '../apps/browser/BrowserApp'
-import SettingsApp from '../apps/settings/SettingsApp'
-import AppStoreApp from '../apps/app-store/AppStoreApp'
-import NotesApp from '../apps/notes/NotesApp'
-import DocsApp from '../apps/docs/DocsApp'
-import BoardsApp from '../apps/boards/BoardsApp'
 import { APP_MANIFEST } from './appManifest'
 import type { AppDefinition } from '../types/windowManager'
+import { createRecoverableLazyWindow } from '../components/system/WindowRecoveryBoundary'
 
 const APP_COMPONENTS: Record<string, AppDefinition['component']> = {
-    appstore: AppStoreApp,
-    term: TerminalWindow,
-    taskmgr: TaskManagerWindow,
-    explorer: FileManagerApp,
-    browser: BrowserApp,
-    settings: SettingsApp,
-    notes: NotesApp,
-    docs: DocsApp,
-    boards: BoardsApp,
+    appstore: createRecoverableLazyWindow('App Store', () => import('../apps/app-store/AppStoreApp')),
+    term: createRecoverableLazyWindow('Terminal', () => import('../components/TerminalWindow')),
+    taskmgr: createRecoverableLazyWindow('Task Manager', () => import('../components/TaskManagerWindow')),
+    explorer: createRecoverableLazyWindow('File Manager', () => import('../apps/file-manager/FileManagerApp')),
+    browser: createRecoverableLazyWindow('Aether Browser', () => import('../apps/browser/BrowserApp')),
+    settings: createRecoverableLazyWindow('Settings', () => import('../apps/settings/SettingsApp')),
+    notes: createRecoverableLazyWindow('Notes', () => import('../apps/notes/NotesApp')),
+    docs: createRecoverableLazyWindow('Docs', () => import('../apps/docs/DocsApp')),
+    boards: createRecoverableLazyWindow('Boards', () => import('../apps/boards/BoardsApp')),
 }
 
 export const DEFAULT_APPS: AppDefinition[] = APP_MANIFEST.map((entry) => ({
     ...entry,
-    component: APP_COMPONENTS[entry.id] ?? TerminalWindow,
+    component: APP_COMPONENTS[entry.id] ?? APP_COMPONENTS.term,
 }))

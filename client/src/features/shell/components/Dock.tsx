@@ -2,16 +2,16 @@ import { useMemo, useState } from 'react'
 import { LayoutGrid, Maximize2, Minimize2 } from 'lucide-react'
 import { SHELL_APPS } from '../model/appCatalog'
 import { ShellAppIcon } from '../model/appIcons'
-import type { WindowData } from '../../../types/windowManager'
+import { useWindowStore } from '../../../stores/windowStore'
 
 interface DockProps {
-    windows: Record<string, WindowData>
     taskbarPosition: 'bottom' | 'top'
     onLaunchOrToggle: (appId: string) => void
     onToggleLauncher: () => void
 }
 
-export default function Dock({ windows, taskbarPosition, onLaunchOrToggle, onToggleLauncher }: DockProps) {
+export default function Dock({ taskbarPosition, onLaunchOrToggle, onToggleLauncher }: DockProps) {
+    const windows = useWindowStore((state) => state.windows)
     const [previewAppId, setPreviewAppId] = useState<string | null>(null)
     const previewWindow = useMemo(() => (
         previewAppId ? windows[previewAppId] : undefined
