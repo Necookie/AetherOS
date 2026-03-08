@@ -1,5 +1,5 @@
 import { DESKTOP_ICONS } from '../../config/desktop'
-import { Folder, Monitor, Settings } from 'lucide-react'
+import { Folder, Monitor, Settings, Store } from 'lucide-react'
 import type { ComponentType } from 'react'
 import { shallow } from 'zustand/shallow'
 import { DEFAULT_APPS } from '../../config/windows'
@@ -8,11 +8,13 @@ import { useWindowStore } from '../../stores/windowStore'
 const DESKTOP_ICON_ASSETS: Record<string, string> = {
     pc: '/assets/candy-icons/pc.svg',
     settings: '/assets/candy-icons/settings.svg',
+    appstore: '/assets/candy-icons/appstore.svg',
 }
 
 const ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
     pc: Monitor,
     settings: Settings,
+    appstore: Store,
 }
 
 export default function DesktopIcons({ iconScale = 1 }: { iconScale?: number }) {

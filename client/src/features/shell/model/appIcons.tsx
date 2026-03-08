@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Settings } from 'lucide-react'
 
 const ICON_MAP: Record<string, string> = {
+    appstore: '/assets/candy-icons/appstore.svg',
     browser: '/assets/candy-icons/browser.svg',
     explorer: '/assets/candy-icons/explorer.svg',
     term: '/assets/candy-icons/term.svg',

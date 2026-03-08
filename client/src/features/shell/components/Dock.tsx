@@ -37,7 +37,10 @@ export default function Dock({ windows, taskbarPosition, onLaunchOrToggle, onTog
 
             <div className="mx-1 h-7 w-px bg-slate-500/30" />
 
-            <div className="grid flex-1 grid-cols-5 gap-1">
+            <div
+                className="grid flex-1 gap-1"
+                style={{ gridTemplateColumns: `repeat(${SHELL_APPS.length}, minmax(0, 1fr))` }}
+            >
                 {SHELL_APPS.map((app) => {
                     const isOpen = Boolean(windows[app.id])
                     const isFocused = windows[app.id]?.state.isFocused
