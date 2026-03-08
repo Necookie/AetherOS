@@ -20,7 +20,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     };
 
     return (
-        <div className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden tracking-wide text-slate-100">
+        <div className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden tracking-wide text-slate-800">
             <LoginBackground />
             <div className={`relative z-10 flex flex-col items-center transition-opacity duration-700 ${isLoggingIn ? 'opacity-80' : 'opacity-100'}`}>
                 <LoginAvatar />
@@ -28,7 +28,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                 <LoginControls isLoggingIn={isLoggingIn} onLogin={handleLoginClick} />
             </div>
             {isLoggingIn && (
-                <div className="absolute inset-0 z-0 animate-fade-in bg-black/40 transition-opacity duration-1000"></div>
+                <div className="absolute inset-0 z-0 animate-fade-in bg-white/20 transition-opacity duration-1000"></div>
             )}
             <LoginFooter />
         </div>

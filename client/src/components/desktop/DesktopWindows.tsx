@@ -64,7 +64,7 @@ export default function DesktopWindows() {
     }, [])
 
     return (
-        <div className="flex-1 relative z-20 pointer-events-auto">
+        <div className="relative z-20 h-full w-full pointer-events-auto">
             {windows.map((windowData) => (
                 <windowData.component key={windowData.id} id={windowData.id} />
             ))}
