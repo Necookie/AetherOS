@@ -10,6 +10,7 @@ import {
     updateWindowBoundsState,
 } from '../features/window-manager/windowState'
 import type { AppDefinition, WindowBounds, WindowData } from '../types/windowManager'
+import { useKernelStore } from './useKernelStore'
 
 export interface WindowStore {
     windows: Record<string, WindowData>
@@ -30,11 +31,29 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
     windows: initialState.windows,
     windowOrder: initialState.windowOrder,
     focusedWindowId: initialState.focusedWindowId,
-    openWindow: (app) => set((state) => openWindowState(state, app, {
-        width: window.innerWidth,
-        height: window.innerHeight,
-    })),
-    closeWindow: (id) => set((state) => closeWindowState(state, id)),
+    openWindow: (app) => set((state) => {
+        const wasOpen = Boolean(state.windows[app.id])
+        const nextState = openWindowState(state, app, {
+            width: window.innerWidth,
+            height: window.innerHeight,
+        })
+
+        if (!wasOpen) {
+            useKernelStore.getState().spawnAppProcess(app.id, app.title)
+        }
+
+        return nextState
+    }),
+    closeWindow: (id) => set((state) => {
+        const wasOpen = Boolean(state.windows[id])
+        const nextState = closeWindowState(state, id)
+
+        if (wasOpen) {
+            useKernelStore.getState().killAppProcess(id)
+        }
+
+        return nextState
+    }),
     focusWindow: (id) => set((state) => focusWindowState(state, id)),
     toggleMinimize: (id) => set((state) => toggleMinimizeState(state, id)),
     toggleMaximize: (id) => set((state) => toggleMaximizeState(state, id, {

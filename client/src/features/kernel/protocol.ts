@@ -20,6 +20,8 @@ export type KernelEventMessage = {
 export type KernelCommandMessage =
     | { type: 'KILL_PROCESS'; payload: { pid: number } }
     | { type: 'SPAWN_PROCESS'; payload: { name: string } }
+    | { type: 'SPAWN_APP_PROCESS'; payload: { appId: string; name: string } }
+    | { type: 'KILL_APP_PROCESS'; payload: { appId: string } }
 
 export function createTickMessage(payload: Omit<KernelTickPayload, 'protocolVersion'>): KernelEventMessage {
     return {
@@ -52,6 +54,18 @@ export function isKernelCommandMessage(value: unknown): value is KernelCommandMe
 
     if (candidate.type === 'SPAWN_PROCESS') {
         return Boolean(candidate.payload && typeof candidate.payload.name === 'string')
+    }
+
+    if (candidate.type === 'SPAWN_APP_PROCESS') {
+        return Boolean(
+            candidate.payload
+            && typeof candidate.payload.appId === 'string'
+            && typeof candidate.payload.name === 'string',
+        )
+    }
+
+    if (candidate.type === 'KILL_APP_PROCESS') {
+        return Boolean(candidate.payload && typeof candidate.payload.appId === 'string')
     }
 
     return false
