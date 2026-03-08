@@ -1,5 +1,4 @@
-import React from 'react'
-import { getResizedWindowBounds } from '../../features/window-manager/dragBounds'
+import React, { useEffect, useRef } from 'react'
 import { selectWindowById, selectWindowZIndex } from '../../features/window-manager/selectors'
 import { useWindowManager } from '../../hooks/useWindowManager'
 import { useWindowStore } from '../../stores/windowStore'
@@ -18,7 +17,27 @@ export default function Window({ id, title, children }: WindowProps) {
     const toggleMinimize = useWindowStore((state) => state.toggleMinimize)
     const toggleMaximize = useWindowStore((state) => state.toggleMaximize)
     const updateBounds = useWindowStore((state) => state.updateBounds)
-    const { handlePointerDown, handlePointerMove, handlePointerUp } = useWindowManager({ id })
+    const { handlePointerDown, handlePointerMove, handlePointerUp, restoreWindow } = useWindowManager({ id })
+    const windowRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        if (!windowState) {
+            return
+        }
+
+        const { isFocused, isMinimized } = windowState.state
+        if (!isFocused || isMinimized) {
+            return
+        }
+
+        const activeElement = document.activeElement
+        const shouldKeepChildFocus = activeElement && windowRef.current?.contains(activeElement)
+        if (shouldKeepChildFocus) {
+            return
+        }
+
+        windowRef.current?.focus({ preventScroll: true })
+    }, [windowState])
 
     if (!windowState) {
         return null
@@ -26,11 +45,44 @@ export default function Window({ id, title, children }: WindowProps) {
 
     const { bounds, state } = windowState
     const { isFocused, isMaximized, isMinimized } = state
-    const RESIZE_EDGE_GUTTER = 14
-    const RESIZE_STEP = 26
+
+    const startResize = (event: React.PointerEvent<HTMLDivElement>, axis: 'x' | 'y' | 'xy') => {
+        event.stopPropagation()
+        focusWindow(id)
+        const initialBounds = bounds
+        const startX = event.clientX
+        const startY = event.clientY
+        const resizeHandle = event.currentTarget
+        resizeHandle.setPointerCapture(event.pointerId)
+
+        const handleMove = (moveEvent: PointerEvent) => {
+            const width = Math.max(320, initialBounds.width + (moveEvent.clientX - startX))
+            const height = Math.max(220, initialBounds.height + (moveEvent.clientY - startY))
+            updateBounds(id, {
+                ...(axis === 'x' || axis === 'xy' ? { width } : {}),
+                ...(axis === 'y' || axis === 'xy' ? { height } : {}),
+            })
+        }
+
+        const handleUp = (upEvent: PointerEvent) => {
+            if (resizeHandle.hasPointerCapture(upEvent.pointerId)) {
+                resizeHandle.releasePointerCapture(upEvent.pointerId)
+            }
+            window.removeEventListener('pointermove', handleMove)
+            window.removeEventListener('pointerup', handleUp)
+        }
+
+        window.addEventListener('pointermove', handleMove)
+        window.addEventListener('pointerup', handleUp)
+    }
 
     return (
         <div
+            ref={windowRef}
+            role="dialog"
+            aria-modal={false}
+            aria-label={title}
+            tabIndex={0}
             className={`animate-os-window-in os-window-motion absolute flex flex-col overflow-hidden border transition-[left,top,width,height,opacity,transform]
                 ${isMaximized ? 'rounded-none' : 'rounded-lg'}
                 ${isMinimized ? 'pointer-events-none opacity-0 scale-[0.98]' : isFocused ? 'brightness-100 opacity-100' : 'opacity-95'}
@@ -48,33 +100,7 @@ export default function Window({ id, title, children }: WindowProps) {
                 backdropFilter: 'blur(22px)',
             }}
             onPointerDown={() => focusWindow(id)}
-            onWheel={(e) => {
-                if (isMaximized) {
-                    return
-                }
-
-                const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect()
-                const nearRight = rect.right - e.clientX <= RESIZE_EDGE_GUTTER
-                const nearBottom = rect.bottom - e.clientY <= RESIZE_EDGE_GUTTER
-
-                if (!nearRight && !nearBottom) {
-                    return
-                }
-
-                e.preventDefault()
-                focusWindow(id)
-
-                const delta = Math.sign(Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX)
-                if (delta === 0) {
-                    return
-                }
-
-                const step = delta * RESIZE_STEP
-                updateBounds(id, {
-                    ...(nearRight ? { width: Math.max(320, bounds.width + step) } : {}),
-                    ...(nearBottom ? { height: Math.max(200, bounds.height + step) } : {}),
-                })
-            }}
+            onFocusCapture={() => focusWindow(id)}
         >
             <div
                 className="flex h-10 select-none items-center justify-between border-b px-3"
@@ -92,17 +118,28 @@ export default function Window({ id, title, children }: WindowProps) {
                     <button
                         onClick={(e) => { e.stopPropagation(); closeWindow(id) }}
                         className="os-hover-motion h-3 w-3 rounded-full border border-red-400/30 bg-[#ff5f57] transition-opacity hover:opacity-100"
-                        title="Close"
+                        title="Close window"
+                        aria-label="Close window"
                     />
                     <button
                         onClick={(e) => { e.stopPropagation(); toggleMinimize(id) }}
                         className="os-hover-motion h-3 w-3 rounded-full border border-amber-400/30 bg-[#febc2e] transition-opacity hover:opacity-100"
-                        title="Minimize"
+                        title="Minimize window"
+                        aria-label="Minimize window"
                     />
                     <button
-                        onClick={(e) => { e.stopPropagation(); toggleMaximize(id) }}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            if (isMaximized) {
+                                restoreWindow()
+                                return
+                            }
+
+                            toggleMaximize(id)
+                        }}
                         className="os-hover-motion h-3 w-3 rounded-full border border-emerald-400/30 bg-[#28c840] transition-opacity hover:opacity-100"
-                        title="Maximize"
+                        title={isMaximized ? 'Restore window' : 'Maximize window'}
+                        aria-label={isMaximized ? 'Restore window' : 'Maximize window'}
                     />
                 </div>
 
@@ -122,35 +159,28 @@ export default function Window({ id, title, children }: WindowProps) {
 
             {!isMaximized && (
                 <div
-                    className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize z-50"
+                    className="absolute bottom-0 right-0 h-4 w-4 cursor-se-resize z-50"
                     data-drag-handle="false"
-                    onPointerDown={(e) => {
-                        e.stopPropagation()
-                        focusWindow(id)
-
-                        const startX = e.clientX
-                        const startY = e.clientY
-
-                        const onMove = (moveEvent: PointerEvent) => {
-                            updateBounds(id, getResizedWindowBounds(bounds, {
-                                startX,
-                                startY,
-                                currentX: moveEvent.clientX,
-                                currentY: moveEvent.clientY,
-                            }))
-                        }
-
-                        const onUp = () => {
-                            window.removeEventListener('pointermove', onMove)
-                            window.removeEventListener('pointerup', onUp)
-                        }
-
-                        window.addEventListener('pointermove', onMove)
-                        window.addEventListener('pointerup', onUp)
-                    }}
+                    onPointerDown={(event) => startResize(event, 'xy')}
                 >
                     <div className="absolute bottom-1 right-1 h-2 w-2 rounded-br-[2px] border-b-2 border-r-2 border-slate-500/50" />
                 </div>
+            )}
+
+            {!isMaximized && (
+                <div
+                    className="absolute right-0 top-10 z-40 h-[calc(100%-2.5rem)] w-2 cursor-ew-resize"
+                    data-drag-handle="false"
+                    onPointerDown={(event) => startResize(event, 'x')}
+                />
+            )}
+
+            {!isMaximized && (
+                <div
+                    className="absolute bottom-0 left-0 z-40 h-2 w-full cursor-ns-resize"
+                    data-drag-handle="false"
+                    onPointerDown={(event) => startResize(event, 'y')}
+                />
             )}
         </div>
     )
