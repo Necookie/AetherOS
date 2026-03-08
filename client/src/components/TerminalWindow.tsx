@@ -1,11 +1,8 @@
-import { useCallback, useEffect, useRef } from 'react'
-import { shallow } from 'zustand/shallow'
+import { useEffect, useMemo, useRef } from 'react'
 import { selectWindowById } from '../features/window-manager/selectors'
-import { useKernelStore } from '../stores/useKernelStore'
 import { useWindowStore } from '../stores/windowStore'
-import { queryAi } from '../services/aiClient'
+import { createTerminalRuntime } from '../apps/terminal/runtime'
 import Window from './system/Window'
-import { handleTerminalCommand } from './terminal/terminalCommands'
 import { useTerminal } from './terminal/useTerminal'
 
 export default function TerminalWindow({ id }: { id: string }) {
@@ -13,36 +10,12 @@ export default function TerminalWindow({ id }: { id: string }) {
     const termInstance = useRef<import('xterm').Terminal | null>(null)
     const fitTerminal = useRef<(() => void) | null>(null)
     const windowData = useWindowStore(selectWindowById(id))
-    const { spawnProcess, killProcess } = useKernelStore((state) => ({
-        spawnProcess: state.spawnProcess,
-        killProcess: state.killProcess,
-    }), shallow)
-
-    const onCommand = useCallback(
-        async (input: string) => {
-            const term = termInstance.current
-            if (!term) {
-                return
-            }
-
-            await handleTerminalCommand(
-                {
-                    term,
-                    writePrompt: () => term.write('\r\naetheros> '),
-                    spawnProcess,
-                    killProcess,
-                    getProcesses: () => useKernelStore.getState().processes,
-                    queryAi,
-                },
-                input,
-            )
-        },
-        [killProcess, spawnProcess],
-    )
+    const runtime = useMemo(() => createTerminalRuntime(), [])
 
     useTerminal({
         terminalRef,
-        onCommand,
+        engine: runtime.engine,
+        session: runtime.session,
         onReady: (term, fit) => {
             termInstance.current = term
             fitTerminal.current = fit
@@ -68,6 +41,7 @@ export default function TerminalWindow({ id }: { id: string }) {
             }
         }
     }, [
+        windowData,
         windowData?.state.isMinimized,
         windowData?.state.isMaximized,
         windowData?.bounds.width,

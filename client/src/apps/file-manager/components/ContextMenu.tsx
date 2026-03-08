@@ -1,9 +1,17 @@
-import { useEffect, useRef } from 'react';
-import { useFsStore } from '../../../stores/fsStore';
+import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import {
-    FolderPlus, FilePlus, Scissors, Copy,
-    Edit2, Trash2, Info, Check, EyeOff
+    FolderPlus,
+    FilePlus,
+    Scissors,
+    Copy,
+    Edit2,
+    Trash2,
+    Info,
+    Check,
+    EyeOff,
+    FolderInput,
 } from 'lucide-react';
+import { useFsStore } from '../../../stores/fsStore';
 
 interface Point {
     x: number;
@@ -13,26 +21,63 @@ interface Point {
 interface ContextMenuProps {
     onClose: () => void;
     position: Point;
-    targetId: string | null; // null means empty space
+    targetId: string | null;
 }
+
+interface MenuItemProps {
+    icon?: ReactNode;
+    label: string;
+    onClick?: () => void;
+    disabled?: boolean;
+    showCheck?: boolean;
+}
+
+function MenuItem({ icon, label, onClick, disabled = false, showCheck = false }: MenuItemProps) {
+    return (
+        <button
+            className={`flex w-full items-center gap-3 px-4 py-1.5 text-left text-sm ${disabled ? 'cursor-not-allowed text-slate-600 opacity-50' : 'text-slate-200 hover:bg-slate-800 hover:text-slate-100'}`}
+            onClick={disabled || !onClick ? undefined : (event) => {
+                event.stopPropagation();
+                onClick();
+            }}
+            disabled={disabled}
+        >
+            <div className="flex w-4 justify-center">{showCheck ? <Check size={14} className="text-slate-500" /> : icon}</div>
+            <span>{label}</span>
+        </button>
+    );
+}
+
+const Separator = () => <div className="mx-2 my-1 h-px bg-slate-700" />;
 
 export default function ContextMenu({ onClose, position, targetId }: ContextMenuProps) {
     const {
-        selectedIds, viewMode, setViewMode, showHidden, toggleHidden,
-        createFolder, createFile, renameItem, deleteItems
+        selectedIds,
+        viewMode,
+        setViewMode,
+        showHidden,
+        toggleHidden,
+        createFolder,
+        createFile,
+        renameItem,
+        deleteItems,
+        moveItems,
+        isMutating,
     } = useFsStore();
 
     const menuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
                 onClose();
             }
         };
 
-        const handleEsc = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose();
+        const handleEsc = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                onClose();
+            }
         };
 
         window.addEventListener('mousedown', handleClickOutside);
@@ -43,32 +88,30 @@ export default function ContextMenu({ onClose, position, targetId }: ContextMenu
         };
     }, [onClose]);
 
-    // Keep menu within screen bounds
-    const style: React.CSSProperties = {
+    const style: CSSProperties = {
         top: Math.min(position.y, window.innerHeight - 300),
         left: Math.min(position.x, window.innerWidth - 250),
     };
 
     const handleNewFolder = () => {
         const name = prompt('New Folder Name:', 'New Folder');
-        if (name) createFolder(name);
+        if (name) {
+            createFolder(name);
+        }
         onClose();
     };
 
     const handleNewFile = () => {
         const name = prompt('New File Name:', 'New Text Document.txt');
-        if (name) createFile(name, '');
+        if (name) {
+            createFile(name, '');
+        }
         onClose();
     };
 
     const handleDelete = () => {
-        if (selectedIds.length > 0) {
-            // Confirm modal integration happens elsewhere, for now just delete
-            // (Wait, we plan to implement DeleteConfirmModal, so we trigger a store state or global event.
-            //  For simplicity, we'll prompt manually here or call deleteItems directly if no modal hooked up)
-            if (confirm(`Are you sure you want to delete ${selectedIds.length} item(s)?`)) {
-                deleteItems(selectedIds);
-            }
+        if (selectedIds.length > 0 && confirm(`Are you sure you want to delete ${selectedIds.length} item(s)?`)) {
+            deleteItems(selectedIds);
         }
         onClose();
     };
@@ -83,20 +126,18 @@ export default function ContextMenu({ onClose, position, targetId }: ContextMenu
         onClose();
     };
 
-    const MenuItem = ({ icon, label, onClick, disabled = false, showCheck = false }: any) => (
-        <button
-            className={`flex w-full items-center gap-3 px-4 py-1.5 text-left text-sm ${disabled ? 'cursor-not-allowed text-slate-600 opacity-50' : 'text-slate-200 hover:bg-slate-800 hover:text-slate-100'}`}
-            onClick={disabled ? undefined : (e) => { e.stopPropagation(); onClick(); }}
-            disabled={disabled}
-        >
-            <div className="w-4 flex justify-center">
-                {showCheck ? <Check size={14} className="text-slate-500" /> : icon}
-            </div>
-            <span>{label}</span>
-        </button>
-    );
+    const handleMove = () => {
+        if (selectedIds.length === 0) {
+            onClose();
+            return;
+        }
 
-    const Separator = () => <div className="mx-2 my-1 h-px bg-slate-700" />;
+        const destination = prompt('Move to path:', '/home/user');
+        if (destination) {
+            moveItems(selectedIds, destination);
+        }
+        onClose();
+    };
 
     const onEmptySpace = !targetId;
     const hasSelection = selectedIds.length > 0;
@@ -107,16 +148,19 @@ export default function ContextMenu({ onClose, position, targetId }: ContextMenu
             ref={menuRef}
             style={style}
             className="fixed z-50 w-56 rounded-md border border-slate-700 bg-slate-900/95 py-1 text-slate-100 shadow-xl outline-none backdrop-blur-sm"
-            onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            onContextMenu={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+            }}
         >
             {onEmptySpace ? (
                 <>
-                    <MenuItem icon={<FolderPlus size={14} />} label="New Folder" onClick={handleNewFolder} />
-                    <MenuItem icon={<FilePlus size={14} />} label="New File" onClick={handleNewFile} />
+                    <MenuItem icon={<FolderPlus size={14} />} label="New Folder" onClick={handleNewFolder} disabled={isMutating} />
+                    <MenuItem icon={<FilePlus size={14} />} label="New File" onClick={handleNewFile} disabled={isMutating} />
                     <Separator />
                     <MenuItem icon={<EyeOff size={14} />} label="Show hidden files" onClick={() => { toggleHidden(); onClose(); }} showCheck={showHidden} />
                     <div className="relative group">
-                        <MenuItem icon={<Check size={14} className="opacity-0" />} label="View " onClick={() => { }} />
+                        <MenuItem icon={<Check size={14} className="opacity-0" />} label="View" />
                         <div className="absolute left-full top-0 -ml-1 hidden w-40 rounded-md border border-slate-700 bg-slate-900/95 py-1 shadow-2xl backdrop-blur-sm group-hover:block">
                             <MenuItem label="Icons" onClick={() => { setViewMode('icons'); onClose(); }} showCheck={viewMode === 'icons'} />
                             <MenuItem label="Details" onClick={() => { setViewMode('details'); onClose(); }} showCheck={viewMode === 'details'} />
@@ -125,14 +169,14 @@ export default function ContextMenu({ onClose, position, targetId }: ContextMenu
                 </>
             ) : (
                 <>
-                    {/* Clipboard operations mocked for now */}
-                    <MenuItem icon={<Scissors size={14} />} label="Cut" onClick={onClose} disabled />
-                    <MenuItem icon={<Copy size={14} />} label="Copy" onClick={onClose} disabled />
+                    <MenuItem icon={<Scissors size={14} />} label="Cut" disabled />
+                    <MenuItem icon={<Copy size={14} />} label="Copy" disabled />
                     <Separator />
-                    <MenuItem icon={<Edit2 size={14} />} label="Rename" onClick={handleRename} disabled={!singleSelection} />
-                    <MenuItem icon={<Trash2 size={14} />} label="Delete" onClick={handleDelete} disabled={!hasSelection} />
+                    <MenuItem icon={<FolderInput size={14} />} label="Move To..." onClick={handleMove} disabled={!hasSelection || isMutating} />
+                    <MenuItem icon={<Edit2 size={14} />} label="Rename" onClick={handleRename} disabled={!singleSelection || isMutating} />
+                    <MenuItem icon={<Trash2 size={14} />} label="Delete" onClick={handleDelete} disabled={!hasSelection || isMutating} />
                     <Separator />
-                    <MenuItem icon={<Info size={14} />} label="Properties" onClick={() => { /* stub */ onClose(); }} disabled={!singleSelection} />
+                    <MenuItem icon={<Info size={14} />} label="Properties" disabled={!singleSelection} />
                 </>
             )}
         </div>

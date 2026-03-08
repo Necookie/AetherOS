@@ -1,21 +1,27 @@
+@import "./design-system/tokens.css";
+@import "./design-system/primitives.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --os-bg-0: #020617;
-    --os-bg-1: #0f172a;
-    --os-surface-0: #111827;
-    --os-surface-1: #1f2937;
-    --os-border: #374151;
-    --os-text-0: #f8fafc;
-    --os-text-1: #94a3b8;
-    --os-accent: #6366f1;
-    --os-success: #22c55e;
-    --os-warn: #f59e0b;
-    --os-danger: #ef4444;
-    --os-shadow: 0 16px 44px rgba(2, 6, 23, 0.5);
+    --os-bg-0: var(--ds-color-bg-canvas);
+    --os-bg-1: var(--ds-color-bg-elevated);
+    --os-surface-0: var(--ds-color-surface-0);
+    --os-surface-1: var(--ds-color-surface-1);
+    --os-border: var(--ds-color-border);
+    --os-text-0: var(--ds-color-text-primary);
+    --os-text-1: var(--ds-color-text-muted);
+    --os-accent: var(--ds-color-accent);
+    --os-success: var(--ds-color-success);
+    --os-danger: var(--ds-color-danger);
+    --os-shadow: var(--ds-shadow-md);
+    --os-focus-ring-width: 2px;
+    --os-control-min-height: 2.25rem;
+    --os-motion-fast: 90ms;
+    --os-motion-normal: 160ms;
+    --os-window-backdrop-blur: 22px;
   }
 
   * {
@@ -25,10 +31,12 @@
   html,
   body {
     @apply m-0 h-full w-full overflow-hidden;
-    background: radial-gradient(1200px 700px at 80% -10%, #1e293b 0%, transparent 55%),
-      linear-gradient(160deg, var(--os-bg-0) 0%, var(--os-bg-1) 100%);
+    background: radial-gradient(760px 520px at 12% 14%, #ffd3e8 0%, transparent 65%),
+      radial-gradient(920px 620px at 88% 22%, #c8e2ff 0%, transparent 62%),
+      radial-gradient(1050px 700px at 58% 84%, #d6cbff 0%, transparent 70%),
+      linear-gradient(165deg, #cae8ff 0%, #d9d8ff 44%, #ffd7ea 100%);
     color: var(--os-text-0);
-    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-family: var(--ds-font-ui);
   }
 
   #root {
@@ -39,36 +47,43 @@
   input {
     font: inherit;
   }
+
+  :focus-visible {
+    outline: var(--os-focus-ring-width) solid color-mix(in oklab, var(--os-accent) 70%, white 30%);
+    outline-offset: 1px;
+  }
 }
 
 @layer components {
   .os-panel {
-    background: color-mix(in oklab, var(--os-surface-0) 92%, white 8%);
-    border: 1px solid color-mix(in oklab, var(--os-border) 82%, black 18%);
+    background: color-mix(in oklab, var(--os-surface-0) 82%, transparent);
+    border: 1px solid color-mix(in oklab, var(--os-border) 70%, white 30%);
     box-shadow: var(--os-shadow);
   }
 
   .os-subtle-panel {
-    background: color-mix(in oklab, var(--os-surface-1) 90%, white 10%);
-    border: 1px solid color-mix(in oklab, var(--os-border) 70%, black 30%);
+    background: color-mix(in oklab, var(--os-surface-1) 78%, transparent);
+    border: 1px solid color-mix(in oklab, var(--os-border) 62%, white 38%);
   }
 
   .os-button {
     @apply inline-flex items-center justify-center rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-100;
+    min-height: var(--os-control-min-height);
     color: var(--os-text-0);
-    background: color-mix(in oklab, var(--os-surface-1) 86%, white 14%);
-    border: 1px solid color-mix(in oklab, var(--os-border) 75%, black 25%);
+    background: color-mix(in oklab, var(--os-surface-1) 82%, white 18%);
+    border: 1px solid color-mix(in oklab, var(--os-border) 72%, white 28%);
   }
 
   .os-button:hover {
-    background: color-mix(in oklab, var(--os-surface-1) 78%, white 22%);
+    background: color-mix(in oklab, var(--os-surface-1) 72%, white 28%);
   }
 
   .os-input {
     @apply w-full rounded-md px-3 py-1.5 text-xs outline-none transition-colors duration-100;
+    min-height: var(--os-control-min-height);
     color: var(--os-text-0);
-    background: color-mix(in oklab, var(--os-bg-1) 78%, black 22%);
-    border: 1px solid color-mix(in oklab, var(--os-border) 65%, black 35%);
+    background: color-mix(in oklab, var(--os-bg-1) 88%, white 12%);
+    border: 1px solid color-mix(in oklab, var(--os-border) 65%, white 35%);
   }
 
   .os-input::placeholder {
@@ -83,32 +98,51 @@
 
 @layer utilities {
   .os-hover-motion {
-    transition-duration: 80ms;
+    transition-duration: var(--os-motion-fast);
     transition-timing-function: ease-out;
   }
 
   .os-window-motion {
-    transition-duration: 120ms;
+    transition-duration: var(--os-motion-fast);
     transition-timing-function: ease-out;
   }
 
   .os-panel-motion {
-    transition-duration: 160ms;
+    transition-duration: var(--os-motion-normal);
     transition-timing-function: ease-out;
   }
 
   .animate-os-window-in {
-    animation: os-window-in 120ms ease-out;
+    animation: os-window-in 110ms ease-out;
   }
 
   .animate-os-minimize {
     animation: os-minimize 150ms ease-out;
   }
 
+  .animate-os-flyout-in {
+    animation: os-flyout-in 140ms cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: top right;
+  }
+
+  .os-interactive {
+    transition: transform var(--os-motion-fast) ease-out, box-shadow var(--os-motion-fast) ease-out,
+      background-color var(--os-motion-fast) ease-out;
+  }
+
+  .os-interactive:hover {
+    box-shadow: 0 8px 22px rgb(15 23 42 / 0.16);
+  }
+
+  .os-interactive:active {
+    transform: scale(0.98);
+  }
+
   .os-desktop-bg {
-    background: radial-gradient(900px 520px at 22% 12%, #1e293b 0%, transparent 65%),
-      radial-gradient(1200px 700px at 88% 78%, #172554 0%, transparent 72%),
-      linear-gradient(165deg, #020617 0%, #0f172a 58%, #111827 100%);
+    background: radial-gradient(760px 520px at 12% 14%, #ffd3e8 0%, transparent 65%),
+      radial-gradient(920px 620px at 88% 22%, #c8e2ff 0%, transparent 62%),
+      radial-gradient(1050px 700px at 58% 84%, #d6cbff 0%, transparent 70%),
+      linear-gradient(165deg, #cae8ff 0%, #d9d8ff 44%, #ffd7ea 100%);
   }
 
   .os-text-muted {
@@ -145,5 +179,29 @@
   to {
     opacity: 0.5;
     transform: scale(0.985);
+  }
+}
+
+@keyframes os-flyout-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .os-hover-motion,
+  .os-window-motion,
+  .os-panel-motion,
+  .animate-os-window-in,
+  .animate-os-minimize,
+  .animate-os-flyout-in {
+    animation: none !important;
+    transition-duration: 1ms !important;
   }
 }

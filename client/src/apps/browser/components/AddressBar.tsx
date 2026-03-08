@@ -59,10 +59,10 @@ export default function AddressBar({ displayUrl, onSubmit, focusTrigger }: Addre
                     onBlur={handleBlur}
                     placeholder="Search or enter URL..."
                     className={`w-full rounded-md border py-1.5 pl-8 pr-3 text-xs
-                        bg-slate-900/70 text-slate-200 placeholder-slate-500
-                        focus:border-indigo-400 focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-400/30
+                        bg-white/75 text-slate-800 placeholder-slate-500
+                        focus:border-sky-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-400/30
                         transition-all duration-150
-                        ${isFocused ? 'border-indigo-400' : 'border-slate-700'}
+                        ${isFocused ? 'border-sky-400' : 'border-white/80'}
                     `}
                 />
             </div>

@@ -1,32 +1,20 @@
-import TerminalWindow from '../components/TerminalWindow'
-import TaskManagerWindow from '../components/TaskManagerWindow'
-import FileManagerApp from '../apps/file-manager/FileManagerApp'
-import BrowserApp from '../apps/browser/BrowserApp'
+import { APP_MANIFEST } from './appManifest'
 import type { AppDefinition } from '../types/windowManager'
+import { createRecoverableLazyWindow } from '../components/system/WindowRecoveryBoundary'
 
-export const DEFAULT_APPS: AppDefinition[] = [
-    {
-        id: 'term',
-        title: 'Terminal',
-        component: TerminalWindow,
-        defaultBounds: { x: 50, y: 50, width: 600, height: 400 }
-    },
-    {
-        id: 'taskmgr',
-        title: 'Task Manager',
-        component: TaskManagerWindow,
-        defaultBounds: { x: 100, y: 100, width: 600, height: 400 }
-    },
-    {
-        id: 'explorer',
-        title: 'File Manager',
-        component: FileManagerApp,
-        defaultBounds: { x: 150, y: 150, width: 800, height: 500 }
-    },
-    {
-        id: 'browser',
-        title: 'Aether Browser',
-        component: BrowserApp,
-        defaultBounds: { x: 100, y: 60, width: 900, height: 600 }
-    }
-]
+const APP_COMPONENTS: Record<string, AppDefinition['component']> = {
+    appstore: createRecoverableLazyWindow('App Store', () => import('../apps/app-store/AppStoreApp')),
+    term: createRecoverableLazyWindow('Terminal', () => import('../components/TerminalWindow')),
+    taskmgr: createRecoverableLazyWindow('Task Manager', () => import('../components/TaskManagerWindow')),
+    explorer: createRecoverableLazyWindow('File Manager', () => import('../apps/file-manager/FileManagerApp')),
+    browser: createRecoverableLazyWindow('Aether Browser', () => import('../apps/browser/BrowserApp')),
+    settings: createRecoverableLazyWindow('Settings', () => import('../apps/settings/SettingsApp')),
+    notes: createRecoverableLazyWindow('Notes', () => import('../apps/notes/NotesApp')),
+    docs: createRecoverableLazyWindow('Docs', () => import('../apps/docs/DocsApp')),
+    boards: createRecoverableLazyWindow('Boards', () => import('../apps/boards/BoardsApp')),
+}
+
+export const DEFAULT_APPS: AppDefinition[] = APP_MANIFEST.map((entry) => ({
+    ...entry,
+    component: APP_COMPONENTS[entry.id] ?? APP_COMPONENTS.term,
+}))

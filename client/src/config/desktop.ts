@@ -1,5 +1,4 @@
-export const DESKTOP_WALLPAPER_URL =
-    'https://res.cloudinary.com/dd6gz4moa/image/upload/v1771955925/blue-abstract-flow-3840x2160-25338_nnk3mk.jpg'
+export const DESKTOP_WALLPAPER_URL = '/assets/wallpapers/urban-night-street.jpg'
 
 export const DESKTOP_ICONS = [
     {
@@ -13,5 +12,11 @@ export const DESKTOP_ICONS = [
         label: 'Settings',
         iconUrl: 'https://img.icons8.com/color/48/000000/settings--v1.png',
         alt: 'Settings'
-    }
+    },
+    {
+        id: 'appstore',
+        label: 'App Store',
+        iconUrl: 'https://img.icons8.com/color/48/000000/shopping-basket-2--v1.png',
+        alt: 'App Store',
+    },
 ]

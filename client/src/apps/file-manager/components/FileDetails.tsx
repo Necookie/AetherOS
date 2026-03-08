@@ -1,44 +1,32 @@
-import { useState } from 'react';
-import { VfsNode, VfsNodeType } from '../../../vfs/types';
-import { useFsStore } from '../../../stores/fsStore';
 import { Folder, File as FileIcon } from 'lucide-react';
-
-type SortColumn = 'name' | 'type' | 'size' | 'modified';
+import { VfsNodeType, type VfsNode } from '../../../vfs/types';
+import { useFsStore } from '../../../stores/fsStore';
 
 export default function FileDetails({ items }: { items: VfsNode[] }) {
-    const { selectedIds, selectItem, navigate, currentPath } = useFsStore();
-    const [sortCol, setSortCol] = useState<SortColumn>('name');
-    const [sortAsc, setSortAsc] = useState(true);
-
-    const handleSort = (col: SortColumn) => {
-        if (sortCol === col) {
-            setSortAsc(!sortAsc);
-            return;
-        }
-        setSortCol(col);
-        setSortAsc(true);
-    };
-
-    const sortedItems = [...items].sort((a, b) => {
-        const factor = sortAsc ? 1 : -1;
-        if (sortCol === 'name') return a.name.localeCompare(b.name) * factor;
-        if (sortCol === 'type') {
-            if (a.type !== b.type) return a.type === VfsNodeType.DIR ? -factor : factor;
-            return a.name.localeCompare(b.name) * factor;
-        }
-        if (sortCol === 'size') return (a.size - b.size) * factor;
-        if (sortCol === 'modified') return (a.modifiedAt - b.modifiedAt) * factor;
-        return 0;
-    });
+    const {
+        selectedIds,
+        selectItem,
+        navigate,
+        currentPath,
+        sortBy,
+        sortDirection,
+        setSort,
+    } = useFsStore();
 
     const formatSize = (bytes: number, type: VfsNodeType) => {
-        if (type === VfsNodeType.DIR) return '';
-        if (bytes < 1024) return `${bytes} B`;
-        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        if (type === VfsNodeType.DIR) {
+            return '';
+        }
+        if (bytes < 1024) {
+            return `${bytes} B`;
+        }
+        if (bytes < 1024 * 1024) {
+            return `${(bytes / 1024).toFixed(1)} KB`;
+        }
         return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     };
 
-    const formatModified = (ts: number) => `Tick ${ts}`;
+    const formatModified = (ts: number) => `Tick ${Math.floor(ts)}`;
 
     const handleDoubleClick = (node: VfsNode) => {
         if (node.type === VfsNodeType.DIR) {
@@ -48,39 +36,39 @@ export default function FileDetails({ items }: { items: VfsNode[] }) {
         console.log('openFile event triggered for nodeId:', node.id);
     };
 
+    const sortLabel = (column: typeof sortBy) => (sortBy === column ? (sortDirection === 'asc' ? 'Asc' : 'Desc') : '');
+
     return (
         <div className="relative flex h-full w-full min-w-max select-none flex-col text-sm outline-none">
             <div className="sticky top-0 z-10 flex border-b border-slate-700 bg-slate-900/85 py-1 pl-6 text-xs font-semibold text-slate-400 backdrop-blur-md">
-                <div className="min-w-[200px] flex-1 cursor-pointer px-2 hover:bg-slate-800/80" onClick={() => handleSort('name')}>
-                    Name {sortCol === 'name' && (sortAsc ? 'Asc' : 'Desc')}
-                </div>
-                <div className="w-32 cursor-pointer px-2 hover:bg-slate-800/80" onClick={() => handleSort('modified')}>
-                    Date modified {sortCol === 'modified' && (sortAsc ? 'Asc' : 'Desc')}
-                </div>
-                <div className="w-32 cursor-pointer px-2 hover:bg-slate-800/80" onClick={() => handleSort('type')}>
-                    Type {sortCol === 'type' && (sortAsc ? 'Asc' : 'Desc')}
-                </div>
-                <div className="w-24 cursor-pointer px-2 text-right hover:bg-slate-800/80" onClick={() => handleSort('size')}>
-                    Size {sortCol === 'size' && (sortAsc ? 'Asc' : 'Desc')}
-                </div>
+                <button className="min-w-[200px] flex-1 px-2 text-left hover:bg-slate-800/80" onClick={() => setSort('name')}>
+                    Name {sortLabel('name')}
+                </button>
+                <button className="w-32 px-2 text-left hover:bg-slate-800/80" onClick={() => setSort('modified')}>
+                    Date modified {sortLabel('modified')}
+                </button>
+                <button className="w-32 px-2 text-left hover:bg-slate-800/80" onClick={() => setSort('type')}>
+                    Type {sortLabel('type')}
+                </button>
+                <button className="w-24 px-2 text-right hover:bg-slate-800/80" onClick={() => setSort('size')}>
+                    Size {sortLabel('size')}
+                </button>
             </div>
 
             <div className="flex-1 pb-4">
-                {sortedItems.map((item) => {
+                {items.map((item) => {
                     const isSelected = selectedIds.includes(item.id);
                     return (
                         <div
                             key={item.id}
                             data-id={item.id}
-                            className={`group flex cursor-pointer items-center border-b border-transparent pl-4 ${
-                                isSelected ? 'border-indigo-500/35 bg-indigo-500/20' : 'hover:bg-slate-800/45'
-                            }`}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                selectItem(item.id, e.ctrlKey || e.metaKey, e.shiftKey);
+                            className={`group flex cursor-pointer items-center border-b border-transparent pl-4 ${isSelected ? 'border-indigo-500/35 bg-indigo-500/20' : 'hover:bg-slate-800/45'}`}
+                            onClick={(event) => {
+                                event.stopPropagation();
+                                selectItem(item.id, event.ctrlKey || event.metaKey, event.shiftKey);
                             }}
-                            onDoubleClick={(e) => {
-                                e.stopPropagation();
+                            onDoubleClick={(event) => {
+                                event.stopPropagation();
                                 handleDoubleClick(item);
                             }}
                         >
