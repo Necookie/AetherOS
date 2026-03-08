@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { RefObject } from 'react'
 import { shallow } from 'zustand/shallow'
 import { DEFAULT_APPS } from '../../../config/windows'
+import { DESKTOP_WALLPAPER_URL } from '../../../config/desktop'
 import { useWindowStore } from '../../../stores/windowStore'
 import DesktopIcons from '../../../components/desktop/DesktopIcons'
 import DesktopWindows from '../../../components/desktop/DesktopWindows'
@@ -118,7 +119,15 @@ export default function ShellFrame() {
     }
 
     return (
-        <div className="os-desktop-bg relative h-full w-full overflow-hidden">
+        <div
+            className="os-desktop-bg relative h-full w-full overflow-hidden"
+            style={{
+                backgroundImage: `linear-gradient(180deg, rgb(2 6 23 / 0.28), rgb(2 6 23 / 0.5)), url('${DESKTOP_WALLPAPER_URL}')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+            }}
+        >
             <TopBar
                 now={now}
                 onToggleLauncher={() => {
