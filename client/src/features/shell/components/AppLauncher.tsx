@@ -1,12 +1,11 @@
 import { Power, Search } from 'lucide-react'
 import { filterShellApps } from '../model/appCatalog'
 import { ShellAppIcon } from '../model/appIcons'
-import type { WindowData } from '../../../types/windowManager'
+import { useWindowStore } from '../../../stores/windowStore'
 
 interface AppLauncherProps {
     taskbarPosition: 'bottom' | 'top'
     query: string
-    windows: Record<string, WindowData>
     onQueryChange: (nextValue: string) => void
     onLaunch: (appId: string) => void
 }
@@ -14,10 +13,10 @@ interface AppLauncherProps {
 export default function AppLauncher({
     taskbarPosition,
     query,
-    windows,
     onQueryChange,
     onLaunch,
 }: AppLauncherProps) {
+    const windows = useWindowStore((state) => state.windows)
     const filteredApps = filterShellApps(query)
 
     return (

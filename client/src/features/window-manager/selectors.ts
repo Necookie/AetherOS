@@ -1,4 +1,3 @@
-import type { WindowData } from '../../types/windowManager'
 import type { WindowStore } from '../../stores/windowStore'
 
 export function selectWindowById(id: string) {
@@ -9,8 +8,10 @@ export function selectWindowZIndex(id: string) {
     return (state: WindowStore) => state.getZIndex(id)
 }
 
-export function selectOrderedWindows(state: WindowStore): WindowData[] {
+export function selectWindowOrder(state: WindowStore): string[] {
     return state.windowOrder
-        .map((id) => state.windows[id])
-        .filter((windowData): windowData is WindowData => Boolean(windowData))
+}
+
+export function selectWindowComponentById(id: string) {
+    return (state: WindowStore) => state.windows[id]?.component
 }

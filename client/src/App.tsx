@@ -20,6 +20,7 @@ function App() {
     const closeWindow = useWindowStore(state => state.closeWindow)
     const resetWindows = useWindowStore(state => state.resetWindows)
     const isLocked = useSessionStore((state) => state.isLocked)
+    const lockSession = useSessionStore((state) => state.lockSession)
     const activeUserId = useSessionStore((state) => state.activeUserId)
     const hydrateSettings = useSettingsStore((state) => state.hydrateForActiveUser)
     const fsRefresh = useFsStore((state) => state.refresh)
@@ -60,7 +61,12 @@ function App() {
     }, [activeUserId, fsNavigate, fsRefresh, hydrateSettings, resetWindows])
 
     return (
-        <AppErrorBoundary>
+        <AppErrorBoundary
+            onResetDesktop={() => {
+                resetWindows()
+                lockSession()
+            }}
+        >
             <div className="h-screen w-screen overflow-hidden text-[var(--os-text-0)]">
                 {!isBootComplete && <LoadingScreen onComplete={() => setBootComplete(true)} />}
                 {isBootComplete && isLocked && <LoginScreen />}
