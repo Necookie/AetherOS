@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
+import type { MutableRefObject } from 'react';
 import { useBrowserStore } from '../../../stores/browserStore';
 import {
     resolveBrowserNavigation,
@@ -6,11 +7,25 @@ import {
 } from '../browserNavigation';
 import type { ToastMessage } from '../components/Toasts';
 import type { BrowserSettings } from '../../../types/browser';
+import { browserConnectivityService } from '../services/browserServices';
+
+function nextToken(tokens: MutableRefObject<Map<string, number>>, tabId: string) {
+    const current = tokens.current.get(tabId) || 0;
+    const next = current + 1;
+    tokens.current.set(tabId, next);
+    return next;
+}
+
+function isLatestToken(tokens: MutableRefObject<Map<string, number>>, tabId: string, token: number) {
+    return tokens.current.get(tabId) === token;
+}
 
 export function useBrowserTabs(activeTabId: string | null, settings: BrowserSettings) {
     const tabsById = useBrowserStore((state) => state.tabsById);
+    const connectivity = useBrowserStore((state) => state.connectivity);
     const recordHistory = useBrowserStore((state) => state.recordHistory);
 
+    const requestTokensRef = useRef<Map<string, number>>(new Map());
     const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
     const addToast = useCallback((message: string, type: ToastMessage['type'] = 'warning') => {
@@ -22,7 +37,7 @@ export function useBrowserTabs(activeTabId: string | null, settings: BrowserSett
         setToasts((currentToasts) => currentToasts.filter((toast) => toast.id !== toastId));
     }, []);
 
-    const handleNavigate = useCallback((input: string) => {
+    const handleNavigate = useCallback(async (input: string) => {
         if (!activeTabId) {
             return;
         }
@@ -38,7 +53,49 @@ export function useBrowserTabs(activeTabId: string | null, settings: BrowserSett
             return;
         }
 
-        if (nextNavigation.kind === 'embed') {
+        const requestToken = nextToken(requestTokensRef, activeTabId);
+
+        useBrowserStore.setState((state) => {
+            const tab = state.tabsById[activeTabId];
+            if (!tab) {
+                return state;
+            }
+
+            return {
+                tabsById: {
+                    ...state.tabsById,
+                    [activeTabId]: {
+                        ...tab,
+                        isLoading: true,
+                        displayUrl: nextNavigation.url,
+                    },
+                },
+            };
+        });
+
+        try {
+            const connectivityResult = await browserConnectivityService.resolveNavigation({
+                url: nextNavigation.url,
+                title: nextNavigation.title,
+                mode: nextNavigation.kind,
+                connectivity,
+            });
+
+            if (!isLatestToken(requestTokensRef, activeTabId, requestToken)) {
+                return;
+            }
+
+            if (connectivityResult.servedOffline) {
+                addToast('Offline mode: loaded from cache', 'info');
+            }
+
+            if (nextNavigation.kind === 'external' && connectivity.online) {
+                const win = window.open(nextNavigation.url, '_blank', 'noopener,noreferrer');
+                if (!win) {
+                    addToast("Pop-up blocked. Click 'Open again' to retry.", 'warning');
+                }
+            }
+
             useBrowserStore.setState((state) => {
                 const tab = state.tabsById[activeTabId];
                 if (!tab) {
@@ -51,47 +108,48 @@ export function useBrowserTabs(activeTabId: string | null, settings: BrowserSett
                         [activeTabId]: updateTabForNavigation(tab, {
                             url: nextNavigation.url,
                             title: nextNavigation.title,
-                            mode: 'embed',
-                            isLoading: true,
+                            mode: connectivityResult.mode,
+                            isLoading: connectivityResult.mode === 'embed',
+                            externalUrl: connectivityResult.mode === 'external'
+                                ? nextNavigation.url
+                                : undefined,
                         }),
                     },
                 };
             });
 
             recordHistory({ url: nextNavigation.url, title: nextNavigation.title });
-            return;
-        }
-
-        const win = window.open(nextNavigation.url, '_blank', 'noopener,noreferrer');
-        if (!win) {
-            addToast("Pop-up blocked. Click 'Open again' to retry.", 'warning');
-        }
-
-        useBrowserStore.setState((state) => {
-            const tab = state.tabsById[activeTabId];
-            if (!tab) {
-                return state;
+        } catch (error) {
+            if (!isLatestToken(requestTokensRef, activeTabId, requestToken)) {
+                return;
             }
 
-            return {
-                tabsById: {
-                    ...state.tabsById,
-                    [activeTabId]: {
-                        ...updateTabForNavigation(tab, {
-                            url: nextNavigation.url,
-                            title: nextNavigation.title,
-                            mode: 'external',
-                            isLoading: false,
-                            externalUrl: nextNavigation.url,
-                        }),
-                        backStack: tab.url && tab.mode !== 'external' ? [...tab.backStack, tab.url] : tab.backStack,
-                    },
-                },
-            };
-        });
+            const message = error instanceof Error ? error.message : 'UNKNOWN_ERROR';
+            if (message === 'NETWORK_OFFLINE_NO_CACHE') {
+                addToast('Offline and no cached page is available for this URL.', 'error');
+            } else {
+                addToast('Navigation failed. Please try again.', 'error');
+            }
 
-        recordHistory({ url: nextNavigation.url, title: nextNavigation.url });
-    }, [activeTabId, settings, addToast, recordHistory]);
+            useBrowserStore.setState((state) => {
+                const tab = state.tabsById[activeTabId];
+                if (!tab) {
+                    return state;
+                }
+
+                return {
+                    tabsById: {
+                        ...state.tabsById,
+                        [activeTabId]: {
+                            ...tab,
+                            isLoading: false,
+                            lastError: message,
+                        },
+                    },
+                };
+            });
+        }
+    }, [activeTabId, settings, addToast, recordHistory, connectivity]);
 
     const handleWebViewLoad = useCallback(() => {
         if (!activeTabId) {
@@ -198,4 +256,3 @@ export function useBrowserTabs(activeTabId: string | null, settings: BrowserSett
         handleTryEmbed,
     };
 }
-

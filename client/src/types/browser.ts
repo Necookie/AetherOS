@@ -8,6 +8,24 @@ export interface HistoryEntry {
     timestamp: number; // Kernel clock timestamp
 }
 
+export interface BookmarkEntry {
+    id: string;
+    url: string;
+    title: string;
+    createdAt: number;
+}
+
+export interface BrowserSessionState {
+    lastActiveTabId: string | null;
+    lastNavigationAt: number | null;
+}
+
+export interface ConnectivityState {
+    online: boolean;
+    latencyMs: number;
+    jitterMs: number;
+}
+
 export interface TabState {
     id: string;
     title: string;
