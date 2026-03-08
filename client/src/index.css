@@ -120,6 +120,24 @@
     animation: os-minimize 150ms ease-out;
   }
 
+  .animate-os-flyout-in {
+    animation: os-flyout-in 140ms cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: top right;
+  }
+
+  .os-interactive {
+    transition: transform var(--os-motion-fast) ease-out, box-shadow var(--os-motion-fast) ease-out,
+      background-color var(--os-motion-fast) ease-out;
+  }
+
+  .os-interactive:hover {
+    box-shadow: 0 8px 22px rgb(15 23 42 / 0.16);
+  }
+
+  .os-interactive:active {
+    transform: scale(0.98);
+  }
+
   .os-desktop-bg {
     background: radial-gradient(760px 520px at 12% 14%, #ffd3e8 0%, transparent 65%),
       radial-gradient(920px 620px at 88% 22%, #c8e2ff 0%, transparent 62%),
@@ -164,12 +182,25 @@
   }
 }
 
+@keyframes os-flyout-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .os-hover-motion,
   .os-window-motion,
   .os-panel-motion,
   .animate-os-window-in,
-  .animate-os-minimize {
+  .animate-os-minimize,
+  .animate-os-flyout-in {
     animation: none !important;
     transition-duration: 1ms !important;
   }

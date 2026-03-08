@@ -3,7 +3,7 @@ import { BatteryCharging, Bluetooth, Plane, SunMedium, Volume2, Wifi } from 'luc
 export default function QuickSettingsFlyout({ taskbarPosition }: { taskbarPosition: 'bottom' | 'top' }) {
     return (
         <div
-            className={`absolute right-24 z-[var(--ds-z-flyout)] w-[min(24rem,calc(100vw-1.5rem))] rounded-2xl p-4 backdrop-blur-2xl ${taskbarPosition === 'top' ? 'top-[calc(var(--shell-topbar-height)+var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)]' : 'bottom-[calc(var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)]'}`}
+            className={`animate-os-flyout-in absolute right-24 z-[var(--ds-z-flyout)] w-[min(24rem,calc(100vw-1.5rem))] rounded-2xl p-4 backdrop-blur-2xl ${taskbarPosition === 'top' ? 'top-[calc(var(--shell-topbar-height)+var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)]' : 'bottom-[calc(var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)]'}`}
             style={{
                 background: 'linear-gradient(180deg, rgb(255 255 255 / 0.58), rgb(255 255 255 / 0.34))',
                 border: '1px solid rgb(255 255 255 / 0.58)',
@@ -11,9 +11,9 @@ export default function QuickSettingsFlyout({ taskbarPosition }: { taskbarPositi
             }}
         >
             <div className="grid grid-cols-3 gap-2">
-                <button className="rounded-lg bg-[var(--ds-color-accent)] px-3 py-3 text-xs font-medium text-white">Wi-Fi</button>
-                <button className="rounded-lg bg-[var(--ds-color-accent)] px-3 py-3 text-xs font-medium text-white">Bluetooth</button>
-                <button className="rounded-lg border border-white/60 bg-white/45 px-3 py-3 text-xs font-medium text-slate-900">Airplane</button>
+                <button className="os-interactive rounded-lg bg-[var(--ds-color-accent)] px-3 py-3 text-xs font-medium text-white">Wi-Fi</button>
+                <button className="os-interactive rounded-lg bg-[var(--ds-color-accent)] px-3 py-3 text-xs font-medium text-white">Bluetooth</button>
+                <button className="os-interactive rounded-lg border border-white/60 bg-white/45 px-3 py-3 text-xs font-medium text-slate-900">Airplane</button>
             </div>
 
             <div className="my-4 space-y-3">

@@ -29,7 +29,7 @@ export default function Dock({ taskbarPosition, onLaunchOrToggle, onToggleLaunch
         >
             <button
                 onClick={onToggleLauncher}
-                className="group flex h-10 w-10 items-center justify-center rounded-xl bg-white/55 text-slate-900 transition-transform hover:scale-110"
+                className="os-interactive group flex h-10 w-10 items-center justify-center rounded-xl bg-white/55 text-slate-900 transition-transform hover:scale-110"
                 aria-label="Open app launcher"
             >
                 <LayoutGrid className="h-4 w-4" />
@@ -55,7 +55,7 @@ export default function Dock({ taskbarPosition, onLaunchOrToggle, onToggleLaunch
                         >
                             <button
                                 onClick={() => onLaunchOrToggle(app.id)}
-                                className={`group relative flex h-10 w-12 items-center justify-center rounded-xl transition-all ${
+                                className={`os-interactive group relative flex h-10 w-12 items-center justify-center rounded-xl transition-all ${
                                     isFocused ? 'bg-white/35 ring-1 ring-white/40' : 'hover:bg-white/25'
                                 }`}
                                 aria-label={`Open ${app.title}`}
@@ -68,7 +68,7 @@ export default function Dock({ taskbarPosition, onLaunchOrToggle, onToggleLaunch
                             </button>
 
                             {isPreviewing && previewWindow && (
-                                <div className="pointer-events-none absolute bottom-12 left-1/2 z-[var(--ds-z-flyout)] w-56 -translate-x-1/2 rounded-xl border border-white/50 bg-white/75 p-2 text-left shadow-xl backdrop-blur-xl">
+                                <div className="animate-os-flyout-in pointer-events-none absolute bottom-12 left-1/2 z-[var(--ds-z-flyout)] w-56 -translate-x-1/2 rounded-xl border border-white/50 bg-white/75 p-2 text-left shadow-xl backdrop-blur-xl">
                                     <div className="mb-1 flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">
                                         <span>{previewWindow.title}</span>
                                         {previewWindow.state.isMaximized ? <Maximize2 className="h-3 w-3" /> : previewWindow.state.isMinimized ? <Minimize2 className="h-3 w-3" /> : null}

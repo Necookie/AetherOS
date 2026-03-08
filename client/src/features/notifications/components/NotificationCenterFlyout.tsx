@@ -30,7 +30,7 @@ export default function NotificationCenterFlyout() {
 
     return (
         <section
-            className="absolute right-2 top-[calc(var(--shell-topbar-height)+0.4rem)] z-[var(--ds-z-flyout)] w-[min(26rem,calc(100vw-1rem))] rounded-2xl border border-white/65 p-3 backdrop-blur-2xl md:right-4"
+            className="animate-os-flyout-in absolute right-2 top-[calc(var(--shell-topbar-height)+0.4rem)] z-[var(--ds-z-flyout)] w-[min(26rem,calc(100vw-1rem))] rounded-2xl border border-white/65 p-3 backdrop-blur-2xl md:right-4"
             style={{
                 background: 'linear-gradient(180deg, rgb(255 255 255 / 0.7), rgb(255 255 255 / 0.44))',
                 boxShadow: '0 20px 40px rgb(15 23 42 / 0.28)',
@@ -45,14 +45,16 @@ export default function NotificationCenterFlyout() {
                 <div className="flex items-center gap-1">
                     <button
                         onClick={() => notificationService.markAllRead()}
-                        className="inline-flex items-center gap-1 rounded-md border border-slate-300/80 bg-white/70 px-2 py-1 text-[11px] text-slate-700 hover:bg-white"
+                        className="os-interactive inline-flex items-center gap-1 rounded-md border border-slate-300/80 bg-white/70 px-2 py-1 text-[11px] text-slate-700 hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+                        disabled={snapshot.unreadCount === 0}
                     >
                         <CheckCheck className="h-3.5 w-3.5" />
                         Mark all
                     </button>
                     <button
                         onClick={() => notificationService.clear()}
-                        className="inline-flex items-center gap-1 rounded-md border border-slate-300/80 bg-white/70 px-2 py-1 text-[11px] text-slate-700 hover:bg-white"
+                        className="os-interactive inline-flex items-center gap-1 rounded-md border border-slate-300/80 bg-white/70 px-2 py-1 text-[11px] text-slate-700 hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+                        disabled={groups.length === 0}
                     >
                         <BellOff className="h-3.5 w-3.5" />
                         Clear
@@ -88,7 +90,7 @@ export default function NotificationCenterFlyout() {
                                                 onClick={() => {
                                                     void notificationService.invokeAction(item.id, action.id)
                                                 }}
-                                                className={`rounded-md border px-2 py-1 text-[11px] font-medium ${actionToneClass[action.tone]}`}
+                                                className={`os-interactive rounded-md border px-2 py-1 text-[11px] font-medium ${actionToneClass[action.tone]}`}
                                             >
                                                 {action.label}
                                             </button>
@@ -96,21 +98,21 @@ export default function NotificationCenterFlyout() {
                                         {!item.isRead ? (
                                             <button
                                                 onClick={() => notificationService.markRead(item.id)}
-                                                className="rounded-md border border-slate-300/90 bg-white/70 px-2 py-1 text-[11px] text-slate-700 hover:bg-white"
+                                                className="os-interactive rounded-md border border-slate-300/90 bg-white/70 px-2 py-1 text-[11px] text-slate-700 hover:bg-white"
                                             >
                                                 Mark read
                                             </button>
                                         ) : (
                                             <button
                                                 onClick={() => notificationService.markUnread(item.id)}
-                                                className="rounded-md border border-slate-300/90 bg-white/70 px-2 py-1 text-[11px] text-slate-700 hover:bg-white"
+                                                className="os-interactive rounded-md border border-slate-300/90 bg-white/70 px-2 py-1 text-[11px] text-slate-700 hover:bg-white"
                                             >
                                                 Mark unread
                                             </button>
                                         )}
                                         <button
                                             onClick={() => notificationService.remove(item.id)}
-                                            className="rounded-md border border-slate-300/90 bg-white/70 px-2 py-1 text-[11px] text-slate-700 hover:bg-white"
+                                            className="os-interactive rounded-md border border-slate-300/90 bg-white/70 px-2 py-1 text-[11px] text-slate-700 hover:bg-white"
                                             aria-label="Delete notification"
                                         >
                                             <Trash2 className="h-3.5 w-3.5" />
