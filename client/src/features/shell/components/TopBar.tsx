@@ -1,19 +1,25 @@
-import { Apple, BatteryCharging, Search, Volume2, Wifi } from 'lucide-react'
+import { Apple, BatteryCharging, Bell, Search, Volume2, Wifi } from 'lucide-react'
 
 interface TopBarProps {
     now: Date
     showSeconds: boolean
+    unreadNotifications: number
+    notificationsOpen: boolean
     onToggleLauncher: () => void
     onToggleQuickSettings: () => void
     onToggleDateTime: () => void
+    onToggleNotifications: () => void
 }
 
 export default function TopBar({
     now,
     showSeconds,
+    unreadNotifications,
+    notificationsOpen,
     onToggleLauncher,
     onToggleQuickSettings,
     onToggleDateTime,
+    onToggleNotifications,
 }: TopBarProps) {
     return (
         <header
@@ -43,6 +49,18 @@ export default function TopBar({
                 </button>
                 <button className="rounded p-1 hover:bg-white/20" onClick={onToggleLauncher} aria-label="Spotlight">
                     <Search className="h-3.5 w-3.5" />
+                </button>
+                <button
+                    className={`relative rounded p-1 ${notificationsOpen ? 'bg-white/25' : 'hover:bg-white/20'}`}
+                    onClick={onToggleNotifications}
+                    aria-label="Notifications"
+                >
+                    <Bell className="h-3.5 w-3.5" />
+                    {unreadNotifications > 0 ? (
+                        <span className="absolute -right-0.5 -top-0.5 min-w-4 rounded-full bg-rose-500 px-1 text-center text-[10px] leading-4 text-white">
+                            {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                        </span>
+                    ) : null}
                 </button>
                 <button className="rounded px-2 py-0.5 hover:bg-white/20" onClick={onToggleDateTime} aria-label="Date and time">
                     {now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })} {now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: showSeconds ? '2-digit' : undefined })}
