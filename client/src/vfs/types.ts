@@ -1,37 +1,56 @@
 export enum VfsNodeType {
     DIR = 'DIR',
     FILE = 'FILE',
-    SYMLINK = 'SYMLINK'
+    SYMLINK = 'SYMLINK',
 }
 
 export interface VfsNode {
     id: string;
     type: VfsNodeType;
     name: string;
-    parentId: string | null;  // null for Root
-    createdAt: number;        // from kernelClock.now()
-    modifiedAt: number;       // from kernelClock.now()
+    parentId: string | null;
+    createdAt: number;
+    modifiedAt: number;
     owner: string;
     group: string;
-    mode: number;             // e.g., 0o755
+    mode: number;
     size: number;
     mime: string;
-    content: string;          // string for now
-    childrenIds: string[];    // only relevant for DIR
+    content: string;
+    childrenIds: string[];
+}
+
+export interface VfsSnapshot {
+    rootId: string;
+    nodes: VfsNode[];
+}
+
+export interface VfsSearchOptions {
+    rootPath?: string;
+    includeHidden?: boolean;
+    limit?: number;
+}
+
+export interface VfsTreeOptions {
+    depth?: number;
+    includeHidden?: boolean;
 }
 
 export class VfsError extends Error {
-    constructor(public code: string, message: string = '') {
+    public readonly code: string;
+
+    constructor(code: string, message: string = '') {
         super(`[${code}] ${message}`);
         this.name = 'VfsError';
+        this.code = code;
     }
 }
 
 export const ErrorCodes = {
-    ENOENT: 'ENOENT',   // No such file or directory
-    EEXIST: 'EEXIST',   // File exists
-    EPERM: 'EPERM',     // Operation not permitted
-    ENOTDIR: 'ENOTDIR', // Not a directory
-    EISDIR: 'EISDIR',   // Is a directory
-    EINVAL: 'EINVAL',   // Invalid argument
+    ENOENT: 'ENOENT',
+    EEXIST: 'EEXIST',
+    EPERM: 'EPERM',
+    ENOTDIR: 'ENOTDIR',
+    EISDIR: 'EISDIR',
+    EINVAL: 'EINVAL',
 } as const;

@@ -1,4 +1,5 @@
 import type { VfsNode } from '../../vfs/types';
+import type { FsSortBy, FsSortDirection } from '../../vfs/fsState';
 
 export type ViewMode = 'icons' | 'details';
 
@@ -10,7 +11,11 @@ export interface FsStoreState {
     selectedIds: string[];
     showHidden: boolean;
     searchQuery: string;
+    sortBy: FsSortBy;
+    sortDirection: FsSortDirection;
     items: VfsNode[];
+    directoryTree: VfsNode[];
+    isMutating: boolean;
     error: string | null;
 }
 
@@ -22,12 +27,14 @@ export interface FsStoreActions {
     setViewMode: (mode: ViewMode) => void;
     toggleHidden: () => void;
     setSearchQuery: (query: string) => void;
+    setSort: (sortBy: FsSortBy, sortDirection?: FsSortDirection) => void;
     selectItem: (id: string, multi: boolean, range: boolean) => void;
     clearSelection: () => void;
     createFolder: (name: string) => void;
     createFile: (name: string, content?: string) => void;
     renameItem: (id: string, newName: string) => void;
     deleteItems: (ids: string[]) => void;
+    moveItems: (ids: string[], destinationPath: string) => void;
     clearError: () => void;
     refresh: () => void;
 }
