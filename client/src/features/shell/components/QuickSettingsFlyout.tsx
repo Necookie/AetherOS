@@ -1,9 +1,9 @@
 import { BatteryCharging, Bluetooth, Plane, SunMedium, Volume2, Wifi } from 'lucide-react'
 
-export default function QuickSettingsFlyout() {
+export default function QuickSettingsFlyout({ taskbarPosition }: { taskbarPosition: 'bottom' | 'top' }) {
     return (
         <div
-            className="absolute bottom-[calc(var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)] right-24 z-[var(--ds-z-flyout)] w-[min(24rem,calc(100vw-1.5rem))] rounded-2xl p-4 backdrop-blur-2xl"
+            className={`absolute right-24 z-[var(--ds-z-flyout)] w-[min(24rem,calc(100vw-1.5rem))] rounded-2xl p-4 backdrop-blur-2xl ${taskbarPosition === 'top' ? 'top-[calc(var(--shell-topbar-height)+var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)]' : 'bottom-[calc(var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)]'}`}
             style={{
                 background: 'linear-gradient(180deg, rgb(255 255 255 / 0.58), rgb(255 255 255 / 0.34))',
                 border: '1px solid rgb(255 255 255 / 0.58)',

@@ -1,6 +1,6 @@
 import { APP_MANIFEST } from '../../../config/appManifest'
 
-const PINNED_ORDER = ['browser', 'explorer', 'term', 'taskmgr'] as const
+const PINNED_ORDER = ['browser', 'explorer', 'term', 'taskmgr', 'settings'] as const
 
 const orderLookup = new Map<string, number>(PINNED_ORDER.map((id, index) => [id, index]))
 

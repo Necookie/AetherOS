@@ -1,6 +1,8 @@
 import { WEEKDAY_LABELS, getCalendarGrid, isSameDay } from '../model/calendar'
 
 interface DateTimeFlyoutProps {
+    taskbarPosition: 'bottom' | 'top'
+    showSeconds: boolean
     now: Date
     viewedMonth: Date
     onBackMonth: () => void
@@ -8,6 +10,8 @@ interface DateTimeFlyoutProps {
 }
 
 export default function DateTimeFlyout({
+    taskbarPosition,
+    showSeconds,
     now,
     viewedMonth,
     onBackMonth,
@@ -17,7 +21,7 @@ export default function DateTimeFlyout({
 
     return (
         <div
-            className="absolute bottom-[calc(var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)] right-0 z-[var(--ds-z-flyout)] w-[min(26rem,calc(100vw-1.5rem))] rounded-2xl p-4 backdrop-blur-2xl"
+            className={`absolute right-0 z-[var(--ds-z-flyout)] w-[min(26rem,calc(100vw-1.5rem))] rounded-2xl p-4 backdrop-blur-2xl ${taskbarPosition === 'top' ? 'top-[calc(var(--shell-topbar-height)+var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)]' : 'bottom-[calc(var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)]'}`}
             style={{
                 background: 'linear-gradient(180deg, rgb(255 255 255 / 0.58), rgb(255 255 255 / 0.34))',
                 border: '1px solid rgb(255 255 255 / 0.58)',
@@ -29,7 +33,7 @@ export default function DateTimeFlyout({
                     {now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}
                 </p>
                 <p className="text-sm text-slate-700">
-                    {now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: showSeconds ? '2-digit' : undefined })}
                 </p>
             </div>
 

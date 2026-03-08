@@ -94,10 +94,10 @@ export default function Window({ id, title, children }: WindowProps) {
                 height: bounds.height,
                 zIndex,
                 visibility: isMinimized ? 'hidden' : 'visible',
-                background: 'linear-gradient(180deg, rgb(255 255 255 / 0.78), rgb(255 255 255 / 0.62))',
-                borderColor: 'rgb(255 255 255 / 0.62)',
+                background: 'linear-gradient(180deg, color-mix(in oklab, var(--os-surface-0) 86%, white 14%), color-mix(in oklab, var(--os-surface-1) 82%, transparent 18%))',
+                borderColor: 'color-mix(in oklab, var(--os-border) 65%, white 35%)',
                 boxShadow: isFocused ? '0 30px 56px rgb(15 23 42 / 0.30)' : '0 14px 30px rgb(15 23 42 / 0.20)',
-                backdropFilter: 'blur(22px)',
+                backdropFilter: `blur(var(--os-window-backdrop-blur))`,
             }}
             onPointerDown={() => focusWindow(id)}
             onFocusCapture={() => focusWindow(id)}
@@ -105,7 +105,7 @@ export default function Window({ id, title, children }: WindowProps) {
             <div
                 className="flex h-10 select-none items-center justify-between border-b px-3"
                 style={{
-                    borderColor: 'rgb(255 255 255 / 0.68)',
+                    borderColor: 'color-mix(in oklab, var(--os-border) 60%, white 40%)',
                     cursor: isMaximized ? 'default' : 'grab',
                 }}
                 onPointerDown={isMaximized ? undefined : handlePointerDown}
@@ -143,7 +143,7 @@ export default function Window({ id, title, children }: WindowProps) {
                     />
                 </div>
 
-                <div className="pointer-events-none flex-1 truncate px-4 text-center text-[13px] font-medium text-slate-800">
+                <div className="pointer-events-none flex-1 truncate px-4 text-center text-[13px] font-medium text-[var(--os-text-0)]">
                     {title}
                 </div>
 
@@ -152,7 +152,7 @@ export default function Window({ id, title, children }: WindowProps) {
 
             <div
                 className="relative flex-1 overflow-hidden"
-                style={{ background: 'color-mix(in oklab, white 74%, #dbeafe 26%)' }}
+                style={{ background: 'color-mix(in oklab, var(--os-surface-0) 82%, var(--os-bg-1) 18%)' }}
             >
                 {children}
             </div>

@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { RefObject } from 'react'
 import { shallow } from 'zustand/shallow'
 import { DEFAULT_APPS } from '../../../config/windows'
-import { DESKTOP_WALLPAPER_URL } from '../../../config/desktop'
 import { useWindowStore } from '../../../stores/windowStore'
+import { useSettingsStore } from '../../../stores/settingsStore'
+import { getWallpaperCss } from '../../settings/themeEngine'
 import DesktopIcons from '../../../components/desktop/DesktopIcons'
 import DesktopWindows from '../../../components/desktop/DesktopWindows'
 import { useShellClock } from '../hooks/useShellClock'
@@ -61,6 +62,10 @@ export default function ShellFrame() {
         toggleMinimize: state.toggleMinimize,
         restoreWindow: state.restoreWindow,
     }), shallow)
+    const wallpaperId = useSettingsStore((state) => state.appearance.wallpaperId)
+    const iconScale = useSettingsStore((state) => state.desktop.iconScale)
+    const taskbarPosition = useSettingsStore((state) => state.desktop.taskbarPosition)
+    const showSecondsInClock = useSettingsStore((state) => state.behavior.showSecondsInClock)
     const [isLauncherOpen, setLauncherOpen] = useState(false)
     const [launcherQuery, setLauncherQuery] = useState('')
     const [isQuickSettingsOpen, setQuickSettingsOpen] = useState(false)
@@ -122,7 +127,7 @@ export default function ShellFrame() {
         <div
             className="os-desktop-bg relative h-full w-full overflow-hidden"
             style={{
-                backgroundImage: `linear-gradient(180deg, rgb(2 6 23 / 0.28), rgb(2 6 23 / 0.5)), url('${DESKTOP_WALLPAPER_URL}')`,
+                backgroundImage: getWallpaperCss(wallpaperId),
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',
@@ -130,6 +135,7 @@ export default function ShellFrame() {
         >
             <TopBar
                 now={now}
+                showSeconds={showSecondsInClock}
                 onToggleLauncher={() => {
                     setQuickSettingsOpen(false)
                     setDateTimeOpen(false)
@@ -151,17 +157,20 @@ export default function ShellFrame() {
             <main
                 className="absolute inset-x-0 z-[var(--ds-z-desktop)]"
                 style={{
-                    top: 'var(--shell-topbar-height)',
-                    bottom: 'calc(var(--shell-dock-height) + var(--shell-edge-gap) * 2)',
+                    top: taskbarPosition === 'top'
+                        ? 'calc(var(--shell-topbar-height) + var(--shell-dock-height) + var(--shell-edge-gap) * 2)'
+                        : 'var(--shell-topbar-height)',
+                    bottom: taskbarPosition === 'bottom' ? 'calc(var(--shell-dock-height) + var(--shell-edge-gap) * 2)' : 'var(--shell-edge-gap)',
                 }}
             >
-                <DesktopIcons />
+                <DesktopIcons iconScale={iconScale} />
                 <DesktopWindows />
             </main>
 
             <div ref={dockRef}>
                 <Dock
                     windows={windows}
+                    taskbarPosition={taskbarPosition}
                     onLaunchOrToggle={handleLaunchOrToggle}
                     onToggleLauncher={() => {
                         setQuickSettingsOpen(false)
@@ -172,8 +181,13 @@ export default function ShellFrame() {
             </div>
 
             {isLauncherOpen && (
-                <div ref={launcherRef} className="absolute bottom-0 left-[var(--shell-edge-gap)] right-[var(--shell-edge-gap)]">
+                <div
+                    ref={launcherRef}
+                    className="absolute left-[var(--shell-edge-gap)] right-[var(--shell-edge-gap)]"
+                    style={taskbarPosition === 'top' ? { top: 0 } : { bottom: 0 }}
+                >
                     <AppLauncher
+                        taskbarPosition={taskbarPosition}
                         query={launcherQuery}
                         windows={windows}
                         onQueryChange={setLauncherQuery}
@@ -184,13 +198,15 @@ export default function ShellFrame() {
 
             {isQuickSettingsOpen && (
                 <div ref={quickSettingsRef}>
-                    <QuickSettingsFlyout />
+                    <QuickSettingsFlyout taskbarPosition={taskbarPosition} />
                 </div>
             )}
 
             {isDateTimeOpen && (
                 <div ref={dateTimeRef}>
                     <DateTimeFlyout
+                        taskbarPosition={taskbarPosition}
+                        showSeconds={showSecondsInClock}
                         now={now}
                         viewedMonth={viewedMonth}
                         onBackMonth={() => setViewedMonth((month) => new Date(month.getFullYear(), month.getMonth() - 1, 1))}

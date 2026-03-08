@@ -27,4 +27,9 @@ export const APP_MANIFEST: AppManifestEntry[] = [
         title: 'Aether Browser',
         defaultBounds: { x: 100, y: 60, width: 900, height: 600 },
     },
+    {
+        id: 'settings',
+        title: 'Settings',
+        defaultBounds: { x: 140, y: 90, width: 980, height: 640 },
+    },
 ]
