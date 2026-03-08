@@ -7,6 +7,19 @@ export type WindowSnapshot = {
 }
 
 const DEFAULT_BOUNDS: WindowBounds = { x: 150, y: 150, width: 600, height: 400 }
+type Viewport = { width: number; height: number }
+
+function getCenteredBounds(bounds: WindowBounds, viewport?: Viewport): WindowBounds {
+    if (!viewport) {
+        return bounds
+    }
+
+    return {
+        ...bounds,
+        x: Math.max(0, Math.floor((viewport.width - bounds.width) / 2)),
+        y: Math.max(0, Math.floor((viewport.height - bounds.height) / 2)),
+    }
+}
 
 function clearFocusedWindow(windows: Record<string, WindowData>, focusedWindowId: string | null) {
     if (focusedWindowId && windows[focusedWindowId]) {
@@ -28,7 +41,7 @@ export function createWindowSnapshot(): WindowSnapshot {
     }
 }
 
-export function openWindowState(state: WindowSnapshot, app: AppDefinition): WindowSnapshot {
+export function openWindowState(state: WindowSnapshot, app: AppDefinition, viewport?: Viewport): WindowSnapshot {
     if (state.windows[app.id]) {
         const updatedWindows = { ...state.windows }
 
@@ -54,7 +67,7 @@ export function openWindowState(state: WindowSnapshot, app: AppDefinition): Wind
         id: app.id,
         title: app.title,
         component: app.component,
-        bounds: app.defaultBounds || DEFAULT_BOUNDS,
+        bounds: getCenteredBounds(app.defaultBounds || DEFAULT_BOUNDS, viewport),
         state: {
             isMinimized: false,
             isMaximized: false,

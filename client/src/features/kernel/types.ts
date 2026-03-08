@@ -1,6 +1,7 @@
 export interface Process {
     pid: number
     name: string
+    appId?: string
     cpu: number
     mem: number
     disk: number

@@ -19,6 +19,8 @@ interface KernelState {
     initKernel: () => void
     killProcess: (pid: number) => void
     spawnProcess: (name: string) => void
+    spawnAppProcess: (appId: string, name: string) => void
+    killAppProcess: (appId: string) => void
 }
 
 export const useKernelStore = create<KernelState>((set, get) => ({
@@ -64,6 +66,18 @@ export const useKernelStore = create<KernelState>((set, get) => ({
     },
     spawnProcess: (name) => {
         const message: KernelCommandMessage = { type: 'SPAWN_PROCESS', payload: { name } }
+        if (isKernelCommandMessage(message)) {
+            get().worker?.postMessage(message)
+        }
+    },
+    spawnAppProcess: (appId, name) => {
+        const message: KernelCommandMessage = { type: 'SPAWN_APP_PROCESS', payload: { appId, name } }
+        if (isKernelCommandMessage(message)) {
+            get().worker?.postMessage(message)
+        }
+    },
+    killAppProcess: (appId) => {
+        const message: KernelCommandMessage = { type: 'KILL_APP_PROCESS', payload: { appId } }
         if (isKernelCommandMessage(message)) {
             get().worker?.postMessage(message)
         }
