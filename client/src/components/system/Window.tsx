@@ -20,12 +20,12 @@ export default function Window({ id, title, children }: WindowProps) {
     const updateBounds = useWindowStore((state) => state.updateBounds)
     const { handlePointerDown, handlePointerMove, handlePointerUp } = useWindowManager({ id })
 
-    if (!windowState || windowState.state.isMinimized) {
+    if (!windowState) {
         return null
     }
 
     const { bounds, state } = windowState
-    const { isFocused, isMaximized } = state
+    const { isFocused, isMaximized, isMinimized } = state
     const RESIZE_EDGE_GUTTER = 14
     const RESIZE_STEP = 26
 
@@ -33,7 +33,7 @@ export default function Window({ id, title, children }: WindowProps) {
         <div
             className={`animate-os-window-in os-window-motion absolute flex flex-col overflow-hidden border transition-[left,top,width,height,opacity,transform]
                 ${isMaximized ? 'rounded-none' : 'rounded-lg'}
-                ${isFocused ? 'brightness-100' : 'opacity-95'}
+                ${isMinimized ? 'pointer-events-none opacity-0 scale-[0.98]' : isFocused ? 'brightness-100 opacity-100' : 'opacity-95'}
             `}
             style={{
                 left: bounds.x,
@@ -41,7 +41,7 @@ export default function Window({ id, title, children }: WindowProps) {
                 width: bounds.width,
                 height: bounds.height,
                 zIndex,
-                visibility: state.isMinimized ? 'hidden' : 'visible',
+                visibility: isMinimized ? 'hidden' : 'visible',
                 background: 'color-mix(in oklab, var(--os-surface-0) 94%, black 6%)',
                 borderColor: 'color-mix(in oklab, var(--os-border) 70%, black 30%)',
                 boxShadow: isFocused ? '0 24px 56px rgba(2, 6, 23, 0.62)' : '0 10px 28px rgba(2, 6, 23, 0.35)',
@@ -113,7 +113,7 @@ export default function Window({ id, title, children }: WindowProps) {
             </div>
 
             <div
-                className="relative flex-1 overflow-auto"
+                className="relative flex-1 overflow-hidden"
                 style={{ background: 'color-mix(in oklab, var(--os-surface-0) 88%, black 12%)' }}
             >
                 {children}
