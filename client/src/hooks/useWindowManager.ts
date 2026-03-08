@@ -9,6 +9,7 @@ interface UseWindowManagerProps {
 export function useWindowManager({ id }: UseWindowManagerProps) {
     const updateBounds = useWindowStore((state) => state.updateBounds)
     const focusWindow = useWindowStore((state) => state.focusWindow)
+    const restoreWindow = useWindowStore((state) => state.restoreWindow)
 
     const dragState = useRef({
         isDragging: false,
@@ -46,12 +47,17 @@ export function useWindowManager({ id }: UseWindowManagerProps) {
             return
         }
 
+        const win = useWindowStore.getState().windows[id]
+        if (!win) {
+            return
+        }
+
         const nextPosition = getDraggedWindowPosition(
             {
                 x: dragState.current.initialWinX,
                 y: dragState.current.initialWinY,
-                width: 0,
-                height: 0,
+                width: win.bounds.width,
+                height: win.bounds.height,
             },
             {
                 startX: dragState.current.startX,
@@ -93,5 +99,6 @@ export function useWindowManager({ id }: UseWindowManagerProps) {
         handlePointerMove,
         handlePointerUp,
         focusWindow: () => focusWindow(id),
+        restoreWindow: () => restoreWindow(id),
     }
 }

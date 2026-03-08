@@ -4,22 +4,15 @@ export function getDraggedWindowPosition(
     bounds: WindowBounds,
     pointer: { startX: number; startY: number; currentX: number; currentY: number },
 ) {
-    let x = bounds.x + (pointer.currentX - pointer.startX)
-    let y = bounds.y + (pointer.currentY - pointer.startY)
+    const maxX = Math.max(0, window.innerWidth - bounds.width)
+    const maxY = Math.max(0, window.innerHeight - bounds.height)
+    const nextX = bounds.x + (pointer.currentX - pointer.startX)
+    const nextY = bounds.y + (pointer.currentY - pointer.startY)
 
-    if (y < 0) {
-        y = 0
+    return {
+        x: Math.max(0, Math.min(nextX, maxX)),
+        y: Math.max(0, Math.min(nextY, maxY)),
     }
-
-    if (x < 8 && x > -8) {
-        x = 0
-    }
-
-    if (y < 8 && y > -8) {
-        y = 0
-    }
-
-    return { x, y }
 }
 
 export function getResizedWindowBounds(

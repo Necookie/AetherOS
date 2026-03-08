@@ -1,0 +1,57 @@
+import { accountService } from './accountService'
+import type { SessionSnapshot } from '../types'
+
+const SESSION_KEY = 'aether.session.v1'
+
+const DEFAULT_SNAPSHOT: SessionSnapshot = {
+    activeUserId: null,
+    selectedLoginUserId: accountService.getDefaultLoginUserId(),
+    isLocked: true,
+}
+
+function canUseStorage() {
+    return typeof window !== 'undefined' && Boolean(window.localStorage)
+}
+
+function normalize(raw: Partial<SessionSnapshot>): SessionSnapshot {
+    const selectedUser = accountService.getProfile(raw.selectedLoginUserId ?? '')
+    const activeUser = accountService.getProfile(raw.activeUserId ?? '')
+
+    return {
+        activeUserId: activeUser?.id ?? null,
+        selectedLoginUserId: selectedUser?.id ?? accountService.getDefaultLoginUserId(),
+        isLocked: raw.isLocked ?? true,
+    }
+}
+
+export const sessionStorage = {
+    load(): SessionSnapshot {
+        if (!canUseStorage()) {
+            return { ...DEFAULT_SNAPSHOT }
+        }
+
+        const serialized = window.localStorage.getItem(SESSION_KEY)
+        if (!serialized) {
+            return { ...DEFAULT_SNAPSHOT }
+        }
+
+        try {
+            const parsed = JSON.parse(serialized) as Partial<SessionSnapshot>
+            return normalize(parsed)
+        } catch {
+            return { ...DEFAULT_SNAPSHOT }
+        }
+    },
+
+    save(snapshot: SessionSnapshot) {
+        if (!canUseStorage()) {
+            return
+        }
+
+        try {
+            window.localStorage.setItem(SESSION_KEY, JSON.stringify(snapshot))
+        } catch {
+            // Keep in-memory session alive when persistence fails.
+        }
+    },
+}

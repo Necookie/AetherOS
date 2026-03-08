@@ -1,4 +1,4 @@
-import { getVisibleItems } from '../../vfs/fsState';
+import { getDirectoryTree, getVisibleItems } from '../../vfs/fsState';
 import type { FsStoreState } from './types';
 
 export const HOME_PATH = '/home/user';
@@ -11,6 +11,14 @@ export const initialFsState: FsStoreState = {
     selectedIds: [],
     showHidden: false,
     searchQuery: '',
-    items: getVisibleItems(HOME_PATH, ''),
+    sortBy: 'name',
+    sortDirection: 'asc',
+    items: getVisibleItems(HOME_PATH, '', {
+        includeHidden: false,
+        sortBy: 'name',
+        sortDirection: 'asc',
+    }),
+    directoryTree: getDirectoryTree('/', false),
+    isMutating: false,
     error: null,
 };

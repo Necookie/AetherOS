@@ -1,72 +1,25 @@
-import { useEffect } from 'react'
-import { selectOrderedWindows } from '../../features/window-manager/selectors'
+import { memo } from 'react'
+import { selectWindowComponentById, selectWindowOrder } from '../../features/window-manager/selectors'
+import { useWindowShortcuts } from '../../features/window-manager/useWindowShortcuts'
 import { useWindowStore } from '../../stores/windowStore'
 
-function isEditableTarget(target: EventTarget | null) {
-    if (!(target instanceof HTMLElement)) {
-        return false
+const WindowRenderer = memo(function WindowRenderer({ id }: { id: string }) {
+    const WindowComponent = useWindowStore(selectWindowComponentById(id))
+    if (!WindowComponent) {
+        return null
     }
 
-    return target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)
-}
+    return <WindowComponent id={id} />
+})
 
 export default function DesktopWindows() {
-    const windows = useWindowStore(selectOrderedWindows)
-
-    useEffect(() => {
-        const onKeyDown = (e: KeyboardEvent) => {
-            if (isEditableTarget(e.target)) {
-                return
-            }
-
-            const store = useWindowStore.getState()
-            const visibleWindowIds = store.windowOrder.filter((id) => !store.windows[id]?.state.isMinimized)
-
-            if (e.altKey && e.key === 'Tab') {
-                e.preventDefault()
-                if (visibleWindowIds.length === 0) {
-                    return
-                }
-
-                const currentIndex = visibleWindowIds.indexOf(store.focusedWindowId ?? '')
-                const step = e.shiftKey ? -1 : 1
-                const startIndex = currentIndex === -1 ? 0 : currentIndex
-                const nextIndex = (startIndex + step + visibleWindowIds.length) % visibleWindowIds.length
-                store.focusWindow(visibleWindowIds[nextIndex])
-                return
-            }
-
-            const focusedId = store.focusedWindowId
-            if (!focusedId) {
-                return
-            }
-
-            if (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'w') {
-                e.preventDefault()
-                store.closeWindow(focusedId)
-                return
-            }
-
-            if (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'm') {
-                e.preventDefault()
-                store.toggleMinimize(focusedId)
-                return
-            }
-
-            if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'm') {
-                e.preventDefault()
-                store.toggleMaximize(focusedId)
-            }
-        }
-
-        window.addEventListener('keydown', onKeyDown)
-        return () => window.removeEventListener('keydown', onKeyDown)
-    }, [])
+    const windowOrder = useWindowStore(selectWindowOrder)
+    useWindowShortcuts()
 
     return (
-        <div className="flex-1 relative z-20 pointer-events-auto">
-            {windows.map((windowData) => (
-                <windowData.component key={windowData.id} id={windowData.id} />
+        <div className="relative z-20 h-full w-full pointer-events-auto">
+            {windowOrder.map((windowId) => (
+                <WindowRenderer key={windowId} id={windowId} />
             ))}
         </div>
     )

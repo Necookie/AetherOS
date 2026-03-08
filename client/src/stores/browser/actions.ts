@@ -1,9 +1,19 @@
 import {
-    createExternalTabState,
-    createHistoryEntry,
+    applyBack,
+    applyForward,
     createTabId,
     createTabState,
-} from '../../apps/browser/browserState';
+} from '../../apps/browser/domains/tabs/tabDomain';
+import { appendHistory } from '../../apps/browser/domains/history/historyDomain';
+import {
+    hasBookmark,
+    removeBookmark,
+    upsertBookmark,
+} from '../../apps/browser/domains/bookmarks/bookmarkDomain';
+import {
+    markNavigation,
+    markTabActivated,
+} from '../../apps/browser/domains/session/sessionDomain';
 import type { BrowserStore } from './types';
 
 function withUpdatedTab(
@@ -37,6 +47,7 @@ export function createBrowserActions(
                 tabsById: { ...state.tabsById, [id]: newTab },
                 tabOrder: [...state.tabOrder, id],
                 activeTabId: id,
+                session: markTabActivated(state.session, id),
             }));
         },
         closeTab: (id: string) => {
@@ -62,6 +73,7 @@ export function createBrowserActions(
                         tabsById: { [newId]: createTabState(newId) },
                         tabOrder: [newId],
                         activeTabId: newId,
+                        session: markTabActivated(state.session, newId),
                     };
                 }
 
@@ -69,10 +81,14 @@ export function createBrowserActions(
                     tabsById: newTabsById,
                     tabOrder: newTabOrder,
                     activeTabId: newActiveTabId,
+                    session: markTabActivated(state.session, newActiveTabId),
                 };
             });
         },
-        setActiveTab: (id: string) => set({ activeTabId: id }),
+        setActiveTab: (id: string) => set((state) => ({
+            activeTabId: id,
+            session: markTabActivated(state.session, id),
+        })),
         navigate: (id: string, inputString: string) => {
             get().navigateToUrl(id, inputString);
         },
@@ -91,13 +107,21 @@ export function createBrowserActions(
 
             set((state) => {
                 const existingTab = state.tabsById[tabId];
-                const newTab = createExternalTabState(tabId, url, existingTab);
-                const newTabOrder = existingTab ? state.tabOrder : [...state.tabOrder, tabId];
+                const nextTab = {
+                    ...(existingTab || createTabState(tabId)),
+                    title: new URL(url).hostname || 'External Link',
+                    url,
+                    displayUrl: url,
+                    mode: 'external' as const,
+                    externalUrl: url,
+                    isLoading: false,
+                };
 
                 return {
-                    tabsById: { ...state.tabsById, [tabId]: newTab },
-                    tabOrder: newTabOrder,
+                    tabsById: { ...state.tabsById, [tabId]: nextTab },
+                    tabOrder: existingTab ? state.tabOrder : [...state.tabOrder, tabId],
                     activeTabId: tabId,
+                    session: markTabActivated(state.session, tabId),
                 };
             });
 
@@ -108,42 +132,10 @@ export function createBrowserActions(
             }
         },
         back: (id: string) => {
-            set((state) => withUpdatedTab(state, id, (tab) => {
-                if (tab.backStack.length === 0) {
-                    return tab;
-                }
-
-                const newBackStack = [...tab.backStack];
-                const previousUrl = newBackStack.pop()!;
-
-                return {
-                    ...tab,
-                    backStack: newBackStack,
-                    forwardStack: tab.url ? [...tab.forwardStack, tab.url] : tab.forwardStack,
-                    url: previousUrl,
-                    displayUrl: previousUrl,
-                    isLoading: true,
-                };
-            }));
+            set((state) => withUpdatedTab(state, id, (tab) => applyBack(tab)));
         },
         forward: (id: string) => {
-            set((state) => withUpdatedTab(state, id, (tab) => {
-                if (tab.forwardStack.length === 0) {
-                    return tab;
-                }
-
-                const newForwardStack = [...tab.forwardStack];
-                const nextUrl = newForwardStack.pop()!;
-
-                return {
-                    ...tab,
-                    forwardStack: newForwardStack,
-                    backStack: tab.url ? [...tab.backStack, tab.url] : tab.backStack,
-                    url: nextUrl,
-                    displayUrl: nextUrl,
-                    isLoading: true,
-                };
-            }));
+            set((state) => withUpdatedTab(state, id, (tab) => applyForward(tab)));
         },
         reload: (id: string) => {
             set((state) => withUpdatedTab(state, id, (tab) => ({ ...tab, isLoading: true })));
@@ -152,7 +144,22 @@ export function createBrowserActions(
             settings: { ...state.settings, defaultSearchEngine: engine },
         })),
         recordHistory: (entry: Parameters<BrowserStore['recordHistory']>[0]) => set((state) => ({
-            historyGlobal: [...state.historyGlobal, createHistoryEntry(entry)],
+            historyGlobal: appendHistory(state.historyGlobal, entry),
+            session: markNavigation(state.session, state.activeTabId),
+        })),
+        toggleBookmark: (entry: { url: string; title: string }) => set((state) => ({
+            bookmarks: hasBookmark(state.bookmarks, entry.url)
+                ? removeBookmark(state.bookmarks, entry.url)
+                : upsertBookmark(state.bookmarks, entry),
+        })),
+        setConnectivityOnline: (online: boolean) => set((state) => ({
+            connectivity: { ...state.connectivity, online },
+        })),
+        setConnectivityLatency: (latencyMs: number) => set((state) => ({
+            connectivity: {
+                ...state.connectivity,
+                latencyMs: Math.max(0, Math.round(latencyMs)),
+            },
         })),
     };
 }
