@@ -53,10 +53,12 @@ function useClickOutside(
 }
 
 export default function ShellFrame() {
-    const { windows, openWindow, toggleMinimize } = useWindowStore((state) => ({
+    const { windows, focusedWindowId, openWindow, toggleMinimize, restoreWindow } = useWindowStore((state) => ({
         windows: state.windows,
+        focusedWindowId: state.focusedWindowId,
         openWindow: state.openWindow,
         toggleMinimize: state.toggleMinimize,
+        restoreWindow: state.restoreWindow,
     }), shallow)
     const [isLauncherOpen, setLauncherOpen] = useState(false)
     const [launcherQuery, setLauncherQuery] = useState('')
@@ -102,7 +104,12 @@ export default function ShellFrame() {
             return
         }
 
-        toggleMinimize(app.id)
+        if (focusedWindowId === app.id && !windows[app.id].state.isMinimized) {
+            toggleMinimize(app.id)
+            return
+        }
+
+        restoreWindow(app.id)
     }
 
     const launchFromMenu = (appId: string) => {

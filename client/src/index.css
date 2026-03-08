@@ -91,7 +91,7 @@
   }
 
   .os-window-motion {
-    transition-duration: 120ms;
+    transition-duration: 110ms;
     transition-timing-function: ease-out;
   }
 
@@ -101,7 +101,7 @@
   }
 
   .animate-os-window-in {
-    animation: os-window-in 120ms ease-out;
+    animation: os-window-in 110ms ease-out;
   }
 
   .animate-os-minimize {
@@ -149,5 +149,16 @@
   to {
     opacity: 0.5;
     transform: scale(0.985);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .os-hover-motion,
+  .os-window-motion,
+  .os-panel-motion,
+  .animate-os-window-in,
+  .animate-os-minimize {
+    animation: none !important;
+    transition-duration: 1ms !important;
   }
 }
