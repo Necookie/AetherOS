@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import DesktopShell from './components/DesktopShell'
 import LoadingScreen from './components/LoadingScreen'
 import LoginScreen from './components/LoginScreen'
+import AppErrorBoundary from './components/system/AppErrorBoundary'
 import { useKernelStore } from './stores/useKernelStore'
 import { useWindowStore } from './stores/windowStore'
 import { DEFAULT_APPS } from './config/windows'
@@ -40,11 +41,13 @@ function App() {
     }, [closeWindow, managedAppIds, processes])
 
     return (
-        <div className="h-screen w-screen overflow-hidden text-[var(--os-text-0)]">
-            {appState === 'loading' && <LoadingScreen onComplete={() => setAppState('login')} />}
-            {appState === 'login' && <LoginScreen onLogin={() => setAppState('desktop')} />}
-            {appState === 'desktop' && <DesktopShell />}
-        </div>
+        <AppErrorBoundary>
+            <div className="h-screen w-screen overflow-hidden text-[var(--os-text-0)]">
+                {appState === 'loading' && <LoadingScreen onComplete={() => setAppState('login')} />}
+                {appState === 'login' && <LoginScreen onLogin={() => setAppState('desktop')} />}
+                {appState === 'desktop' && <DesktopShell />}
+            </div>
+        </AppErrorBoundary>
     )
 }
 
