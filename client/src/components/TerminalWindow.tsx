@@ -68,6 +68,7 @@ export default function TerminalWindow({ id }: { id: string }) {
             }
         }
     }, [
+        windowData,
         windowData?.state.isMinimized,
         windowData?.state.isMaximized,
         windowData?.bounds.width,

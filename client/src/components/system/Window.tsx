@@ -42,9 +42,10 @@ export default function Window({ id, title, children }: WindowProps) {
                 height: bounds.height,
                 zIndex,
                 visibility: isMinimized ? 'hidden' : 'visible',
-                background: 'color-mix(in oklab, var(--os-surface-0) 94%, black 6%)',
-                borderColor: 'color-mix(in oklab, var(--os-border) 70%, black 30%)',
-                boxShadow: isFocused ? '0 24px 56px rgba(2, 6, 23, 0.62)' : '0 10px 28px rgba(2, 6, 23, 0.35)',
+                background: 'linear-gradient(180deg, rgb(255 255 255 / 0.78), rgb(255 255 255 / 0.62))',
+                borderColor: 'rgb(255 255 255 / 0.62)',
+                boxShadow: isFocused ? '0 30px 56px rgb(15 23 42 / 0.30)' : '0 14px 30px rgb(15 23 42 / 0.20)',
+                backdropFilter: 'blur(22px)',
             }}
             onPointerDown={() => focusWindow(id)}
             onWheel={(e) => {
@@ -78,7 +79,7 @@ export default function Window({ id, title, children }: WindowProps) {
             <div
                 className="flex h-10 select-none items-center justify-between border-b px-3"
                 style={{
-                    borderColor: 'color-mix(in oklab, var(--os-border) 65%, black 35%)',
+                    borderColor: 'rgb(255 255 255 / 0.68)',
                     cursor: isMaximized ? 'default' : 'grab',
                 }}
                 onPointerDown={isMaximized ? undefined : handlePointerDown}
@@ -90,22 +91,22 @@ export default function Window({ id, title, children }: WindowProps) {
                 <div className="flex items-center gap-2 pl-0.5" data-drag-handle="false">
                     <button
                         onClick={(e) => { e.stopPropagation(); closeWindow(id) }}
-                        className="os-hover-motion h-3 w-3 rounded-full bg-[var(--os-danger)]/90 transition-opacity hover:opacity-100"
+                        className="os-hover-motion h-3 w-3 rounded-full border border-red-400/30 bg-[#ff5f57] transition-opacity hover:opacity-100"
                         title="Close"
                     />
                     <button
                         onClick={(e) => { e.stopPropagation(); toggleMinimize(id) }}
-                        className="os-hover-motion h-3 w-3 rounded-full bg-[var(--os-warn)]/90 transition-opacity hover:opacity-100"
+                        className="os-hover-motion h-3 w-3 rounded-full border border-amber-400/30 bg-[#febc2e] transition-opacity hover:opacity-100"
                         title="Minimize"
                     />
                     <button
                         onClick={(e) => { e.stopPropagation(); toggleMaximize(id) }}
-                        className="os-hover-motion h-3 w-3 rounded-full bg-[var(--os-success)]/90 transition-opacity hover:opacity-100"
+                        className="os-hover-motion h-3 w-3 rounded-full border border-emerald-400/30 bg-[#28c840] transition-opacity hover:opacity-100"
                         title="Maximize"
                     />
                 </div>
 
-                <div className="pointer-events-none flex-1 truncate px-4 text-center text-[13px] font-medium text-slate-100">
+                <div className="pointer-events-none flex-1 truncate px-4 text-center text-[13px] font-medium text-slate-800">
                     {title}
                 </div>
 
@@ -114,7 +115,7 @@ export default function Window({ id, title, children }: WindowProps) {
 
             <div
                 className="relative flex-1 overflow-hidden"
-                style={{ background: 'color-mix(in oklab, var(--os-surface-0) 88%, black 12%)' }}
+                style={{ background: 'color-mix(in oklab, white 74%, #dbeafe 26%)' }}
             >
                 {children}
             </div>
@@ -148,7 +149,7 @@ export default function Window({ id, title, children }: WindowProps) {
                         window.addEventListener('pointerup', onUp)
                     }}
                 >
-                    <div className="absolute bottom-1 right-1 h-2 w-2 rounded-br-[2px] border-b-2 border-r-2 border-slate-500/70" />
+                    <div className="absolute bottom-1 right-1 h-2 w-2 rounded-br-[2px] border-b-2 border-r-2 border-slate-500/50" />
                 </div>
             )}
         </div>

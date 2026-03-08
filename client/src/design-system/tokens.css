@@ -1,0 +1,40 @@
+:root {
+  --ds-color-bg-canvas: #cde8ff;
+  --ds-color-bg-elevated: #f1f7ff;
+  --ds-color-surface-0: #ffffff;
+  --ds-color-surface-1: #ecf4ff;
+  --ds-color-border: #b9cae2;
+  --ds-color-text-primary: #172033;
+  --ds-color-text-muted: #4f678a;
+  --ds-color-accent: #0a84ff;
+  --ds-color-success: #22c55e;
+  --ds-color-danger: #ef4444;
+
+  --ds-space-1: 0.25rem;
+  --ds-space-2: 0.5rem;
+  --ds-space-3: 0.75rem;
+  --ds-space-4: 1rem;
+  --ds-space-5: 1.25rem;
+  --ds-space-6: 1.5rem;
+
+  --ds-radius-sm: 0.5rem;
+  --ds-radius-md: 0.75rem;
+  --ds-radius-lg: 1rem;
+  --ds-radius-xl: 1.25rem;
+
+  --ds-shadow-sm: 0 8px 18px rgb(30 58 138 / 0.16);
+  --ds-shadow-md: 0 16px 32px rgb(30 58 138 / 0.24);
+  --ds-shadow-lg: 0 22px 44px rgb(30 58 138 / 0.3);
+
+  --ds-z-topbar: 500;
+  --ds-z-desktop: 400;
+  --ds-z-dock: 700;
+  --ds-z-flyout: 900;
+
+  --ds-font-ui: "Segoe UI", "Inter", "SF Pro Text", system-ui, sans-serif;
+  --ds-font-mono: "JetBrains Mono", "Cascadia Code", "Fira Code", monospace;
+
+  --shell-topbar-height: 2rem;
+  --shell-dock-height: 3.5rem;
+  --shell-edge-gap: 0.75rem;
+}

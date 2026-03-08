@@ -1,0 +1,39 @@
+@layer components {
+  .ds-surface {
+    background: color-mix(in oklab, var(--ds-color-surface-0) 86%, black 14%);
+    border: 1px solid color-mix(in oklab, var(--ds-color-border) 72%, black 28%);
+    box-shadow: var(--ds-shadow-md);
+  }
+
+  .ds-surface-subtle {
+    background: color-mix(in oklab, var(--ds-color-surface-1) 82%, black 18%);
+    border: 1px solid color-mix(in oklab, var(--ds-color-border) 66%, black 34%);
+  }
+
+  .ds-button {
+    @apply inline-flex items-center justify-center rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-100;
+    color: var(--ds-color-text-primary);
+    background: color-mix(in oklab, var(--ds-color-surface-1) 80%, black 20%);
+    border: 1px solid color-mix(in oklab, var(--ds-color-border) 62%, black 38%);
+  }
+
+  .ds-button:hover {
+    background: color-mix(in oklab, var(--ds-color-surface-1) 72%, white 28%);
+  }
+
+  .ds-input {
+    @apply w-full rounded-md px-3 py-2 text-sm outline-none transition-colors duration-100;
+    color: var(--ds-color-text-primary);
+    background: color-mix(in oklab, var(--ds-color-bg-canvas) 78%, black 22%);
+    border: 1px solid color-mix(in oklab, var(--ds-color-border) 64%, black 36%);
+  }
+
+  .ds-input::placeholder {
+    color: var(--ds-color-text-muted);
+  }
+
+  .ds-input:focus {
+    border-color: color-mix(in oklab, var(--ds-color-accent) 70%, white 30%);
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--ds-color-accent) 28%, transparent);
+  }
+}

@@ -32,21 +32,21 @@ export default function ExternalPage({ url, onOpenAgain, onTryEmbed }: ExternalP
     };
 
     return (
-        <div className="flex h-full w-full select-none flex-col items-center justify-center bg-slate-900/80 px-6">
-            <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-slate-700 bg-slate-800 shadow-sm">
-                <Globe className="h-7 w-7 text-indigo-300" />
+        <div className="flex h-full w-full select-none flex-col items-center justify-center bg-[linear-gradient(165deg,#cae8ff_0%,#d9d8ff_44%,#ffd7ea_100%)] px-6">
+            <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-white/80 bg-white/70 shadow-sm">
+                <Globe className="h-7 w-7 text-sky-500" />
             </div>
-            <h2 className="mb-1 text-base font-semibold text-slate-100">{hostname}</h2>
-            <p className="mb-6 max-w-sm text-center text-sm leading-relaxed text-slate-400">
+            <h2 className="mb-1 text-base font-semibold text-slate-800">{hostname}</h2>
+            <p className="mb-6 max-w-sm text-center text-sm leading-relaxed text-slate-600">
                 This site was opened in a real browser tab for full compatibility.
             </p>
-            <div className="font-term mb-6 w-full max-w-sm truncate rounded-lg border border-slate-700 bg-slate-950/80 px-3 py-2 text-center text-xs text-slate-400">
+            <div className="font-term mb-6 w-full max-w-sm truncate rounded-lg border border-white/80 bg-white/80 px-3 py-2 text-center text-xs text-slate-700">
                 {url}
             </div>
             <div className="flex flex-wrap gap-2 justify-center">
                 <button
                     onClick={onOpenAgain}
-                    className="flex items-center gap-1.5 rounded-md bg-indigo-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-indigo-400 active:scale-95"
+                    className="flex items-center gap-1.5 rounded-md bg-sky-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-sky-400 active:scale-95"
                 >
                     <ExternalLink className="w-3.5 h-3.5" />
                     Open again
@@ -54,7 +54,7 @@ export default function ExternalPage({ url, onOpenAgain, onTryEmbed }: ExternalP
 
                 <button
                     onClick={handleCopy}
-                    className="flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-800 px-4 py-2 text-sm font-medium text-slate-200 shadow-sm transition-all hover:bg-slate-700 active:scale-95"
+                    className="flex items-center gap-1.5 rounded-md border border-white/80 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all hover:bg-white active:scale-95"
                 >
                     {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
                     {copied ? 'Copied!' : 'Copy URL'}
@@ -63,7 +63,7 @@ export default function ExternalPage({ url, onOpenAgain, onTryEmbed }: ExternalP
                 {onTryEmbed && (
                     <button
                         onClick={onTryEmbed}
-                        className="flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-800 px-4 py-2 text-sm text-slate-300 shadow-sm transition-all hover:bg-slate-700 active:scale-95"
+                        className="flex items-center gap-1.5 rounded-md border border-white/80 bg-white/80 px-4 py-2 text-sm text-slate-700 shadow-sm transition-all hover:bg-white active:scale-95"
                     >
                         <RefreshCw className="w-3.5 h-3.5" />
                         Try embed

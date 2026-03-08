@@ -35,10 +35,10 @@ function Toast({ toast, onDismiss }: { toast: ToastMessage; onDismiss: (id: stri
     }, [toast.id, onDismiss]);
 
     const bgColor = toast.type === 'error'
-        ? 'bg-red-950/90 border-red-700 text-red-200'
+        ? 'bg-red-50/90 border-red-300 text-red-700'
         : toast.type === 'warning'
-            ? 'bg-amber-950/90 border-amber-700 text-amber-200'
-            : 'bg-slate-900/90 border-slate-700 text-slate-100';
+            ? 'bg-amber-50/90 border-amber-300 text-amber-700'
+            : 'bg-white/90 border-white text-slate-800';
 
     return (
         <div

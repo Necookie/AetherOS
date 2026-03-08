@@ -1,0 +1,30 @@
+import type { WindowBounds } from '../types/windowManager'
+
+export interface AppManifestEntry {
+    id: string
+    title: string
+    defaultBounds?: WindowBounds
+}
+
+export const APP_MANIFEST: AppManifestEntry[] = [
+    {
+        id: 'term',
+        title: 'Terminal',
+        defaultBounds: { x: 50, y: 50, width: 600, height: 400 },
+    },
+    {
+        id: 'taskmgr',
+        title: 'Task Manager',
+        defaultBounds: { x: 100, y: 100, width: 600, height: 400 },
+    },
+    {
+        id: 'explorer',
+        title: 'File Manager',
+        defaultBounds: { x: 150, y: 150, width: 800, height: 500 },
+    },
+    {
+        id: 'browser',
+        title: 'Aether Browser',
+        defaultBounds: { x: 100, y: 60, width: 900, height: 600 },
+    },
+]
