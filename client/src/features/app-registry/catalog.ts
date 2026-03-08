@@ -127,17 +127,53 @@ export const APP_REGISTRY_CATALOG: RegistryAppMetadata[] = [
         summary: 'Quick capture workspace for local notes.',
         category: 'productivity',
         iconId: 'notes',
-        launchable: false,
+        launchable: true,
         releases: [
             {
-                version: '1.2.0',
+                version: '2.0.0',
                 dependencies: [{ appId: 'explorer', range: '>=1.1.0 <2.0.0' }],
-                changelog: 'Search indexing and notebook pinning.',
+                changelog: 'Shared productivity workspace with autosave and cross-link previews.',
             },
             {
                 version: '1.0.0',
                 dependencies: [{ appId: 'explorer', range: '>=1.0.0 <2.0.0' }],
                 changelog: 'Initial text capture and autosave support.',
+            },
+        ],
+    },
+    {
+        id: 'docs',
+        title: 'Docs',
+        summary: 'Rich text authoring workspace for structured documents.',
+        category: 'productivity',
+        iconId: 'docs',
+        launchable: true,
+        releases: [
+            {
+                version: '1.0.0',
+                dependencies: [
+                    { appId: 'explorer', range: '>=1.1.0 <2.0.0' },
+                    { appId: 'notes', range: '>=2.0.0 <3.0.0' },
+                ],
+                changelog: 'Rich text editing with shared draft autosave and linked references.',
+            },
+        ],
+    },
+    {
+        id: 'boards',
+        title: 'Boards',
+        summary: 'Kanban planning boards integrated with notes and docs.',
+        category: 'productivity',
+        iconId: 'boards',
+        launchable: true,
+        releases: [
+            {
+                version: '1.0.0',
+                dependencies: [
+                    { appId: 'explorer', range: '>=1.1.0 <2.0.0' },
+                    { appId: 'notes', range: '>=2.0.0 <3.0.0' },
+                ],
+                changelog: 'Column-based task boards with cross-app linking and autosave drafts.',
             },
         ],
     },
@@ -187,4 +223,4 @@ export const APP_REGISTRY_CATALOG: RegistryAppMetadata[] = [
     },
 ]
 
-export const PREINSTALLED_APP_IDS = ['appstore', 'browser', 'explorer', 'term', 'taskmgr', 'settings'] as const
+export const PREINSTALLED_APP_IDS = ['appstore', 'browser', 'explorer', 'notes', 'docs', 'boards', 'term', 'taskmgr', 'settings'] as const

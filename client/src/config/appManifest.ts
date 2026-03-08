@@ -37,4 +37,19 @@ export const APP_MANIFEST: AppManifestEntry[] = [
         title: 'Settings',
         defaultBounds: { x: 140, y: 90, width: 980, height: 640 },
     },
+    {
+        id: 'notes',
+        title: 'Notes',
+        defaultBounds: { x: 190, y: 80, width: 1040, height: 690 },
+    },
+    {
+        id: 'docs',
+        title: 'Docs',
+        defaultBounds: { x: 210, y: 95, width: 1080, height: 710 },
+    },
+    {
+        id: 'boards',
+        title: 'Boards',
+        defaultBounds: { x: 230, y: 110, width: 1100, height: 720 },
+    },
 ]
