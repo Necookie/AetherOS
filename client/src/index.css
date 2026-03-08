@@ -17,6 +17,11 @@
     --os-success: var(--ds-color-success);
     --os-danger: var(--ds-color-danger);
     --os-shadow: var(--ds-shadow-md);
+    --os-focus-ring-width: 2px;
+    --os-control-min-height: 2.25rem;
+    --os-motion-fast: 90ms;
+    --os-motion-normal: 160ms;
+    --os-window-backdrop-blur: 22px;
   }
 
   * {
@@ -42,6 +47,11 @@
   input {
     font: inherit;
   }
+
+  :focus-visible {
+    outline: var(--os-focus-ring-width) solid color-mix(in oklab, var(--os-accent) 70%, white 30%);
+    outline-offset: 1px;
+  }
 }
 
 @layer components {
@@ -58,6 +68,7 @@
 
   .os-button {
     @apply inline-flex items-center justify-center rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-100;
+    min-height: var(--os-control-min-height);
     color: var(--os-text-0);
     background: color-mix(in oklab, var(--os-surface-1) 82%, white 18%);
     border: 1px solid color-mix(in oklab, var(--os-border) 72%, white 28%);
@@ -69,6 +80,7 @@
 
   .os-input {
     @apply w-full rounded-md px-3 py-1.5 text-xs outline-none transition-colors duration-100;
+    min-height: var(--os-control-min-height);
     color: var(--os-text-0);
     background: color-mix(in oklab, var(--os-bg-1) 88%, white 12%);
     border: 1px solid color-mix(in oklab, var(--os-border) 65%, white 35%);
@@ -86,17 +98,17 @@
 
 @layer utilities {
   .os-hover-motion {
-    transition-duration: 80ms;
+    transition-duration: var(--os-motion-fast);
     transition-timing-function: ease-out;
   }
 
   .os-window-motion {
-    transition-duration: 110ms;
+    transition-duration: var(--os-motion-fast);
     transition-timing-function: ease-out;
   }
 
   .os-panel-motion {
-    transition-duration: 160ms;
+    transition-duration: var(--os-motion-normal);
     transition-timing-function: ease-out;
   }
 

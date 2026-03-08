@@ -6,11 +6,12 @@ import type { WindowData } from '../../../types/windowManager'
 
 interface DockProps {
     windows: Record<string, WindowData>
+    taskbarPosition: 'bottom' | 'top'
     onLaunchOrToggle: (appId: string) => void
     onToggleLauncher: () => void
 }
 
-export default function Dock({ windows, onLaunchOrToggle, onToggleLauncher }: DockProps) {
+export default function Dock({ windows, taskbarPosition, onLaunchOrToggle, onToggleLauncher }: DockProps) {
     const [previewAppId, setPreviewAppId] = useState<string | null>(null)
     const previewWindow = useMemo(() => (
         previewAppId ? windows[previewAppId] : undefined
@@ -18,7 +19,7 @@ export default function Dock({ windows, onLaunchOrToggle, onToggleLauncher }: Do
 
     return (
         <nav
-            className="absolute bottom-[var(--shell-edge-gap)] left-1/2 z-[var(--ds-z-dock)] flex h-[var(--shell-dock-height)] w-[min(36rem,calc(100vw-1.5rem))] -translate-x-1/2 items-center gap-1 rounded-2xl px-2 backdrop-blur-2xl"
+            className={`absolute left-1/2 z-[var(--ds-z-dock)] flex h-[var(--shell-dock-height)] w-[min(36rem,calc(100vw-1.5rem))] -translate-x-1/2 items-center gap-1 rounded-2xl px-2 backdrop-blur-2xl ${taskbarPosition === 'top' ? 'top-[calc(var(--shell-topbar-height)+var(--shell-edge-gap))]' : 'bottom-[var(--shell-edge-gap)]'}`}
             style={{
                 background: 'linear-gradient(180deg, rgb(255 255 255 / 0.35), rgb(255 255 255 / 0.16))',
                 border: '1px solid rgb(255 255 255 / 0.45)',
@@ -36,7 +37,7 @@ export default function Dock({ windows, onLaunchOrToggle, onToggleLauncher }: Do
 
             <div className="mx-1 h-7 w-px bg-slate-500/30" />
 
-            <div className="grid flex-1 grid-cols-4 gap-1">
+            <div className="grid flex-1 grid-cols-5 gap-1">
                 {SHELL_APPS.map((app) => {
                     const isOpen = Boolean(windows[app.id])
                     const isFocused = windows[app.id]?.state.isFocused

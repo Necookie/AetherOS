@@ -2,6 +2,7 @@ import { Apple, BatteryCharging, Search, Volume2, Wifi } from 'lucide-react'
 
 interface TopBarProps {
     now: Date
+    showSeconds: boolean
     onToggleLauncher: () => void
     onToggleQuickSettings: () => void
     onToggleDateTime: () => void
@@ -9,6 +10,7 @@ interface TopBarProps {
 
 export default function TopBar({
     now,
+    showSeconds,
     onToggleLauncher,
     onToggleQuickSettings,
     onToggleDateTime,
@@ -43,7 +45,7 @@ export default function TopBar({
                     <Search className="h-3.5 w-3.5" />
                 </button>
                 <button className="rounded px-2 py-0.5 hover:bg-white/20" onClick={onToggleDateTime} aria-label="Date and time">
-                    {now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })} {now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })} {now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: showSeconds ? '2-digit' : undefined })}
                 </button>
             </div>
         </header>

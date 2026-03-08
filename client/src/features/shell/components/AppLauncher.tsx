@@ -4,6 +4,7 @@ import { ShellAppIcon } from '../model/appIcons'
 import type { WindowData } from '../../../types/windowManager'
 
 interface AppLauncherProps {
+    taskbarPosition: 'bottom' | 'top'
     query: string
     windows: Record<string, WindowData>
     onQueryChange: (nextValue: string) => void
@@ -11,6 +12,7 @@ interface AppLauncherProps {
 }
 
 export default function AppLauncher({
+    taskbarPosition,
     query,
     windows,
     onQueryChange,
@@ -20,7 +22,7 @@ export default function AppLauncher({
 
     return (
         <div
-            className="absolute bottom-[calc(var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)] left-0 z-[var(--ds-z-flyout)] w-[min(30rem,calc(100vw-1.5rem))] rounded-2xl p-3 backdrop-blur-2xl"
+            className={`absolute left-0 z-[var(--ds-z-flyout)] w-[min(30rem,calc(100vw-1.5rem))] rounded-2xl p-3 backdrop-blur-2xl ${taskbarPosition === 'top' ? 'top-[calc(var(--shell-topbar-height)+var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)]' : 'bottom-[calc(var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)]'}`}
             style={{
                 background: 'linear-gradient(180deg, rgb(255 255 255 / 0.54), rgb(255 255 255 / 0.34))',
                 border: '1px solid rgb(255 255 255 / 0.56)',

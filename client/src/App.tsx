@@ -5,10 +5,13 @@ import LoginScreen from './components/LoginScreen'
 import { useKernelStore } from './stores/useKernelStore'
 import { useWindowStore } from './stores/windowStore'
 import { DEFAULT_APPS } from './config/windows'
+import { useApplySettings } from './features/settings/useApplySettings'
 
 type AppState = 'loading' | 'login' | 'desktop';
 
 function App() {
+    useApplySettings()
+
     const initKernel = useKernelStore(state => state.initKernel)
     const processes = useKernelStore(state => state.processes)
     const closeWindow = useWindowStore(state => state.closeWindow)
