@@ -8,6 +8,11 @@ export interface AppManifestEntry {
 
 export const APP_MANIFEST: AppManifestEntry[] = [
     {
+        id: 'appstore',
+        title: 'App Store',
+        defaultBounds: { x: 180, y: 90, width: 1020, height: 680 },
+    },
+    {
         id: 'term',
         title: 'Terminal',
         defaultBounds: { x: 50, y: 50, width: 600, height: 400 },
