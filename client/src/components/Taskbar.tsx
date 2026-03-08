@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Activity, BatteryCharging, Globe, LayoutGrid, Monitor, Power, Search, Settings, Terminal, Volume2, Wifi } from 'lucide-react'
+import { Accessibility, Activity, BatteryCharging, Bluetooth, ChevronRight, Globe, LayoutGrid, Leaf, Monitor, Plane, Power, Search, Settings, SunMedium, Terminal, Volume2, VolumeX, Wifi } from 'lucide-react'
 import { shallow } from 'zustand/shallow'
 import { DEFAULT_APPS } from '../config/windows'
 import { useWindowStore } from '../stores/windowStore'
@@ -226,6 +226,103 @@ function DateTimeFlyout({
     )
 }
 
+function QuickSettingsFlyout() {
+    return (
+        <div
+            className="animate-os-window-in absolute bottom-16 right-24 z-[10000] w-[28rem] rounded-2xl border border-slate-600/70 shadow-2xl backdrop-blur-xl"
+            style={{
+                background: 'color-mix(in oklab, var(--os-surface-0) 84%, black 16%)',
+            }}
+        >
+            <div className="grid grid-cols-3 gap-3 p-4">
+                <button className="rounded-xl bg-[var(--os-accent)] px-3 py-3 text-left text-white transition-opacity hover:opacity-95">
+                    <div className="mb-3 flex items-center justify-between">
+                        <Wifi className="h-4 w-4" />
+                        <ChevronRight className="h-4 w-4" />
+                    </div>
+                    <p className="text-xs font-medium">ItHurtsWhenIP</p>
+                </button>
+
+                <button className="rounded-xl bg-[var(--os-accent)] px-3 py-3 text-left text-white transition-opacity hover:opacity-95">
+                    <div className="mb-3 flex items-center justify-between">
+                        <Bluetooth className="h-4 w-4" />
+                        <ChevronRight className="h-4 w-4" />
+                    </div>
+                    <p className="text-xs font-medium">Not connected</p>
+                </button>
+
+                <button className="rounded-xl border border-slate-700 bg-slate-800/60 px-3 py-3 text-left text-slate-100 transition-colors hover:bg-slate-700/70">
+                    <div className="mb-3 flex items-center justify-center">
+                        <Plane className="h-4 w-4" />
+                    </div>
+                    <p className="text-xs font-medium">Airplane mode</p>
+                </button>
+
+                <button className="rounded-xl border border-slate-700 bg-slate-800/60 px-3 py-3 text-left text-slate-100 transition-colors hover:bg-slate-700/70">
+                    <div className="mb-3 flex items-center justify-between">
+                        <Accessibility className="h-4 w-4" />
+                        <ChevronRight className="h-4 w-4" />
+                    </div>
+                    <p className="text-xs font-medium">Accessibility</p>
+                </button>
+
+                <button className="rounded-xl border border-slate-700 bg-slate-800/60 px-3 py-3 text-left text-slate-100 transition-colors hover:bg-slate-700/70">
+                    <div className="mb-3 flex items-center justify-center">
+                        <Leaf className="h-4 w-4" />
+                    </div>
+                    <p className="text-xs font-medium">Energy saver</p>
+                </button>
+
+                <button className="rounded-xl border border-slate-700 bg-slate-800/60 px-3 py-3 text-left text-slate-100 transition-colors hover:bg-slate-700/70">
+                    <div className="mb-3 flex items-center justify-center">
+                        <Monitor className="h-4 w-4" />
+                    </div>
+                    <p className="text-xs font-medium">Live captions</p>
+                </button>
+            </div>
+
+            <div className="space-y-4 border-t border-slate-700/80 px-4 py-4">
+                <div className="flex items-center gap-3">
+                    <SunMedium className="h-4 w-4 text-slate-200" />
+                    <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        value={96}
+                        readOnly
+                        className="h-1 w-full accent-[var(--os-accent)]"
+                        aria-label="Brightness"
+                    />
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <VolumeX className="h-4 w-4 text-slate-200" />
+                    <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        value={8}
+                        readOnly
+                        className="h-1 w-full accent-[var(--os-accent)]"
+                        aria-label="Volume"
+                    />
+                    <Volume2 className="h-4 w-4 text-slate-200" />
+                </div>
+            </div>
+
+            <div className="flex items-center justify-between border-t border-slate-700/80 px-4 py-3 text-slate-200">
+                <div className="flex items-center gap-2 text-sm">
+                    <BatteryCharging className="h-4 w-4 text-[var(--os-success)]" />
+                    <span>100%</span>
+                </div>
+                <button className="rounded-md border border-slate-700 bg-slate-800/80 p-1.5 text-slate-200 transition-colors hover:bg-slate-700">
+                    <Settings className="h-4 w-4" />
+                </button>
+            </div>
+        </div>
+    )
+}
+
 export default function Taskbar() {
     const { windows, toggleMinimize, openWindow } = useWindowStore((state) => ({
         windows: state.windows,
@@ -235,6 +332,7 @@ export default function Taskbar() {
     const [isStartMenuOpen, setIsStartMenuOpen] = useState(false)
     const [startQuery, setStartQuery] = useState('')
     const [isDateTimeOpen, setIsDateTimeOpen] = useState(false)
+    const [isQuickSettingsOpen, setIsQuickSettingsOpen] = useState(false)
     const [now, setNow] = useState(() => new Date())
     const [viewedMonth, setViewedMonth] = useState(() => {
         const current = new Date()
@@ -244,6 +342,8 @@ export default function Taskbar() {
     const startMenuRef = useRef<HTMLDivElement>(null)
     const dateTimeButtonRef = useRef<HTMLButtonElement>(null)
     const dateTimeFlyoutRef = useRef<HTMLDivElement>(null)
+    const quickSettingsButtonRef = useRef<HTMLButtonElement>(null)
+    const quickSettingsFlyoutRef = useRef<HTMLDivElement>(null)
 
     const filteredApps = useMemo(() => {
         const query = startQuery.trim().toLowerCase()
@@ -255,7 +355,7 @@ export default function Taskbar() {
     }, [startQuery])
 
     useEffect(() => {
-        if (!isStartMenuOpen && !isDateTimeOpen) {
+        if (!isStartMenuOpen && !isDateTimeOpen && !isQuickSettingsOpen) {
             return
         }
 
@@ -279,14 +379,23 @@ export default function Taskbar() {
                 return
             }
 
+            if (
+                quickSettingsFlyoutRef.current?.contains(target)
+                || quickSettingsButtonRef.current?.contains(target)
+            ) {
+                return
+            }
+
             setIsStartMenuOpen(false)
             setIsDateTimeOpen(false)
+            setIsQuickSettingsOpen(false)
         }
 
         const onKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
                 setIsStartMenuOpen(false)
                 setIsDateTimeOpen(false)
+                setIsQuickSettingsOpen(false)
             }
         }
 
@@ -296,7 +405,7 @@ export default function Taskbar() {
             window.removeEventListener('mousedown', onPointerDown)
             window.removeEventListener('keydown', onKeyDown)
         }
-    }, [isStartMenuOpen, isDateTimeOpen])
+    }, [isStartMenuOpen, isDateTimeOpen, isQuickSettingsOpen])
 
     useEffect(() => {
         if (!isStartMenuOpen) {
@@ -332,6 +441,7 @@ export default function Taskbar() {
                     ref={startButtonRef}
                     onClick={() => {
                         setIsDateTimeOpen(false)
+                        setIsQuickSettingsOpen(false)
                         setIsStartMenuOpen((open) => !open)
                     }}
                     className={`os-hover-motion group rounded-lg p-2 transition-colors ${isStartMenuOpen ? 'bg-white/10' : 'hover:bg-white/10'}`}
@@ -397,16 +507,33 @@ export default function Taskbar() {
             </div>
 
             <div className="flex items-center space-x-2 border-l border-slate-700 pl-3">
-                <div className="os-hover-motion flex cursor-pointer space-x-1 rounded-md px-2 py-1 text-slate-300 transition-colors hover:bg-white/10 hover:text-slate-100">
+                <button
+                    ref={quickSettingsButtonRef}
+                    onClick={() => {
+                        setIsStartMenuOpen(false)
+                        setIsDateTimeOpen(false)
+                        setIsQuickSettingsOpen((open) => !open)
+                    }}
+                    className="os-hover-motion flex space-x-1 rounded-md px-2 py-1 text-slate-300 transition-colors hover:bg-white/10 hover:text-slate-100"
+                    aria-expanded={isQuickSettingsOpen}
+                    aria-label="Open quick settings"
+                >
                     <Wifi className="h-4 w-4" />
                     <Volume2 className="h-4 w-4" />
                     <BatteryCharging className="h-4 w-4" />
-                </div>
+                </button>
+
+                {isQuickSettingsOpen && (
+                    <div ref={quickSettingsFlyoutRef}>
+                        <QuickSettingsFlyout />
+                    </div>
+                )}
 
                 <button
                     ref={dateTimeButtonRef}
                     onClick={() => {
                         setIsStartMenuOpen(false)
+                        setIsQuickSettingsOpen(false)
                         setIsDateTimeOpen((open) => !open)
                         setViewedMonth(new Date(now.getFullYear(), now.getMonth(), 1))
                     }}
