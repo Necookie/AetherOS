@@ -104,6 +104,128 @@ function StartMenu({
     )
 }
 
+const WEEKDAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
+
+function addDays(date: Date, days: number) {
+    const next = new Date(date)
+    next.setDate(next.getDate() + days)
+    return next
+}
+
+function getCalendarGrid(monthDate: Date) {
+    const year = monthDate.getFullYear()
+    const month = monthDate.getMonth()
+    const firstOfMonth = new Date(year, month, 1)
+    const startOffset = firstOfMonth.getDay()
+    const gridStart = addDays(firstOfMonth, -startOffset)
+
+    return Array.from({ length: 42 }, (_, index) => addDays(gridStart, index))
+}
+
+function isSameDay(left: Date, right: Date) {
+    return (
+        left.getFullYear() === right.getFullYear()
+        && left.getMonth() === right.getMonth()
+        && left.getDate() === right.getDate()
+    )
+}
+
+function DateTimeFlyout({
+    now,
+    viewedMonth,
+    onMonthBack,
+    onMonthForward,
+}: {
+    now: Date
+    viewedMonth: Date
+    onMonthBack: () => void
+    onMonthForward: () => void
+}) {
+    const gridDays = useMemo(() => getCalendarGrid(viewedMonth), [viewedMonth])
+    const timeDisplay = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    const headerDate = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })
+
+    return (
+        <div
+            className="animate-os-window-in absolute bottom-16 right-0 z-[10000] w-[26rem] rounded-2xl border border-slate-600/70 p-4 shadow-2xl backdrop-blur-xl"
+            style={{
+                background: 'color-mix(in oklab, var(--os-surface-0) 82%, black 18%)',
+            }}
+        >
+            <div className="mb-4 flex items-center justify-between">
+                <p className="text-lg font-medium text-slate-100">{headerDate}</p>
+                <button
+                    className="rounded-md border border-slate-700 bg-slate-800/80 px-2 py-1 text-xs text-slate-200 transition-colors hover:bg-slate-700"
+                    title="Collapse"
+                >
+                    v
+                </button>
+            </div>
+
+            <div className="rounded-xl border border-slate-700/80 bg-slate-900/40 p-4">
+                <div className="mb-4 flex items-center justify-between">
+                    <h3 className="text-2xl font-semibold text-slate-100">{viewedMonth.toLocaleDateString([], { month: 'long', year: 'numeric' })}</h3>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={onMonthBack}
+                            className="rounded-md border border-slate-700 bg-slate-800/80 px-2 py-1 text-xs text-slate-200 transition-colors hover:bg-slate-700"
+                            aria-label="Previous month"
+                        >
+                            &lt;
+                        </button>
+                        <button
+                            onClick={onMonthForward}
+                            className="rounded-md border border-slate-700 bg-slate-800/80 px-2 py-1 text-xs text-slate-200 transition-colors hover:bg-slate-700"
+                            aria-label="Next month"
+                        >
+                            &gt;
+                        </button>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-7 gap-y-2 text-center text-sm">
+                    {WEEKDAY_LABELS.map((label) => (
+                        <div key={label} className="pb-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+                            {label}
+                        </div>
+                    ))}
+
+                    {gridDays.map((date) => {
+                        const isCurrentMonth = date.getMonth() === viewedMonth.getMonth()
+                        const isToday = isSameDay(date, now)
+
+                        return (
+                            <div
+                                key={date.toISOString()}
+                                className={`mx-auto flex h-9 w-9 items-center justify-center rounded-full text-sm ${
+                                    isToday
+                                        ? 'bg-[var(--os-accent)] text-white'
+                                        : isCurrentMonth
+                                            ? 'text-slate-100'
+                                            : 'text-slate-500'
+                                }`}
+                            >
+                                {date.getDate()}
+                            </div>
+                        )
+                    })}
+                </div>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between rounded-xl border border-slate-700/80 bg-slate-900/30 px-3 py-2">
+                <div className="flex items-center gap-2 text-sm text-slate-200">
+                    <button className="rounded-md bg-slate-800 px-2 py-1 text-lg leading-none transition-colors hover:bg-slate-700">-</button>
+                    <span>30 mins</span>
+                    <button className="rounded-md bg-slate-800 px-2 py-1 text-lg leading-none transition-colors hover:bg-slate-700">+</button>
+                </div>
+                <button className="rounded-md border border-slate-700 bg-slate-800/80 px-3 py-1.5 text-sm text-slate-100 transition-colors hover:bg-slate-700">
+                    {timeDisplay}
+                </button>
+            </div>
+        </div>
+    )
+}
+
 export default function Taskbar() {
     const { windows, toggleMinimize, openWindow } = useWindowStore((state) => ({
         windows: state.windows,
@@ -112,8 +234,16 @@ export default function Taskbar() {
     }), shallow)
     const [isStartMenuOpen, setIsStartMenuOpen] = useState(false)
     const [startQuery, setStartQuery] = useState('')
+    const [isDateTimeOpen, setIsDateTimeOpen] = useState(false)
+    const [now, setNow] = useState(() => new Date())
+    const [viewedMonth, setViewedMonth] = useState(() => {
+        const current = new Date()
+        return new Date(current.getFullYear(), current.getMonth(), 1)
+    })
     const startButtonRef = useRef<HTMLButtonElement>(null)
     const startMenuRef = useRef<HTMLDivElement>(null)
+    const dateTimeButtonRef = useRef<HTMLButtonElement>(null)
+    const dateTimeFlyoutRef = useRef<HTMLDivElement>(null)
 
     const filteredApps = useMemo(() => {
         const query = startQuery.trim().toLowerCase()
@@ -125,7 +255,7 @@ export default function Taskbar() {
     }, [startQuery])
 
     useEffect(() => {
-        if (!isStartMenuOpen) {
+        if (!isStartMenuOpen && !isDateTimeOpen) {
             return
         }
 
@@ -142,12 +272,21 @@ export default function Taskbar() {
                 return
             }
 
+            if (
+                dateTimeFlyoutRef.current?.contains(target)
+                || dateTimeButtonRef.current?.contains(target)
+            ) {
+                return
+            }
+
             setIsStartMenuOpen(false)
+            setIsDateTimeOpen(false)
         }
 
         const onKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
                 setIsStartMenuOpen(false)
+                setIsDateTimeOpen(false)
             }
         }
 
@@ -157,13 +296,23 @@ export default function Taskbar() {
             window.removeEventListener('mousedown', onPointerDown)
             window.removeEventListener('keydown', onKeyDown)
         }
-    }, [isStartMenuOpen])
+    }, [isStartMenuOpen, isDateTimeOpen])
 
     useEffect(() => {
         if (!isStartMenuOpen) {
             setStartQuery('')
         }
     }, [isStartMenuOpen])
+
+    useEffect(() => {
+        const interval = window.setInterval(() => {
+            setNow(new Date())
+        }, 1000)
+
+        return () => {
+            window.clearInterval(interval)
+        }
+    }, [])
 
     const launchFromStartMenu = (app: AppDefinition) => {
         openWindow(app)
@@ -181,7 +330,10 @@ export default function Taskbar() {
             <div className="flex items-center space-x-1">
                 <button
                     ref={startButtonRef}
-                    onClick={() => setIsStartMenuOpen((open) => !open)}
+                    onClick={() => {
+                        setIsDateTimeOpen(false)
+                        setIsStartMenuOpen((open) => !open)
+                    }}
                     className={`os-hover-motion group rounded-lg p-2 transition-colors ${isStartMenuOpen ? 'bg-white/10' : 'hover:bg-white/10'}`}
                     aria-expanded={isStartMenuOpen}
                     aria-label="Open Start menu"
@@ -251,10 +403,31 @@ export default function Taskbar() {
                     <BatteryCharging className="h-4 w-4" />
                 </div>
 
-                <div className="os-hover-motion flex cursor-pointer flex-col items-end rounded-md px-2 py-1 text-[10px] font-medium leading-tight text-slate-300 transition-colors hover:bg-white/10 hover:text-slate-100">
-                    <span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                    <span>{new Date().toLocaleDateString()}</span>
-                </div>
+                <button
+                    ref={dateTimeButtonRef}
+                    onClick={() => {
+                        setIsStartMenuOpen(false)
+                        setIsDateTimeOpen((open) => !open)
+                        setViewedMonth(new Date(now.getFullYear(), now.getMonth(), 1))
+                    }}
+                    className="os-hover-motion flex flex-col items-end rounded-md px-2 py-1 text-[10px] font-medium leading-tight text-slate-300 transition-colors hover:bg-white/10 hover:text-slate-100"
+                    aria-expanded={isDateTimeOpen}
+                    aria-label="Open calendar and clock"
+                >
+                    <span>{now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span>{now.toLocaleDateString()}</span>
+                </button>
+
+                {isDateTimeOpen && (
+                    <div ref={dateTimeFlyoutRef}>
+                        <DateTimeFlyout
+                            now={now}
+                            viewedMonth={viewedMonth}
+                            onMonthBack={() => setViewedMonth((current) => new Date(current.getFullYear(), current.getMonth() - 1, 1))}
+                            onMonthForward={() => setViewedMonth((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1))}
+                        />
+                    </div>
+                )}
             </div>
         </div>
     )
