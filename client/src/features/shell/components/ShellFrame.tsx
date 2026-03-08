@@ -19,6 +19,8 @@ import DateTimeFlyout from './DateTimeFlyout'
 import Dock from './Dock'
 import QuickSettingsFlyout from './QuickSettingsFlyout'
 import TopBar from './TopBar'
+import { useSessionStore } from '../../../stores/useSessionStore'
+import { getActiveAccount } from '../../accounts/services/sessionSelectors'
 
 function useClickOutside(
     refs: Array<RefObject<HTMLElement | null>>,
@@ -61,17 +63,23 @@ function useClickOutside(
 }
 
 export default function ShellFrame() {
-    const { windows, focusedWindowId, openWindow, toggleMinimize, restoreWindow } = useWindowStore((state) => ({
+    const { windows, focusedWindowId, openWindow, toggleMinimize, restoreWindow, lastGuardError } = useWindowStore((state) => ({
         windows: state.windows,
         focusedWindowId: state.focusedWindowId,
         openWindow: state.openWindow,
         toggleMinimize: state.toggleMinimize,
         restoreWindow: state.restoreWindow,
+        lastGuardError: state.lastGuardError,
     }), shallow)
     const wallpaperId = useSettingsStore((state) => state.appearance.wallpaperId)
     const iconScale = useSettingsStore((state) => state.desktop.iconScale)
     const taskbarPosition = useSettingsStore((state) => state.desktop.taskbarPosition)
     const showSecondsInClock = useSettingsStore((state) => state.behavior.showSecondsInClock)
+    const sessionAccounts = useSessionStore((state) => state.accounts)
+    const activeUserId = useSessionStore((state) => state.activeUserId)
+    const lockSession = useSessionStore((state) => state.lockSession)
+    const logout = useSessionStore((state) => state.logout)
+    const selectLoginUser = useSessionStore((state) => state.selectLoginUser)
     const [isLauncherOpen, setLauncherOpen] = useState(false)
     const [launcherQuery, setLauncherQuery] = useState('')
     const [isQuickSettingsOpen, setQuickSettingsOpen] = useState(false)
@@ -93,6 +101,11 @@ export default function ShellFrame() {
         () => new Map(DEFAULT_APPS.map((app) => [app.id, app])),
         [],
     )
+    const activeAccount = getActiveAccount({ activeUserId, accounts: sessionAccounts })
+
+    if (!activeAccount) {
+        return null
+    }
 
     useClickOutside(
         [dockRef, launcherRef, quickSettingsRef, dateTimeRef, notificationCenterRef],
@@ -187,6 +200,20 @@ export default function ShellFrame() {
         })
     }, [appLookup])
 
+    useEffect(() => {
+        if (!lastGuardError) {
+            return
+        }
+
+        notificationService.publish({
+            title: 'Access denied',
+            message: lastGuardError,
+            source: 'Permissions',
+            priority: 'high',
+            groupKey: 'permissions',
+        })
+    }, [lastGuardError])
+
     const handleLaunchOrToggle = (appId: string) => {
         const app = appLookup.get(appId)
         if (!app) {
@@ -226,6 +253,8 @@ export default function ShellFrame() {
                 showSeconds={showSecondsInClock}
                 unreadNotifications={unreadCount}
                 notificationsOpen={isNotificationCenterOpen}
+                activeAccount={activeAccount}
+                accounts={sessionAccounts}
                 onToggleLauncher={() => {
                     setQuickSettingsOpen(false)
                     setDateTimeOpen(false)
@@ -250,6 +279,12 @@ export default function ShellFrame() {
                     setQuickSettingsOpen(false)
                     setDateTimeOpen(false)
                     setNotificationCenterOpen((open) => !open)
+                }}
+                onLockSession={lockSession}
+                onLogout={logout}
+                onSwitchUser={(userId) => {
+                    selectLoginUser(userId)
+                    lockSession()
                 }}
             />
 

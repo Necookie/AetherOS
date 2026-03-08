@@ -1,6 +1,10 @@
 import { getDirectoryTree, getParentPath, getVisibleItems, navigateToPath, stepHistory } from '../../vfs/fsState';
 import { fsService } from '../../vfs/vfsService';
 import { VfsNodeType, type VfsSnapshot } from '../../vfs/types';
+import { getActiveAccount } from '../../features/accounts/services/sessionSelectors';
+import { useSessionStore } from '../useSessionStore';
+import { checkFileMutationAccess, checkFilePathAccess } from '../../features/permissions/guards';
+import { permissionService } from '../../features/permissions/permissionService';
 import type { FsStore } from './types';
 
 function toErrorMessage(error: unknown): string {
@@ -75,6 +79,41 @@ function runOptimisticMutation(set: StoreSet, get: StoreGet, action: () => void)
     }
 }
 
+function assertFilePermission(action: 'create' | 'rename' | 'delete' | 'move', path: string) {
+    const sessionState = useSessionStore.getState();
+    const account = getActiveAccount(sessionState);
+    if (!account || !sessionState.activeUserId) {
+        throw new Error('No active session.');
+    }
+
+    const access = checkFileMutationAccess(account.role, action, path);
+    if (access.allowed) {
+        return;
+    }
+
+    if (access.needsPrompt && access.permission) {
+        const granted = permissionService.request(sessionState.activeUserId, access.permission, access.reason ?? `Allow file action: ${action}`);
+        if (granted) {
+            return;
+        }
+    }
+
+    throw new Error(access.reason ?? 'Permission denied.');
+}
+
+function assertPathPermission(path: string) {
+    const sessionState = useSessionStore.getState();
+    const account = getActiveAccount(sessionState);
+    if (!account) {
+        throw new Error('No active session.');
+    }
+
+    const access = checkFilePathAccess(account.role, path);
+    if (!access.allowed) {
+        throw new Error(access.reason ?? 'Path access denied.');
+    }
+}
+
 export function createFsActions(set: StoreSet, get: StoreGet) {
     return {
         refresh: () => runWithErrorBoundary(set, () => {
@@ -85,6 +124,7 @@ export function createFsActions(set: StoreSet, get: StoreGet) {
             });
         }),
         navigate: (path: string) => runWithErrorBoundary(set, () => {
+            assertPathPermission(path);
             const nextState = navigateToPath(get(), path);
             set({
                 currentPath: nextState.currentPath,
@@ -101,6 +141,7 @@ export function createFsActions(set: StoreSet, get: StoreGet) {
             if (!nextState) {
                 return;
             }
+            assertPathPermission(nextState.currentPath);
 
             set({
                 currentPath: nextState.currentPath,
@@ -116,6 +157,7 @@ export function createFsActions(set: StoreSet, get: StoreGet) {
             if (!nextState) {
                 return;
             }
+            assertPathPermission(nextState.currentPath);
 
             set({
                 currentPath: nextState.currentPath,
@@ -169,9 +211,11 @@ export function createFsActions(set: StoreSet, get: StoreGet) {
         },
         clearSelection: () => set({ selectedIds: [] }),
         createFolder: (name: string) => runOptimisticMutation(set, get, () => {
+            assertFilePermission('create', get().currentPath);
             fsService.createNode(get().currentPath, name, VfsNodeType.DIR);
         }),
         createFile: (name: string, content = '') => runOptimisticMutation(set, get, () => {
+            assertFilePermission('create', get().currentPath);
             fsService.createNode(get().currentPath, name, VfsNodeType.FILE, content);
         }),
         renameItem: (id: string, newName: string) => runOptimisticMutation(set, get, () => {
@@ -180,7 +224,9 @@ export function createFsActions(set: StoreSet, get: StoreGet) {
                 throw new Error(`Missing file node: ${id}`);
             }
 
-            fsService.rename(fsService.getPath(node.id), newName);
+            const nodePath = fsService.getPath(node.id);
+            assertFilePermission('rename', nodePath);
+            fsService.rename(nodePath, newName);
         }),
         deleteItems: (ids: string[]) => runOptimisticMutation(set, get, () => {
             for (const id of ids) {
@@ -189,10 +235,13 @@ export function createFsActions(set: StoreSet, get: StoreGet) {
                     throw new Error(`Missing file node: ${id}`);
                 }
 
-                fsService.delete(fsService.getPath(node.id));
+                const nodePath = fsService.getPath(node.id);
+                assertFilePermission('delete', nodePath);
+                fsService.delete(nodePath);
             }
         }),
         moveItems: (ids: string[], destinationPath: string) => runOptimisticMutation(set, get, () => {
+            assertFilePermission('move', destinationPath);
             for (const id of ids) {
                 const node = fsService.getNodeById(id);
                 if (!node) {

@@ -14,11 +14,16 @@ import { getNextWindowInCycle } from '../features/window-manager/navigation'
 import type { AppDefinition, WindowBounds, WindowData } from '../types/windowManager'
 import { useKernelStore } from './useKernelStore'
 import { registryService, useAppRegistryStore } from './appRegistryStore'
+import { useSessionStore } from './useSessionStore'
+import { getActiveAccount } from '../features/accounts/services/sessionSelectors'
+import { checkAppLaunchAccess } from '../features/permissions/guards'
+import { permissionService } from '../features/permissions/permissionService'
 
 export interface WindowStore {
     windows: Record<string, WindowData>
     windowOrder: string[]
     focusedWindowId: string | null
+    lastGuardError: string | null
     openWindow: (app: AppDefinition) => void
     closeWindow: (id: string) => void
     focusWindow: (id: string) => void
@@ -28,6 +33,7 @@ export interface WindowStore {
     updateBounds: (id: string, bounds: Partial<WindowBounds>) => void
     cycleFocus: (step: 1 | -1) => void
     getZIndex: (id: string) => number
+    resetWindows: () => void
 }
 
 const initialState = createWindowSnapshot()
@@ -43,10 +49,38 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
     windows: initialState.windows,
     windowOrder: initialState.windowOrder,
     focusedWindowId: initialState.focusedWindowId,
+    lastGuardError: null,
     openWindow: (app) => set((state) => {
         const installed = useAppRegistryStore.getState().installed
         if (!registryService.canLaunch(app.id, installed)) {
             return state
+        }
+
+        const sessionState = useSessionStore.getState()
+        const activeAccount = getActiveAccount(sessionState)
+        if (!activeAccount) {
+            return {
+                ...state,
+                lastGuardError: 'No active session. Please log in to continue.',
+            }
+        }
+
+        const access = checkAppLaunchAccess(activeAccount.role, app.id)
+        if (!access.allowed) {
+            if (access.needsPrompt && access.permission) {
+                const granted = permissionService.request(sessionState.activeUserId ?? activeAccount.id, access.permission, access.reason ?? `Allow launching ${app.title}`)
+                if (!granted) {
+                    return {
+                        ...state,
+                        lastGuardError: access.reason ?? 'Permission denied.',
+                    }
+                }
+            } else {
+                return {
+                    ...state,
+                    lastGuardError: access.reason ?? 'You are not allowed to launch this app.',
+                }
+            }
         }
 
         const wasOpen = Boolean(state.windows[app.id])
@@ -57,7 +91,10 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
             void useAppRegistryStore.getState().dispatchLifecycleEvent('launch', app.id)
         }
 
-        return nextState
+        return {
+            ...nextState,
+            lastGuardError: null,
+        }
     }),
     closeWindow: (id) => set((state) => {
         const wasOpen = Boolean(state.windows[id])
@@ -100,4 +137,17 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
         return focusWindowState(state, nextWindowId)
     }),
     getZIndex: (id) => getWindowZIndex(get().windowOrder, id),
+    resetWindows: () => set((state) => {
+        Object.keys(state.windows).forEach((appId) => {
+            useKernelStore.getState().killAppProcess(appId)
+            void useAppRegistryStore.getState().dispatchLifecycleEvent('suspend', appId)
+        })
+
+        return {
+            windows: {},
+            windowOrder: [],
+            focusedWindowId: null,
+            lastGuardError: null,
+        }
+    }),
 }))

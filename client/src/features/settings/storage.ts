@@ -1,6 +1,7 @@
 import { DEFAULT_SETTINGS } from './defaults'
 import { normalizeSettingsState } from './normalize'
 import type { OsSettingsState } from './types'
+import { getScopedStorageKey } from '../accounts/services/userScope'
 
 const PERSIST_KEY = 'aether.settings.v1'
 
@@ -20,7 +21,7 @@ export function createSettingsStorage(): SettingsStorage {
                 return structuredClone(DEFAULT_SETTINGS)
             }
 
-            const raw = window.localStorage.getItem(PERSIST_KEY)
+            const raw = window.localStorage.getItem(getScopedStorageKey(PERSIST_KEY))
             if (!raw) {
                 return structuredClone(DEFAULT_SETTINGS)
             }
@@ -37,7 +38,7 @@ export function createSettingsStorage(): SettingsStorage {
             }
 
             try {
-                window.localStorage.setItem(PERSIST_KEY, JSON.stringify(settings))
+                window.localStorage.setItem(getScopedStorageKey(PERSIST_KEY), JSON.stringify(settings))
             } catch {
                 // Ignore persistence issues and keep in-memory state active.
             }

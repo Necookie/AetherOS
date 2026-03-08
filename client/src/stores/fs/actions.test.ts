@@ -3,6 +3,8 @@ import { fsService } from '../../vfs/vfsService';
 import { createFsActions } from './actions';
 import { initialFsState, HOME_PATH } from './initialState';
 import type { FsStore } from './types';
+import { useSessionStore } from '../useSessionStore';
+import { setActiveUserId } from '../../features/accounts/services/userScope';
 
 type StoreSet = (
     partial:
@@ -37,6 +39,15 @@ function createHarness() {
 
 describe('filesystem actions optimistic behavior', () => {
     beforeEach(() => {
+        setActiveUserId('admin');
+        useSessionStore.setState((state) => ({
+            ...state,
+            activeUserId: 'admin',
+            selectedLoginUserId: 'admin',
+            isLocked: false,
+            error: null,
+            isAuthenticating: false,
+        }));
         fsService.resetToDefaults();
     });
 
@@ -71,5 +82,30 @@ describe('filesystem actions optimistic behavior', () => {
         expect(harness.getState().error).toContain('EPERM');
         expect(harness.getState().isMutating).toBe(false);
         expect(harness.getState().currentPath).toBe(HOME_PATH + '/Documents');
+    });
+
+    it('blocks guest profile from deleting files', () => {
+        setActiveUserId('guest');
+        useSessionStore.setState((state) => ({
+            ...state,
+            activeUserId: 'guest',
+            selectedLoginUserId: 'guest',
+            isLocked: false,
+        }));
+
+        const harness = createHarness();
+        const state = harness.getState();
+        state.navigate('/home/user/Documents');
+        const readme = harness.getState().items.find((item) => item.name === 'readme.txt');
+        expect(readme).toBeTruthy();
+        if (!readme) {
+            return;
+        }
+
+        state.deleteItems([readme.id]);
+
+        const recovered = fsService.resolvePath('/home/user/Documents/readme.txt');
+        expect(recovered.name).toBe('readme.txt');
+        expect(harness.getState().error).toContain('read-only');
     });
 });
