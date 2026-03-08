@@ -8,6 +8,9 @@ const ICON_MAP: Record<string, string> = {
     term: '/assets/candy-icons/term.svg',
     taskmgr: '/assets/candy-icons/taskmgr.svg',
     settings: '/assets/candy-icons/settings.svg',
+    notes: '/assets/candy-icons/notes.svg',
+    docs: '/assets/candy-icons/docs.svg',
+    boards: '/assets/candy-icons/boards.svg',
 }
 
 export function ShellAppIcon({ appId, className }: { appId: string; className?: string }) {

@@ -1,0 +1,190 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { autosaveDraft, productivityRepository } from '../../../features/productivity'
+import type { ProductivityAppId, ProductivityRecord, ProductivityRepository } from '../../../features/productivity'
+
+interface Defaults {
+    title: string
+    body: string
+}
+
+interface UseProductivityEditorOptions {
+    appId: ProductivityAppId
+    createDefaults: () => Defaults
+    repository?: ProductivityRepository
+}
+
+interface Snapshot {
+    title: string
+    body: string
+    attachments: string[]
+}
+
+function snapshotFromState(title: string, body: string, attachments: string[]): Snapshot {
+    return {
+        title,
+        body,
+        attachments: [...attachments],
+    }
+}
+
+function isEqualSnapshot(left: Snapshot, right: Snapshot) {
+    return left.title === right.title
+        && left.body === right.body
+        && left.attachments.join('\n') === right.attachments.join('\n')
+}
+
+export function useProductivityEditor(options: UseProductivityEditorOptions) {
+    const repository = options.repository ?? productivityRepository
+    const [records, setRecords] = useState<ProductivityRecord[]>(() => repository.listRecords(options.appId))
+    const [activeId, setActiveId] = useState<string | null>(records[0]?.id ?? null)
+    const [title, setTitle] = useState('')
+    const [body, setBody] = useState('')
+    const [attachments, setAttachments] = useState<string[]>([])
+    const [attachmentInput, setAttachmentInput] = useState('')
+    const [statusLabel, setStatusLabel] = useState('Ready')
+
+    const baseRevisionRef = useRef(0)
+    const loadedSnapshotRef = useRef<Snapshot>(snapshotFromState('', '', []))
+
+    const loadRecord = (recordId: string) => {
+        const persisted = repository.getRecord(options.appId, recordId)
+        if (!persisted) {
+            return
+        }
+
+        const existingDraft = repository.loadDraft(options.appId, recordId)
+        const nextTitle = existingDraft?.title ?? persisted.title
+        const nextBody = existingDraft?.body ?? persisted.body
+        const nextAttachments = existingDraft?.attachments ?? persisted.attachments
+        const baseRevision = existingDraft?.baseRevision ?? persisted.revision
+
+        setActiveId(recordId)
+        setTitle(nextTitle)
+        setBody(nextBody)
+        setAttachments(nextAttachments)
+        baseRevisionRef.current = baseRevision
+        loadedSnapshotRef.current = snapshotFromState(nextTitle, nextBody, nextAttachments)
+        setStatusLabel(existingDraft ? 'Recovered unsaved draft' : 'Ready')
+    }
+
+    const createRecord = () => {
+        const defaults = options.createDefaults()
+        const created = repository.createRecord({
+            appId: options.appId,
+            title: defaults.title,
+            body: defaults.body,
+        })
+
+        const nextRecords = [created, ...records]
+        setRecords(nextRecords)
+        loadRecord(created.id)
+        setStatusLabel('Created')
+    }
+
+    useEffect(() => {
+        if (records.length === 0) {
+            createRecord()
+            return
+        }
+
+        if (activeId) {
+            loadRecord(activeId)
+            return
+        }
+
+        if (records[0]) {
+            loadRecord(records[0].id)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    const dirty = useMemo(() => (
+        !isEqualSnapshot(loadedSnapshotRef.current, snapshotFromState(title, body, attachments))
+    ), [attachments, body, title])
+
+    useEffect(() => {
+        if (!activeId || !dirty) {
+            return
+        }
+
+        const timerId = window.setTimeout(() => {
+            const result = autosaveDraft(repository, {
+                appId: options.appId,
+                id: activeId,
+                title,
+                body,
+                attachments,
+                baseRevision: baseRevisionRef.current,
+            })
+
+            if (result.status === 'conflict') {
+                baseRevisionRef.current = result.current.revision
+                setStatusLabel(`Conflict saved to ${result.conflictPath}`)
+                return
+            }
+
+            if (result.status === 'saved') {
+                baseRevisionRef.current = result.record.revision
+                loadedSnapshotRef.current = snapshotFromState(result.record.title, result.record.body, result.record.attachments)
+                setRecords((currentRecords) => {
+                    const index = currentRecords.findIndex((record) => record.id === result.record.id)
+                    if (index === -1) {
+                        return [result.record, ...currentRecords]
+                    }
+
+                    const clone = [...currentRecords]
+                    clone[index] = result.record
+                    return clone.sort((left, right) => right.updatedAt - left.updatedAt)
+                })
+                setStatusLabel('All changes saved')
+            }
+        }, 650)
+
+        return () => window.clearTimeout(timerId)
+    }, [activeId, attachments, body, dirty, options.appId, repository, title])
+
+    const linkedRecords = useMemo(() => repository.resolveLinkedRecords(body), [body, repository])
+
+    const addAttachment = () => {
+        const normalized = attachmentInput.trim()
+        if (!normalized) {
+            return
+        }
+
+        const valid = repository.validateAttachmentPaths([normalized])
+        if (valid.length === 0) {
+            setStatusLabel('Attachment path not found in VFS')
+            return
+        }
+
+        setAttachments((current) => {
+            if (current.includes(normalized)) {
+                return current
+            }
+            return [...current, normalized]
+        })
+        setAttachmentInput('')
+    }
+
+    const removeAttachment = (path: string) => {
+        setAttachments((current) => current.filter((item) => item !== path))
+    }
+
+    return {
+        records,
+        activeId,
+        title,
+        body,
+        attachments,
+        linkedRecords,
+        statusLabel,
+        attachmentInput,
+        setTitle,
+        setBody,
+        createRecord,
+        selectRecord: loadRecord,
+        setAttachmentInput,
+        addAttachment,
+        removeAttachment,
+    }
+}
