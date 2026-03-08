@@ -21,7 +21,7 @@ export default function DateTimeFlyout({
 
     return (
         <div
-            className={`absolute right-0 z-[var(--ds-z-flyout)] w-[min(26rem,calc(100vw-1.5rem))] rounded-2xl p-4 backdrop-blur-2xl ${taskbarPosition === 'top' ? 'top-[calc(var(--shell-topbar-height)+var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)]' : 'bottom-[calc(var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)]'}`}
+            className={`animate-os-flyout-in absolute right-0 z-[var(--ds-z-flyout)] w-[min(26rem,calc(100vw-1.5rem))] rounded-2xl p-4 backdrop-blur-2xl ${taskbarPosition === 'top' ? 'top-[calc(var(--shell-topbar-height)+var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)]' : 'bottom-[calc(var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)]'}`}
             style={{
                 background: 'linear-gradient(180deg, rgb(255 255 255 / 0.58), rgb(255 255 255 / 0.34))',
                 border: '1px solid rgb(255 255 255 / 0.58)',
@@ -43,8 +43,8 @@ export default function DateTimeFlyout({
                         {viewedMonth.toLocaleDateString([], { month: 'long', year: 'numeric' })}
                     </h3>
                     <div className="flex items-center gap-2">
-                        <button onClick={onBackMonth} className="rounded border border-white/65 bg-white/70 px-2 py-1 text-xs text-slate-900" aria-label="Previous month">&lt;</button>
-                        <button onClick={onForwardMonth} className="rounded border border-white/65 bg-white/70 px-2 py-1 text-xs text-slate-900" aria-label="Next month">&gt;</button>
+                        <button onClick={onBackMonth} className="os-interactive rounded border border-white/65 bg-white/70 px-2 py-1 text-xs text-slate-900" aria-label="Previous month">&lt;</button>
+                        <button onClick={onForwardMonth} className="os-interactive rounded border border-white/65 bg-white/70 px-2 py-1 text-xs text-slate-900" aria-label="Next month">&gt;</button>
                     </div>
                 </div>
 
