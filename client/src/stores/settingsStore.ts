@@ -3,8 +3,13 @@ import { DEFAULT_SETTINGS } from '../features/settings/defaults'
 import { normalizeSettingsState } from '../features/settings/normalize'
 import { settingsStorage } from '../features/settings/storage'
 import type { DensityMode, OsSettingsState, TaskbarPosition, ThemeMode, ThemePalette } from '../features/settings/types'
+import { useSessionStore } from './useSessionStore'
+import { getActiveAccount } from '../features/accounts/services/sessionSelectors'
+import { checkSettingsAccess } from '../features/permissions/guards'
+import { permissionService } from '../features/permissions/permissionService'
 
 interface SettingsActions {
+    hydrateForActiveUser: () => void
     setThemeMode: (mode: ThemeMode) => void
     updateCustomPalette: (patch: Partial<ThemePalette>) => void
     setWallpaper: (wallpaperId: string) => void
@@ -38,11 +43,39 @@ function persist(state: OsSettingsState) {
     settingsStorage.save(state)
 }
 
+function canMutateSettings() {
+    const sessionState = useSessionStore.getState()
+    const account = getActiveAccount(sessionState)
+
+    if (!account || !sessionState.activeUserId) {
+        return false
+    }
+
+    const access = checkSettingsAccess(account.role)
+    if (access.allowed) {
+        return true
+    }
+
+    if (access.needsPrompt && access.permission) {
+        return permissionService.request(
+            sessionState.activeUserId,
+            access.permission,
+            access.reason ?? 'Allow settings changes for this profile.',
+        )
+    }
+
+    return false
+}
+
 const initialState = loadInitialState()
 
 export const useSettingsStore = create<SettingsStore>((set) => ({
     ...initialState,
+    hydrateForActiveUser: () => set(() => loadInitialState()),
     setThemeMode: (themeMode) => set((state) => {
+        if (!canMutateSettings()) {
+            return state
+        }
         const next: OsSettingsState = {
             ...state,
             appearance: {
@@ -54,6 +87,9 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
         return next
     }),
     updateCustomPalette: (patch) => set((state) => {
+        if (!canMutateSettings()) {
+            return state
+        }
         const next: OsSettingsState = {
             ...state,
             appearance: {
@@ -69,6 +105,9 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
         return next
     }),
     setWallpaper: (wallpaperId) => set((state) => {
+        if (!canMutateSettings()) {
+            return state
+        }
         const next: OsSettingsState = {
             ...state,
             appearance: {
@@ -80,6 +119,9 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
         return next
     }),
     setIconScale: (iconScale) => set((state) => {
+        if (!canMutateSettings()) {
+            return state
+        }
         const next: OsSettingsState = {
             ...state,
             desktop: {
@@ -91,6 +133,9 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
         return next
     }),
     setTaskbarPosition: (taskbarPosition) => set((state) => {
+        if (!canMutateSettings()) {
+            return state
+        }
         const next: OsSettingsState = {
             ...state,
             desktop: {
@@ -102,6 +147,9 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
         return next
     }),
     setAccentStrength: (accentStrength) => set((state) => {
+        if (!canMutateSettings()) {
+            return state
+        }
         const next: OsSettingsState = {
             ...state,
             desktop: {
@@ -113,6 +161,9 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
         return next
     }),
     setDensity: (density) => set((state) => {
+        if (!canMutateSettings()) {
+            return state
+        }
         const next: OsSettingsState = {
             ...state,
             accessibility: {
@@ -124,6 +175,9 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
         return next
     }),
     setFontScale: (fontScale) => set((state) => {
+        if (!canMutateSettings()) {
+            return state
+        }
         const next: OsSettingsState = {
             ...state,
             accessibility: {
@@ -135,6 +189,9 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
         return next
     }),
     setHighContrast: (highContrast) => set((state) => {
+        if (!canMutateSettings()) {
+            return state
+        }
         const next: OsSettingsState = {
             ...state,
             accessibility: {
@@ -146,6 +203,9 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
         return next
     }),
     setReducedMotion: (reducedMotion) => set((state) => {
+        if (!canMutateSettings()) {
+            return state
+        }
         const next: OsSettingsState = {
             ...state,
             accessibility: {
@@ -157,6 +217,9 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
         return next
     }),
     setKeyboardHints: (keyboardHints) => set((state) => {
+        if (!canMutateSettings()) {
+            return state
+        }
         const next: OsSettingsState = {
             ...state,
             accessibility: {
@@ -168,6 +231,9 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
         return next
     }),
     setAnimations: (animations) => set((state) => {
+        if (!canMutateSettings()) {
+            return state
+        }
         const next: OsSettingsState = {
             ...state,
             behavior: {
@@ -179,6 +245,9 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
         return next
     }),
     setTranslucentWindows: (translucentWindows) => set((state) => {
+        if (!canMutateSettings()) {
+            return state
+        }
         const next: OsSettingsState = {
             ...state,
             behavior: {
@@ -190,6 +259,9 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
         return next
     }),
     setShowSecondsInClock: (showSecondsInClock) => set((state) => {
+        if (!canMutateSettings()) {
+            return state
+        }
         const next: OsSettingsState = {
             ...state,
             behavior: {
@@ -200,7 +272,10 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
         persist(next)
         return next
     }),
-    resetSettings: () => set(() => {
+    resetSettings: () => set((state) => {
+        if (!canMutateSettings()) {
+            return state
+        }
         const next = structuredClone(DEFAULT_SETTINGS)
         persist(next)
         return next

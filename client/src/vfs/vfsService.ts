@@ -1,5 +1,6 @@
 import { AetherVFS } from './vfsCore';
 import { VfsNodeType, type VfsNode, type VfsSnapshot, type VfsSearchOptions, type VfsTreeOptions } from './types';
+import { getScopedStorageKey, onActiveUserChange } from '../features/accounts/services/userScope';
 
 const PERSIST_KEY = 'aether.vfs.snapshot.v1';
 
@@ -14,6 +15,10 @@ class VfsService {
             this.seedDefaults();
             this.persist();
         }
+
+        onActiveUserChange(() => {
+            this.loadForActiveUser();
+        });
     }
 
     public getRootId(): string {
@@ -106,6 +111,16 @@ class VfsService {
         this.persist();
     }
 
+    private loadForActiveUser() {
+        const persisted = this.loadPersistedSnapshot();
+        this.vfs = persisted ? new AetherVFS(persisted) : new AetherVFS();
+
+        if (!persisted) {
+            this.seedDefaults();
+            this.persist();
+        }
+    }
+
     private seedDefaults() {
         this.mkdirP('/etc');
         this.touch('/etc/hosts', '127.0.0.1 localhost\n::1 localhost');
@@ -165,7 +180,7 @@ class VfsService {
 
         try {
             const serialized = JSON.stringify(this.vfs.getSnapshot());
-            window.localStorage.setItem(PERSIST_KEY, serialized);
+            window.localStorage.setItem(getScopedStorageKey(PERSIST_KEY), serialized);
         } catch {
             // Ignore persistence failures and keep runtime state active.
         }
@@ -176,7 +191,7 @@ class VfsService {
             return null;
         }
 
-        const serialized = window.localStorage.getItem(PERSIST_KEY);
+        const serialized = window.localStorage.getItem(getScopedStorageKey(PERSIST_KEY));
         if (!serialized) {
             return null;
         }
