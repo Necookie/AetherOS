@@ -30,7 +30,10 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
     windows: initialState.windows,
     windowOrder: initialState.windowOrder,
     focusedWindowId: initialState.focusedWindowId,
-    openWindow: (app) => set((state) => openWindowState(state, app)),
+    openWindow: (app) => set((state) => openWindowState(state, app, {
+        width: window.innerWidth,
+        height: window.innerHeight,
+    })),
     closeWindow: (id) => set((state) => closeWindowState(state, id)),
     focusWindow: (id) => set((state) => focusWindowState(state, id)),
     toggleMinimize: (id) => set((state) => toggleMinimizeState(state, id)),

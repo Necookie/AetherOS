@@ -4,3 +4,4 @@ dist/
 dist-tsc/
 build/
 .DS_Store
+prompts/
