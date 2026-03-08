@@ -5,3 +5,4 @@ dist-tsc/
 build/
 .DS_Store
 prompts/
+references/
