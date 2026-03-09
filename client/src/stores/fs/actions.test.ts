@@ -108,4 +108,44 @@ describe('filesystem actions optimistic behavior', () => {
         expect(recovered.name).toBe('readme.txt');
         expect(harness.getState().error).toContain('read-only');
     });
+
+    it('supports single to multi and range selection transitions', () => {
+        const harness = createHarness();
+        const state = harness.getState();
+
+        state.navigate('/home/user');
+        const ids = harness.getState().items.map((item) => item.id);
+        expect(ids.length).toBeGreaterThanOrEqual(2);
+        if (ids.length < 2) {
+            return;
+        }
+
+        state.selectItem(ids[0], false, false);
+        expect(harness.getState().selectedIds).toEqual([ids[0]]);
+
+        state.selectItem(ids[1], true, false);
+        expect(harness.getState().selectedIds).toEqual([ids[0], ids[1]]);
+
+        state.selectItem(ids[ids.length - 1], false, true);
+        const expectedRange = ids.slice(1);
+        expect(harness.getState().selectedIds).toEqual(expectedRange);
+    });
+
+    it('clears selection and anchor together', () => {
+        const harness = createHarness();
+        const state = harness.getState();
+        state.navigate('/home/user/Documents');
+        const firstId = harness.getState().items[0]?.id;
+        expect(firstId).toBeTruthy();
+        if (!firstId) {
+            return;
+        }
+
+        state.selectItem(firstId, false, false);
+        expect(harness.getState().selectionAnchorId).toBe(firstId);
+
+        state.clearSelection();
+        expect(harness.getState().selectedIds).toEqual([]);
+        expect(harness.getState().selectionAnchorId).toBeNull();
+    });
 });

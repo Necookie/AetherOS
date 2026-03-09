@@ -5,6 +5,7 @@ import { getActiveAccount } from '../../features/accounts/services/sessionSelect
 import { useSessionStore } from '../useSessionStore';
 import { checkFileMutationAccess, checkFilePathAccess } from '../../features/permissions/guards';
 import { permissionService } from '../../features/permissions/permissionService';
+import { resolveClickSelection } from '../../features/selection/selectionDomain';
 import type { FsStore } from './types';
 
 function toErrorMessage(error: unknown): string {
@@ -29,6 +30,7 @@ function restoreUiState(set: StoreSet, snapshot: FsStore) {
         historyIndex: snapshot.historyIndex,
         viewMode: snapshot.viewMode,
         selectedIds: snapshot.selectedIds,
+        selectionAnchorId: snapshot.selectionAnchorId,
         showHidden: snapshot.showHidden,
         searchQuery: snapshot.searchQuery,
         sortBy: snapshot.sortBy,
@@ -70,6 +72,7 @@ function runOptimisticMutation(set: StoreSet, get: StoreGet, action: () => void)
             ...buildViewState(currentState),
             isMutating: false,
             selectedIds: [],
+            selectionAnchorId: null,
             error: null,
         });
     } catch (error: unknown) {
@@ -131,6 +134,7 @@ export function createFsActions(set: StoreSet, get: StoreGet) {
                 history: nextState.history,
                 historyIndex: nextState.historyIndex,
                 selectedIds: [],
+                selectionAnchorId: null,
                 searchQuery: nextState.searchQuery,
                 error: null,
             });
@@ -147,6 +151,7 @@ export function createFsActions(set: StoreSet, get: StoreGet) {
                 currentPath: nextState.currentPath,
                 historyIndex: nextState.historyIndex,
                 selectedIds: [],
+                selectionAnchorId: null,
                 searchQuery: nextState.searchQuery,
                 error: null,
             });
@@ -163,6 +168,7 @@ export function createFsActions(set: StoreSet, get: StoreGet) {
                 currentPath: nextState.currentPath,
                 historyIndex: nextState.historyIndex,
                 selectedIds: [],
+                selectionAnchorId: null,
                 searchQuery: nextState.searchQuery,
                 error: null,
             });
@@ -197,19 +203,29 @@ export function createFsActions(set: StoreSet, get: StoreGet) {
         },
         selectItem: (id: string, multi: boolean, range: boolean) => {
             set((state) => {
-                if (multi || range) {
-                    const exists = state.selectedIds.includes(id);
-                    return {
-                        selectedIds: exists
-                            ? state.selectedIds.filter((selectedId) => selectedId !== id)
-                            : [...state.selectedIds, id],
-                    };
-                }
+                const { selectedIds, anchorId } = resolveClickSelection({
+                    currentSelection: state.selectedIds,
+                    orderedIds: state.items.map((item) => item.id),
+                    clickedId: id,
+                    anchorId: state.selectionAnchorId,
+                    multi,
+                    range,
+                });
 
-                return { selectedIds: [id] };
+                return {
+                    selectedIds,
+                    selectionAnchorId: anchorId,
+                };
             });
         },
-        clearSelection: () => set({ selectedIds: [] }),
+        setSelection: (ids: string[], anchorId: string | null = null) => set({
+            selectedIds: ids,
+            selectionAnchorId: anchorId,
+        }),
+        clearSelection: () => set({
+            selectedIds: [],
+            selectionAnchorId: null,
+        }),
         createFolder: (name: string) => runOptimisticMutation(set, get, () => {
             assertFilePermission('create', get().currentPath);
             fsService.createNode(get().currentPath, name, VfsNodeType.DIR);
@@ -252,7 +268,10 @@ export function createFsActions(set: StoreSet, get: StoreGet) {
             }
 
             if (destinationPath !== get().currentPath) {
-                set({ selectedIds: [] });
+                set({
+                    selectedIds: [],
+                    selectionAnchorId: null,
+                });
             }
         }),
         clearError: () => set({ error: null }),
