@@ -21,6 +21,8 @@ import QuickSettingsFlyout from './QuickSettingsFlyout'
 import TopBar from './TopBar'
 import { useSessionStore } from '../../../stores/useSessionStore'
 import { getActiveAccount } from '../../accounts/services/sessionSelectors'
+import { SHORTCUT_EVENT_LAUNCHER_TOGGLE } from '../../shortcuts/shortcutEvents'
+import DirtyGuardModal from '../../dirty-guard/components/DirtyGuardModal'
 
 function useClickOutside(
     refs: Array<RefObject<HTMLElement | null>>,
@@ -118,6 +120,18 @@ export default function ShellFrame() {
             setLauncherQuery('')
         }
     }, [isLauncherOpen])
+
+    useEffect(() => {
+        const onToggleLauncher = () => {
+            setQuickSettingsOpen(false)
+            setDateTimeOpen(false)
+            setNotificationCenterOpen(false)
+            setLauncherOpen((open) => !open)
+        }
+
+        window.addEventListener(SHORTCUT_EVENT_LAUNCHER_TOGGLE, onToggleLauncher)
+        return () => window.removeEventListener(SHORTCUT_EVENT_LAUNCHER_TOGGLE, onToggleLauncher)
+    }, [])
 
     useEffect(() => {
         const scheduler = schedulerRef.current
@@ -353,6 +367,7 @@ export default function ShellFrame() {
                     />
                 </div>
             )}
+            <DirtyGuardModal />
         </div>
     )
 }

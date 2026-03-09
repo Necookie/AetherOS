@@ -17,7 +17,7 @@ function App() {
 
     const initKernel = useKernelStore(state => state.initKernel)
     const processes = useKernelStore(state => state.processes)
-    const closeWindow = useWindowStore(state => state.closeWindow)
+    const closeWindowImmediate = useWindowStore(state => state.closeWindowImmediate)
     const resetWindows = useWindowStore(state => state.resetWindows)
     const isLocked = useSessionStore((state) => state.isLocked)
     const lockSession = useSessionStore((state) => state.lockSession)
@@ -42,12 +42,12 @@ function App() {
 
         previousRunningAppIdsRef.current.forEach((appId) => {
             if (managedAppIds.has(appId) && !runningAppIds.has(appId)) {
-                closeWindow(appId)
+                closeWindowImmediate(appId)
             }
         })
 
         previousRunningAppIdsRef.current = runningAppIds
-    }, [closeWindow, managedAppIds, processes])
+    }, [closeWindowImmediate, managedAppIds, processes])
 
     useEffect(() => {
         if (!activeUserId) {

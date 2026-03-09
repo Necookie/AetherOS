@@ -1,20 +1,36 @@
-import { useMemo, useState } from 'react'
-import { Palette, Monitor, Accessibility, SlidersHorizontal, RotateCcw } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Palette, Monitor, Accessibility, SlidersHorizontal, RotateCcw, Keyboard } from 'lucide-react'
 import Window from '../../components/system/Window'
 import { WALLPAPER_OPTIONS } from '../../features/settings/defaults'
 import { runAccessibilityChecks } from '../../features/settings/accessibilityChecks'
 import { createThemeTokens, resolveWallpaper } from '../../features/settings/themeEngine'
 import { useSettingsStore } from '../../stores/settingsStore'
 import type { ThemePalette } from '../../features/settings/types'
+import {
+    REMAPPABLE_SHORTCUTS,
+    resolveShortcutKeymap,
+    SHORTCUT_ACTION_IDS,
+    validateShortcutOverrides,
+} from '../../features/shortcuts/shortcutConfig'
 
-type SettingsSection = 'appearance' | 'desktop' | 'accessibility' | 'behavior'
+type SettingsSection = 'appearance' | 'desktop' | 'accessibility' | 'behavior' | 'shortcuts'
 
 const sectionMeta: Array<{ id: SettingsSection; label: string; icon: typeof Palette }> = [
     { id: 'appearance', label: 'Appearance', icon: Palette },
     { id: 'desktop', label: 'Desktop', icon: Monitor },
     { id: 'accessibility', label: 'Accessibility', icon: Accessibility },
     { id: 'behavior', label: 'Behavior', icon: SlidersHorizontal },
+    { id: 'shortcuts', label: 'Shortcuts', icon: Keyboard },
 ]
+
+const SHORTCUT_LABELS: Record<string, string> = {
+    [SHORTCUT_ACTION_IDS.launcherToggle]: 'Toggle launcher',
+    [SHORTCUT_ACTION_IDS.openTaskManager]: 'Open Task Manager',
+    [SHORTCUT_ACTION_IDS.openTerminal]: 'Open Terminal',
+    [SHORTCUT_ACTION_IDS.closeFocusedWindow]: 'Close focused window',
+    [SHORTCUT_ACTION_IDS.minimizeFocusedWindow]: 'Minimize focused window',
+    [SHORTCUT_ACTION_IDS.maximizeFocusedWindow]: 'Maximize focused window',
+}
 
 function SectionButton({
     active,
@@ -89,11 +105,13 @@ function ColorField({
 
 export default function SettingsApp({ id }: { id: string }) {
     const [section, setSection] = useState<SettingsSection>('appearance')
+    const [shortcutDrafts, setShortcutDrafts] = useState<Record<string, string>>({})
     const {
         appearance,
         desktop,
         accessibility,
         behavior,
+        shortcuts,
         setThemeMode,
         updateCustomPalette,
         setWallpaper,
@@ -108,12 +126,37 @@ export default function SettingsApp({ id }: { id: string }) {
         setAnimations,
         setTranslucentWindows,
         setShowSecondsInClock,
+        setShortcutOverride,
+        clearShortcutOverride,
         resetSettings,
     } = useSettingsStore((state) => state)
 
-    const tokens = useMemo(() => createThemeTokens({ appearance, desktop, accessibility, behavior }), [appearance, desktop, accessibility, behavior])
+    const tokens = useMemo(
+        () => createThemeTokens({ appearance, desktop, accessibility, behavior, shortcuts }),
+        [appearance, desktop, accessibility, behavior, shortcuts],
+    )
     const report = useMemo(() => runAccessibilityChecks(tokens), [tokens])
     const selectedWallpaper = resolveWallpaper(appearance.wallpaperId)
+    const resolvedShortcutKeymap = useMemo(() => resolveShortcutKeymap(shortcuts.overrides), [shortcuts.overrides])
+    const shortcutValidation = useMemo(() => validateShortcutOverrides(shortcuts.overrides), [shortcuts.overrides])
+
+    useEffect(() => {
+        const drafts: Record<string, string> = {}
+        REMAPPABLE_SHORTCUTS.forEach((actionId) => {
+            drafts[actionId] = shortcuts.overrides[actionId] ?? resolvedShortcutKeymap[actionId]
+        })
+        setShortcutDrafts(drafts)
+    }, [resolvedShortcutKeymap, shortcuts.overrides])
+
+    const applyShortcutDraft = (actionId: (typeof REMAPPABLE_SHORTCUTS)[number], value: string) => {
+        const combo = value.trim()
+        if (!combo) {
+            clearShortcutOverride(actionId)
+            return true
+        }
+
+        return setShortcutOverride(actionId, combo)
+    }
 
     return (
         <Window id={id} title="Settings">
@@ -305,6 +348,64 @@ export default function SettingsApp({ id }: { id: string }) {
                                 <SettingsToggle label="Enable animations" checked={behavior.animations} onChange={setAnimations} />
                                 <SettingsToggle label="Translucent window effects" checked={behavior.translucentWindows} onChange={setTranslucentWindows} />
                                 <SettingsToggle label="Show seconds in clock" checked={behavior.showSecondsInClock} onChange={setShowSecondsInClock} />
+                            </div>
+                        </div>
+                    )}
+
+                    {section === 'shortcuts' && (
+                        <div className="space-y-4">
+                            <div>
+                                <h2 className="text-lg font-semibold text-slate-900">Shortcuts</h2>
+                                <p className="text-sm text-slate-600">Browser-safe keymap with remappable entries.</p>
+                            </div>
+                            <div className="space-y-2 rounded-lg border border-white/70 bg-white/55 p-3">
+                                <p className="text-xs text-slate-600">Fixed defaults: App switcher next `Ctrl+Alt+]`, previous `Ctrl+Alt+[`.</p>
+                                {REMAPPABLE_SHORTCUTS.map((actionId) => (
+                                    <div key={actionId} className="grid grid-cols-[14rem_1fr_auto] items-center gap-2 text-sm">
+                                        <label className="text-slate-800">{SHORTCUT_LABELS[actionId]}</label>
+                                        <input
+                                            value={shortcutDrafts[actionId] ?? ''}
+                                            onChange={(event) => {
+                                                const combo = event.target.value
+                                                setShortcutDrafts((current) => ({
+                                                    ...current,
+                                                    [actionId]: combo,
+                                                }))
+                                            }}
+                                            onBlur={(event) => {
+                                                const accepted = applyShortcutDraft(actionId, event.target.value)
+                                                if (accepted) {
+                                                    return
+                                                }
+
+                                                event.currentTarget.setCustomValidity('Invalid or conflicting shortcut.')
+                                                event.currentTarget.reportValidity()
+                                                event.currentTarget.setCustomValidity('')
+                                                setShortcutDrafts((current) => ({
+                                                    ...current,
+                                                    [actionId]: shortcuts.overrides[actionId] ?? resolvedShortcutKeymap[actionId],
+                                                }))
+                                            }}
+                                            placeholder={resolvedShortcutKeymap[actionId]}
+                                            className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-800"
+                                        />
+                                        <button
+                                            onClick={() => {
+                                                clearShortcutOverride(actionId)
+                                                setShortcutDrafts((current) => ({
+                                                    ...current,
+                                                    [actionId]: resolvedShortcutKeymap[actionId],
+                                                }))
+                                            }}
+                                            className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-white"
+                                        >
+                                            Reset
+                                        </button>
+                                    </div>
+                                ))}
+                                {shortcutValidation.conflicts.length > 0 && (
+                                    <p className="text-xs text-rose-700">Conflicting shortcuts detected. Reset one mapping to continue.</p>
+                                )}
                             </div>
                         </div>
                     )}

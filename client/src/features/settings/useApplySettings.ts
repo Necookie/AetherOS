@@ -33,6 +33,7 @@ export function useApplySettings() {
         desktop: current.desktop,
         accessibility: current.accessibility,
         behavior: current.behavior,
+        shortcuts: current.shortcuts,
     }))
 
     useEffect(() => {

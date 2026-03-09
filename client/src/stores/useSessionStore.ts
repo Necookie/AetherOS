@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { sessionService, type SessionState } from '../features/accounts/services/sessionService'
+import { dirtyGuardService } from '../features/dirty-guard/dirtyGuardService'
 
 interface SessionActions {
     selectLoginUser: (userId: string) => void
@@ -30,6 +31,28 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
 
         set((state) => sessionService.completeLogin(state, selectedLoginUserId))
     },
-    lockSession: () => set((state) => sessionService.lock(state)),
-    logout: () => set((state) => sessionService.logout(state)),
+    lockSession: () => {
+        void (async () => {
+            const allowed = await dirtyGuardService.confirmTransition({
+                reason: 'lock-session',
+            })
+            if (!allowed) {
+                return
+            }
+
+            set((state) => sessionService.lock(state))
+        })()
+    },
+    logout: () => {
+        void (async () => {
+            const allowed = await dirtyGuardService.confirmTransition({
+                reason: 'logout-session',
+            })
+            if (!allowed) {
+                return
+            }
+
+            set((state) => sessionService.logout(state))
+        })()
+    },
 }))
