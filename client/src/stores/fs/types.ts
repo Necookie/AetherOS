@@ -9,6 +9,7 @@ export interface FsStoreState {
     historyIndex: number;
     viewMode: ViewMode;
     selectedIds: string[];
+    selectionAnchorId: string | null;
     showHidden: boolean;
     searchQuery: string;
     sortBy: FsSortBy;
@@ -29,6 +30,7 @@ export interface FsStoreActions {
     setSearchQuery: (query: string) => void;
     setSort: (sortBy: FsSortBy, sortDirection?: FsSortDirection) => void;
     selectItem: (id: string, multi: boolean, range: boolean) => void;
+    setSelection: (ids: string[], anchorId?: string | null) => void;
     clearSelection: () => void;
     createFolder: (name: string) => void;
     createFile: (name: string, content?: string) => void;

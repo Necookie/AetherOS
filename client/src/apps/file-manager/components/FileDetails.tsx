@@ -62,6 +62,7 @@ export default function FileDetails({ items }: { items: VfsNode[] }) {
                         <div
                             key={item.id}
                             data-id={item.id}
+                            data-selectable-id={item.id}
                             className={`group flex cursor-pointer items-center border-b border-transparent pl-4 ${isSelected ? 'border-indigo-500/35 bg-indigo-500/20' : 'hover:bg-slate-800/45'}`}
                             onClick={(event) => {
                                 event.stopPropagation();

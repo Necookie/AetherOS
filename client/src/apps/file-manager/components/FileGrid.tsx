@@ -32,6 +32,7 @@ export default function FileGrid({ items }: { items: VfsNode[] }) {
                     <div
                         key={item.id}
                         data-id={item.id}
+                        data-selectable-id={item.id}
                         className={`h-28 w-24 cursor-pointer rounded p-2 transition-colors ${isSelected ? 'bg-indigo-500/20 outline outline-1 outline-indigo-400/70' : 'hover:bg-slate-800/55'
                             }`}
                         onClick={(e) => {

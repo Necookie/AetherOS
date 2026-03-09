@@ -1,9 +1,19 @@
-import { useRef, useState, type MouseEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react';
 import { useFsStore } from '../../../stores/fsStore';
+import { createSelectionRect, rectFromDomRect, rectIntersects, resolveMarqueeSelection, type MarqueeSelectionMode, type SelectionRect } from '../../../features/selection';
 import ContextMenu from './ContextMenu';
 import FileDetails from './FileDetails';
 import FileGrid from './FileGrid';
 import SelectionDetails from './SelectionDetails';
+
+const INTERACTIVE_SELECTOR = 'button, input, textarea, select, option, a, [role="button"], [data-disable-marquee="true"]';
+
+interface DragState {
+    startX: number;
+    startY: number;
+    mode: MarqueeSelectionMode;
+    baseSelection: string[];
+}
 
 export default function FilePane() {
     const {
@@ -11,6 +21,7 @@ export default function FilePane() {
         items,
         showHidden,
         clearSelection,
+        setSelection,
         error,
         clearError,
         selectedIds,
@@ -19,11 +30,19 @@ export default function FilePane() {
     } = useFsStore();
     const paneRef = useRef<HTMLDivElement>(null);
     const [contextMenu, setContextMenu] = useState<{ x: number; y: number; targetId: string | null } | null>(null);
+    const [selectionRect, setSelectionRect] = useState<SelectionRect | null>(null);
+    const dragRef = useRef<DragState | null>(null);
 
     const visibleItems = items.filter((item) => showHidden || !item.name.startsWith('.'));
 
     const handlePaneClick = (event: MouseEvent) => {
-        if (event.target === paneRef.current) {
+        if (dragRef.current) {
+            return;
+        }
+
+        const target = event.target as HTMLElement | null;
+        const clickedSelectable = target?.closest('[data-selectable-id]');
+        if (!clickedSelectable && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
             clearSelection();
         }
         if (contextMenu) {
@@ -49,11 +68,103 @@ export default function FilePane() {
         });
     };
 
+    const updateMarqueeSelection = useCallback((nextRect: SelectionRect) => {
+        const pane = paneRef.current;
+        const dragState = dragRef.current;
+        if (!pane || !dragState) {
+            return;
+        }
+
+        const selectableItems = pane.querySelectorAll<HTMLElement>('[data-selectable-id]');
+        const hitIds: string[] = [];
+        selectableItems.forEach((element) => {
+            const selectableId = element.dataset.selectableId;
+            if (!selectableId) {
+                return;
+            }
+
+            if (rectIntersects(nextRect, rectFromDomRect(element.getBoundingClientRect()))) {
+                hitIds.push(selectableId);
+            }
+        });
+
+        const nextSelection = resolveMarqueeSelection({
+            currentSelection: dragState.baseSelection,
+            hitIds,
+            mode: dragState.mode,
+        });
+        setSelection(nextSelection, nextSelection.at(-1) ?? null);
+    }, [setSelection]);
+
+    const handleMouseMove = useCallback((event: globalThis.MouseEvent) => {
+        const dragState = dragRef.current;
+        if (!dragState) {
+            return;
+        }
+
+        const nextRect = createSelectionRect(dragState.startX, dragState.startY, event.clientX, event.clientY);
+        setSelectionRect(nextRect);
+        updateMarqueeSelection(nextRect);
+    }, [updateMarqueeSelection]);
+
+    const endDrag = useCallback(() => {
+        dragRef.current = null;
+        setSelectionRect(null);
+        window.removeEventListener('mousemove', handleMouseMove);
+    }, [handleMouseMove]);
+
+    const handleMouseUp = useCallback(() => {
+        window.removeEventListener('mouseup', handleMouseUp);
+        endDrag();
+    }, [endDrag]);
+
+    const handleMouseDown = (event: MouseEvent<HTMLDivElement>) => {
+        if (event.button !== 0) {
+            return;
+        }
+
+        const target = event.target as HTMLElement | null;
+        if (!target) {
+            return;
+        }
+
+        if (target.closest(INTERACTIVE_SELECTOR) || target.closest('[data-selectable-id]')) {
+            return;
+        }
+
+        const mode: MarqueeSelectionMode = event.ctrlKey || event.metaKey
+            ? (event.shiftKey ? 'toggle' : 'subtract')
+            : (event.shiftKey ? 'add' : 'replace');
+
+        dragRef.current = {
+            startX: event.clientX,
+            startY: event.clientY,
+            mode,
+            baseSelection: [...selectedIds],
+        };
+
+        const startRect = createSelectionRect(event.clientX, event.clientY, event.clientX, event.clientY);
+        setSelectionRect(startRect);
+        updateMarqueeSelection(startRect);
+        setContextMenu(null);
+
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+    };
+
+    useEffect(() => {
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [handleMouseMove, handleMouseUp]);
+
     return (
         <div className="relative flex flex-1 overflow-hidden">
             <div
                 ref={paneRef}
                 className="relative flex-1 overflow-y-auto bg-slate-950/30 outline-none"
+                onMouseDown={handleMouseDown}
                 onClick={handlePaneClick}
                 onContextMenu={handleContextMenu}
                 tabIndex={0}
@@ -72,6 +183,18 @@ export default function FilePane() {
                 )}
 
                 {viewMode === 'icons' ? <FileGrid items={visibleItems} /> : <FileDetails items={visibleItems} />}
+                {selectionRect && (
+                    <div
+                        aria-hidden
+                        className="pointer-events-none fixed z-30 border border-indigo-400/70 bg-indigo-500/20"
+                        style={{
+                            left: selectionRect.left,
+                            top: selectionRect.top,
+                            width: selectionRect.right - selectionRect.left,
+                            height: selectionRect.bottom - selectionRect.top,
+                        }}
+                    />
+                )}
 
                 {contextMenu && (
                     <ContextMenu
