@@ -14,6 +14,7 @@ import {
     markNavigation,
     markTabActivated,
 } from '../../apps/browser/domains/session/sessionDomain';
+import { reportKernelActivity } from '../../features/kernel/activityReporter';
 import type { BrowserStore } from './types';
 
 function withUpdatedTab(
@@ -32,6 +33,10 @@ function withUpdatedTab(
             [id]: updater(tab),
         },
     };
+}
+
+function isLikelyDownload(url: string) {
+    return /\.(zip|rar|7z|pdf|csv|dmg|exe|msi|apk|deb|tar|gz)$/i.test(url);
 }
 
 export function createBrowserActions(
@@ -93,6 +98,11 @@ export function createBrowserActions(
             get().navigateToUrl(id, inputString);
         },
         navigateToUrl: (id: string, url: string) => {
+            reportKernelActivity({
+                type: 'browser-navigate',
+                sourceAppId: 'browser',
+                targetAppId: 'browser',
+            });
             set((state) => withUpdatedTab(state, id, (tab) => ({
                 ...tab,
                 backStack: tab.url ? [...tab.backStack, tab.url] : tab.backStack,
@@ -103,6 +113,12 @@ export function createBrowserActions(
             })));
         },
         openExternal: (url: string, opts: { reuseTabId?: string } = {}) => {
+            reportKernelActivity({
+                type: isLikelyDownload(url) ? 'browser-download' : 'browser-navigate',
+                sourceAppId: 'browser',
+                targetAppId: 'browser',
+                units: isLikelyDownload(url) ? 1.2 : 1,
+            });
             const tabId = opts.reuseTabId || createTabId();
 
             set((state) => {
@@ -132,12 +148,30 @@ export function createBrowserActions(
             }
         },
         back: (id: string) => {
+            reportKernelActivity({
+                type: 'browser-navigate',
+                sourceAppId: 'browser',
+                targetAppId: 'browser',
+                units: 0.8,
+            });
             set((state) => withUpdatedTab(state, id, (tab) => applyBack(tab)));
         },
         forward: (id: string) => {
+            reportKernelActivity({
+                type: 'browser-navigate',
+                sourceAppId: 'browser',
+                targetAppId: 'browser',
+                units: 0.8,
+            });
             set((state) => withUpdatedTab(state, id, (tab) => applyForward(tab)));
         },
         reload: (id: string) => {
+            reportKernelActivity({
+                type: 'browser-navigate',
+                sourceAppId: 'browser',
+                targetAppId: 'browser',
+                units: 0.9,
+            });
             set((state) => withUpdatedTab(state, id, (tab) => ({ ...tab, isLoading: true })));
         },
         setSearchEngine: (engine: BrowserStore['settings']['defaultSearchEngine']) => set((state) => ({

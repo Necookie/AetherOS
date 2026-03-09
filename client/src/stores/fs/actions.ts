@@ -6,6 +6,7 @@ import { useSessionStore } from '../useSessionStore';
 import { checkFileMutationAccess, checkFilePathAccess } from '../../features/permissions/guards';
 import { permissionService } from '../../features/permissions/permissionService';
 import { resolveClickSelection } from '../../features/selection/selectionDomain';
+import { reportKernelActivity } from '../../features/kernel/activityReporter';
 import type { FsStore } from './types';
 
 const TRASH_PATH = '/home/user/.Trash';
@@ -262,6 +263,12 @@ export function createFsActions(set: StoreSet, get: StoreGet) {
                 assertFilePermission('delete', nodePath);
                 fsService.delete(nodePath);
             }
+            reportKernelActivity({
+                type: 'file-delete',
+                sourceAppId: 'explorer',
+                targetAppId: 'explorer',
+                units: Math.max(1, ids.length * 0.75),
+            });
         }),
         restoreItems: (ids: string[]) => runOptimisticMutation(set, get, () => {
             for (const id of ids) {
@@ -278,6 +285,12 @@ export function createFsActions(set: StoreSet, get: StoreGet) {
                 assertFilePermission('move', nodePath);
                 fsService.restoreFromTrash(nodePath, 'keep-both');
             }
+            reportKernelActivity({
+                type: 'file-restore',
+                sourceAppId: 'explorer',
+                targetAppId: 'explorer',
+                units: Math.max(1, ids.length * 0.7),
+            });
         }),
         permanentlyDeleteItems: (ids: string[]) => runOptimisticMutation(set, get, () => {
             for (const id of ids) {
@@ -314,6 +327,12 @@ export function createFsActions(set: StoreSet, get: StoreGet) {
 
                 fsService.move(fsService.getPath(node.id), destinationPath);
             }
+            reportKernelActivity({
+                type: 'file-move',
+                sourceAppId: 'explorer',
+                targetAppId: 'explorer',
+                units: Math.max(1, ids.length * 0.8),
+            });
 
             if (destinationPath !== get().currentPath) {
                 set({
