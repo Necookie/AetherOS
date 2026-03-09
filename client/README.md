@@ -1,29 +1,70 @@
-# AetherOS - Client (Frontend)
+# AetherOS Client
 
-The visual operating system shell for the AetherOS simulator.
+Frontend workspace for the AetherOS browser-based OS simulator.
 
-## Tech Stack
-- React + TypeScript
+## Stack
+
+- React 18 + TypeScript
 - Vite
+- Zustand
 - Tailwind CSS
-- Zustand (State Management)
-- Web Worker (Simulated OS Environment)
-- xterm.js (Terminal)
+- xterm.js
+- Web Worker (kernel simulation)
+
+## What This Workspace Implements
+
+- Boot/login/desktop shell flow
+- Window manager and desktop surfaces
+- Core apps:
+  - Terminal
+  - Task Manager
+  - File Manager
+  - Browser
+  - Settings
+  - Notes, Docs, Boards
+  - App Store simulation
+- Notifications, widgets, quick settings/date-time flyouts
+- Local per-user persistence (session/settings/vfs/permissions)
 
 ## Setup
-1. Copy `.env.example` to `.env`. Ensure it points to the server url.
-   ```bash
-   cp .env.example .env
-   ```
-2. Install dependencies from the project root:
-   ```bash
-   npm install
-   ```
 
-## Running the Client
-Start the application from the root project folder using `npm run dev`, or locally via:
+From repo root:
+
+```bash
+npm install
+cp client/.env.example client/.env
+```
+
+Default env:
+
+- `VITE_API_URL=http://localhost:3000`
+
+## Run
+
+From repo root:
+
+```bash
+npm run dev --workspace=client
+```
+
+or run both client+server:
+
 ```bash
 npm run dev
 ```
 
-This will run Vite on `http://localhost:5173`.
+Client default URL: `http://localhost:5173`
+
+## Scripts
+
+```bash
+npm run lint --workspace=client
+npm run typecheck --workspace=client
+npm run test --workspace=client
+npm run build --workspace=client
+```
+
+## Scope Note
+
+This workspace currently targets functional OS simulation for OS/HCI requirements.
+No real auth or database integration is required in this phase.
