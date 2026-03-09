@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { autosaveDraft, productivityRepository } from '../../../features/productivity'
 import { reportKernelActivity } from '../../../features/kernel/activityReporter'
+import { dirtyGuardService } from '../../../features/dirty-guard/dirtyGuardService'
 import type { ProductivityAppId, ProductivityRecord, ProductivityRepository } from '../../../features/productivity'
 
 interface Defaults {
@@ -46,8 +47,9 @@ export function useProductivityEditor(options: UseProductivityEditorOptions) {
 
     const baseRevisionRef = useRef(0)
     const loadedSnapshotRef = useRef<Snapshot>(snapshotFromState('', '', []))
+    const dirtyRef = useRef(false)
 
-    const loadRecord = (recordId: string) => {
+    const loadRecord = useCallback((recordId: string) => {
         const persisted = repository.getRecord(options.appId, recordId)
         if (!persisted) {
             return
@@ -66,9 +68,9 @@ export function useProductivityEditor(options: UseProductivityEditorOptions) {
         baseRevisionRef.current = baseRevision
         loadedSnapshotRef.current = snapshotFromState(nextTitle, nextBody, nextAttachments)
         setStatusLabel(existingDraft ? 'Recovered unsaved draft' : 'Ready')
-    }
+    }, [options.appId, repository])
 
-    const createRecord = () => {
+    const createRecord = useCallback(() => {
         const defaults = options.createDefaults()
         const created = repository.createRecord({
             appId: options.appId,
@@ -76,11 +78,10 @@ export function useProductivityEditor(options: UseProductivityEditorOptions) {
             body: defaults.body,
         })
 
-        const nextRecords = [created, ...records]
-        setRecords(nextRecords)
+        setRecords((current) => [created, ...current])
         loadRecord(created.id)
         setStatusLabel('Created')
-    }
+    }, [loadRecord, options.appId, options.createDefaults, repository])
 
     useEffect(() => {
         if (records.length === 0) {
@@ -102,6 +103,78 @@ export function useProductivityEditor(options: UseProductivityEditorOptions) {
     const dirty = useMemo(() => (
         !isEqualSnapshot(loadedSnapshotRef.current, snapshotFromState(title, body, attachments))
     ), [attachments, body, title])
+    dirtyRef.current = dirty
+
+    const saveNow = useCallback(async () => {
+        if (!activeId || !dirtyRef.current) {
+            return true
+        }
+
+        const burstUnits = Math.min(3.5, Math.max(0.7, (title.length + body.length + attachments.join('').length) / 1_200))
+        const result = autosaveDraft(repository, {
+            appId: options.appId,
+            id: activeId,
+            title,
+            body,
+            attachments,
+            baseRevision: baseRevisionRef.current,
+        })
+
+        if (result.status === 'conflict') {
+            reportKernelActivity({
+                type: 'productivity-autosave',
+                sourceAppId: options.appId,
+                targetAppId: options.appId,
+                units: burstUnits * 1.15,
+            })
+            baseRevisionRef.current = result.current.revision
+            setStatusLabel(`Conflict saved to ${result.conflictPath}`)
+            return false
+        }
+
+        if (result.status === 'saved') {
+            reportKernelActivity({
+                type: 'productivity-autosave',
+                sourceAppId: options.appId,
+                targetAppId: options.appId,
+                units: burstUnits,
+            })
+            baseRevisionRef.current = result.record.revision
+            loadedSnapshotRef.current = snapshotFromState(result.record.title, result.record.body, result.record.attachments)
+            repository.clearDraft(options.appId, result.record.id)
+            setRecords((currentRecords) => {
+                const index = currentRecords.findIndex((record) => record.id === result.record.id)
+                if (index === -1) {
+                    return [result.record, ...currentRecords]
+                }
+
+                const clone = [...currentRecords]
+                clone[index] = result.record
+                return clone.sort((left, right) => right.updatedAt - left.updatedAt)
+            })
+            setStatusLabel('All changes saved')
+        }
+
+        return true
+    }, [activeId, attachments, body, options.appId, repository, title])
+
+    const discardChanges = useCallback(() => {
+        if (!activeId) {
+            return
+        }
+
+        repository.clearDraft(options.appId, activeId)
+        loadRecord(activeId)
+        setStatusLabel('Changes discarded')
+    }, [activeId, loadRecord, options.appId, repository])
+
+    useEffect(() => dirtyGuardService.registerScope({
+        id: options.appId,
+        label: options.appId[0].toUpperCase() + options.appId.slice(1),
+        isDirty: () => dirtyRef.current,
+        save: saveNow,
+        discard: discardChanges,
+    }), [discardChanges, options.appId, saveNow])
 
     useEffect(() => {
         if (!activeId || !dirty) {
@@ -109,53 +182,11 @@ export function useProductivityEditor(options: UseProductivityEditorOptions) {
         }
 
         const timerId = window.setTimeout(() => {
-            const burstUnits = Math.min(3.5, Math.max(0.7, (title.length + body.length + attachments.join('').length) / 1_200))
-            const result = autosaveDraft(repository, {
-                appId: options.appId,
-                id: activeId,
-                title,
-                body,
-                attachments,
-                baseRevision: baseRevisionRef.current,
-            })
-
-            if (result.status === 'conflict') {
-                reportKernelActivity({
-                    type: 'productivity-autosave',
-                    sourceAppId: options.appId,
-                    targetAppId: options.appId,
-                    units: burstUnits * 1.15,
-                })
-                baseRevisionRef.current = result.current.revision
-                setStatusLabel(`Conflict saved to ${result.conflictPath}`)
-                return
-            }
-
-            if (result.status === 'saved') {
-                reportKernelActivity({
-                    type: 'productivity-autosave',
-                    sourceAppId: options.appId,
-                    targetAppId: options.appId,
-                    units: burstUnits,
-                })
-                baseRevisionRef.current = result.record.revision
-                loadedSnapshotRef.current = snapshotFromState(result.record.title, result.record.body, result.record.attachments)
-                setRecords((currentRecords) => {
-                    const index = currentRecords.findIndex((record) => record.id === result.record.id)
-                    if (index === -1) {
-                        return [result.record, ...currentRecords]
-                    }
-
-                    const clone = [...currentRecords]
-                    clone[index] = result.record
-                    return clone.sort((left, right) => right.updatedAt - left.updatedAt)
-                })
-                setStatusLabel('All changes saved')
-            }
+            void saveNow()
         }, 650)
 
         return () => window.clearTimeout(timerId)
-    }, [activeId, attachments, body, dirty, options.appId, repository, title])
+    }, [activeId, dirty, saveNow])
 
     const linkedRecords = useMemo(() => repository.resolveLinkedRecords(body), [body, repository])
 
@@ -200,5 +231,8 @@ export function useProductivityEditor(options: UseProductivityEditorOptions) {
         setAttachmentInput,
         addAttachment,
         removeAttachment,
+        saveNow,
+        discardChanges,
+        dirty,
     }
 }

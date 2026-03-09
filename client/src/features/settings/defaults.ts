@@ -70,4 +70,7 @@ export const DEFAULT_SETTINGS: OsSettingsState = {
         translucentWindows: true,
         showSecondsInClock: false,
     },
+    shortcuts: {
+        overrides: {},
+    },
 }
