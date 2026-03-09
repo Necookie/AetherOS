@@ -15,3 +15,7 @@ export function selectWindowOrder(state: WindowStore): string[] {
 export function selectWindowComponentById(id: string) {
     return (state: WindowStore) => state.windows[id]?.component
 }
+
+export function selectSnapPreview(state: WindowStore) {
+    return state.snapPreview
+}
