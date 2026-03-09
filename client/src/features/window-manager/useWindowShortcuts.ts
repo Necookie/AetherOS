@@ -3,6 +3,7 @@ import { useWindowStore } from '../../stores/windowStore'
 import { APP_MANIFEST } from '../../config/appManifest'
 import { DEFAULT_APPS } from '../../config/windows'
 import { getWindowAtPosition } from './navigation'
+import type { SnapMode } from '../../types/windowManager'
 
 function isEditableTarget(target: EventTarget | null) {
     if (!(target instanceof HTMLElement)) {
@@ -14,6 +15,14 @@ function isEditableTarget(target: EventTarget | null) {
 
 const APP_BY_ID = new Map(DEFAULT_APPS.map((app) => [app.id, app]))
 const APP_ORDER = APP_MANIFEST.map((app) => app.id)
+const SNAP_MODE_BY_KEY: Record<string, SnapMode> = {
+    h: 'left-half',
+    l: 'right-half',
+    y: 'top-left',
+    u: 'top-right',
+    b: 'bottom-left',
+    n: 'bottom-right',
+}
 
 export function useWindowShortcuts() {
     useEffect(() => {
@@ -79,6 +88,17 @@ export function useWindowShortcuts() {
             if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'r' && focusedId) {
                 event.preventDefault()
                 store.restoreWindow(focusedId)
+                return
+            }
+
+            if (event.ctrlKey && event.altKey && !event.metaKey && focusedId) {
+                const snapMode = SNAP_MODE_BY_KEY[event.key.toLowerCase()]
+                if (!snapMode) {
+                    return
+                }
+
+                event.preventDefault()
+                store.snapWindow(focusedId, snapMode)
                 return
             }
 

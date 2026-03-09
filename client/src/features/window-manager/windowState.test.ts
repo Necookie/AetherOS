@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { getNextWindowInCycle } from './navigation'
 import {
+    applyWindowSnapState,
     createWindowSnapshot,
     focusWindowState,
     openWindowState,
@@ -9,8 +10,19 @@ import {
     toggleMinimizeState,
     updateWindowBoundsState,
 } from './windowState'
+import type { SnapContext } from './types'
 
 const viewport = { width: 1280, height: 720 }
+const snapContext: SnapContext = {
+    viewport,
+    taskbarPosition: 'bottom',
+    minWindowWidth: 320,
+    minWindowHeight: 220,
+    safeMargin: 8,
+    shellTopbarHeight: 32,
+    shellDockHeight: 56,
+    shellEdgeGap: 12,
+}
 const Dummy = () => null
 
 const terminalApp = {
@@ -64,6 +76,22 @@ describe('window manager lifecycle', () => {
             width: viewport.width,
             height: viewport.height,
         })
+    })
+
+    it('applies snap bounds and restores to pre-snap bounds', () => {
+        const opened = openWindowState(createWindowSnapshot(), browserApp, viewport)
+        const snapped = applyWindowSnapState(opened, browserApp.id, 'right-half', snapContext)
+        const restored = restoreWindowState(snapped, browserApp.id, viewport)
+
+        expect(snapped.windows[browserApp.id].state.snapMode).toBe('right-half')
+        expect(snapped.windows[browserApp.id].bounds).toEqual({
+            x: 640,
+            y: 40,
+            width: 628,
+            height: 592,
+        })
+        expect(restored.windows[browserApp.id].state.snapMode).toBeUndefined()
+        expect(restored.windows[browserApp.id].bounds).toEqual(opened.windows[browserApp.id].bounds)
     })
 })
 
