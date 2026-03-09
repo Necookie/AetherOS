@@ -9,6 +9,7 @@ export const initialFsState: FsStoreState = {
     historyIndex: 0,
     viewMode: 'icons',
     selectedIds: [],
+    selectionAnchorId: null,
     showHidden: false,
     searchQuery: '',
     sortBy: 'name',

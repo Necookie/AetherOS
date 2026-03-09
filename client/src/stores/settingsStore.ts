@@ -3,6 +3,8 @@ import { DEFAULT_SETTINGS } from '../features/settings/defaults'
 import { normalizeSettingsState } from '../features/settings/normalize'
 import { settingsStorage } from '../features/settings/storage'
 import type { DensityMode, OsSettingsState, TaskbarPosition, ThemeMode, ThemePalette } from '../features/settings/types'
+import type { ShortcutRemapAction } from '../features/settings/types'
+import { validateShortcutOverrides } from '../features/shortcuts/shortcutConfig'
 import { useSessionStore } from './useSessionStore'
 import { getActiveAccount } from '../features/accounts/services/sessionSelectors'
 import { checkSettingsAccess } from '../features/permissions/guards'
@@ -24,6 +26,8 @@ interface SettingsActions {
     setAnimations: (enabled: boolean) => void
     setTranslucentWindows: (enabled: boolean) => void
     setShowSecondsInClock: (enabled: boolean) => void
+    setShortcutOverride: (actionId: ShortcutRemapAction, combo: string) => boolean
+    clearShortcutOverride: (actionId: ShortcutRemapAction) => void
     resetSettings: () => void
 }
 
@@ -272,6 +276,50 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
         persist(next)
         return next
     }),
+    setShortcutOverride: (actionId, combo) => {
+        if (!canMutateSettings()) {
+            return false
+        }
+
+        let accepted = false
+        set((state) => {
+            const validation = validateShortcutOverrides({
+                ...state.shortcuts.overrides,
+                [actionId]: combo,
+            })
+            if (!validation.isValid) {
+                return state
+            }
+
+            const next: OsSettingsState = {
+                ...state,
+                shortcuts: {
+                    overrides: validation.normalizedOverrides,
+                },
+            }
+            persist(next)
+            accepted = true
+            return next
+        })
+
+        return accepted
+    },
+    clearShortcutOverride: (actionId) => set((state) => {
+        if (!canMutateSettings()) {
+            return state
+        }
+
+        const { [actionId]: removed, ...rest } = state.shortcuts.overrides
+        void removed
+        const next: OsSettingsState = {
+            ...state,
+            shortcuts: {
+                overrides: rest,
+            },
+        }
+        persist(next)
+        return next
+    }),
     resetSettings: () => set((state) => {
         if (!canMutateSettings()) {
             return state
@@ -288,5 +336,6 @@ export function selectSettingsState(state: SettingsStore): OsSettingsState {
         desktop: state.desktop,
         accessibility: state.accessibility,
         behavior: state.behavior,
+        shortcuts: state.shortcuts,
     }
 }

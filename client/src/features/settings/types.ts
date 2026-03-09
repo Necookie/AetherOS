@@ -1,3 +1,4 @@
+import type { RemappableShortcutActionId, ShortcutOverrides } from '../shortcuts/shortcutConfig'
 export type ThemeMode = 'light' | 'dark' | 'custom'
 export type DensityMode = 'comfortable' | 'cozy' | 'compact'
 export type TaskbarPosition = 'bottom' | 'top'
@@ -41,12 +42,19 @@ export interface BehaviorSettings {
     showSecondsInClock: boolean
 }
 
+export interface ShortcutSettings {
+    overrides: ShortcutOverrides
+}
+
 export interface OsSettingsState {
     appearance: AppearanceSettings
     desktop: DesktopSettings
     accessibility: AccessibilitySettings
     behavior: BehaviorSettings
+    shortcuts: ShortcutSettings
 }
+
+export type ShortcutRemapAction = RemappableShortcutActionId
 
 export interface ThemeTokens {
     colorBgCanvas: string

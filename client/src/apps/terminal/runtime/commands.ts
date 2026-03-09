@@ -1,4 +1,5 @@
 import { ErrorCodes, VfsError, VfsNodeType } from '../../../vfs/types'
+import { reportKernelActivity } from '../../../features/kernel/activityReporter'
 import { assertDirectory, resolveInputPath, splitParent } from './pathUtils'
 import type { CommandDefinition, CommandResult, TerminalVfs } from './types'
 
@@ -192,6 +193,12 @@ export function createBuiltInCommands(vfs: TerminalVfs): CommandDefinition[] {
         }
 
         vfs.delete(path)
+        reportKernelActivity({
+          type: 'file-delete',
+          sourceAppId: 'term',
+          targetAppId: 'term',
+          units: 1,
+        })
         return { output: [] }
       }),
     },
@@ -211,6 +218,12 @@ export function createBuiltInCommands(vfs: TerminalVfs): CommandDefinition[] {
           const destinationNode = vfs.resolvePath(destination)
           if (destinationNode.type === VfsNodeType.DIR) {
             vfs.move(source, destination)
+            reportKernelActivity({
+              type: 'file-move',
+              sourceAppId: 'term',
+              targetAppId: 'term',
+              units: 1,
+            })
             return { output: [] }
           }
 
@@ -223,6 +236,12 @@ export function createBuiltInCommands(vfs: TerminalVfs): CommandDefinition[] {
 
         const { parentPath, name } = splitParent(destination)
         vfs.move(source, parentPath, name)
+        reportKernelActivity({
+          type: 'file-move',
+          sourceAppId: 'term',
+          targetAppId: 'term',
+          units: 1,
+        })
         return { output: [] }
       }),
     },
@@ -254,6 +273,12 @@ export function createBuiltInCommands(vfs: TerminalVfs): CommandDefinition[] {
         }
 
         copyRecursive(vfs, source, finalDestination)
+        reportKernelActivity({
+          type: 'file-copy',
+          sourceAppId: 'term',
+          targetAppId: 'term',
+          units: 1.1,
+        })
         return { output: [] }
       }),
     },

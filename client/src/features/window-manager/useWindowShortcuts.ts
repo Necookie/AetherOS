@@ -1,97 +1,127 @@
 import { useEffect } from 'react'
 import { useWindowStore } from '../../stores/windowStore'
-import { APP_MANIFEST } from '../../config/appManifest'
 import { DEFAULT_APPS } from '../../config/windows'
-import { getWindowAtPosition } from './navigation'
-
-function isEditableTarget(target: EventTarget | null) {
-    if (!(target instanceof HTMLElement)) {
-        return false
-    }
-
-    return target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)
-}
+import { useSettingsStore } from '../../stores/settingsStore'
+import { detectShortcutConflicts } from '../shortcuts/shortcutDomain'
+import { dispatchLauncherToggleShortcut } from '../shortcuts/shortcutEvents'
+import {
+    resolveShortcutKeymap,
+    SHORTCUT_ACTION_IDS,
+} from '../shortcuts/shortcutConfig'
+import { createShortcutKeydownHandler } from '../shortcuts/shortcutRegistry'
 
 const APP_BY_ID = new Map(DEFAULT_APPS.map((app) => [app.id, app]))
-const APP_ORDER = APP_MANIFEST.map((app) => app.id)
 
 export function useWindowShortcuts() {
+    const overrides = useSettingsStore((state) => state.shortcuts.overrides)
+
     useEffect(() => {
-        const onKeyDown = (event: KeyboardEvent) => {
-            if (isEditableTarget(event.target)) {
-                return
-            }
-
-            const store = useWindowStore.getState()
-            const focusedId = store.focusedWindowId
-
-            if (event.altKey && event.key === 'Tab') {
-                event.preventDefault()
-                store.cycleFocus(event.shiftKey ? -1 : 1)
-                return
-            }
-
-            if (event.ctrlKey && event.key === 'F6') {
-                event.preventDefault()
-                store.cycleFocus(event.shiftKey ? -1 : 1)
-                return
-            }
-
-            const position = Number(event.key)
-            if (event.metaKey && Number.isInteger(position) && position >= 1 && position <= 9) {
-                event.preventDefault()
-                const appId = APP_ORDER[position - 1]
-                if (!appId) {
-                    return
-                }
-
-                const app = APP_BY_ID.get(appId)
-                if (!app) {
-                    return
-                }
-
-                if (store.windows[appId]) {
-                    store.restoreWindow(appId)
-                } else {
-                    store.openWindow(app)
-                }
-                return
-            }
-
-            if (event.ctrlKey && !event.shiftKey && event.key.toLowerCase() === 'w' && focusedId) {
-                event.preventDefault()
-                store.closeWindow(focusedId)
-                return
-            }
-
-            if (event.ctrlKey && !event.shiftKey && event.key.toLowerCase() === 'm' && focusedId) {
-                event.preventDefault()
-                store.toggleMinimize(focusedId)
-                return
-            }
-
-            if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'm' && focusedId) {
-                event.preventDefault()
-                store.toggleMaximize(focusedId)
-                return
-            }
-
-            if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'r' && focusedId) {
-                event.preventDefault()
-                store.restoreWindow(focusedId)
-                return
-            }
-
-            if (event.altKey && !event.ctrlKey && !event.metaKey && Number.isInteger(position) && position >= 1 && position <= 9) {
-                event.preventDefault()
-                const targetId = getWindowAtPosition(store.windowOrder, position)
-                if (targetId) {
-                    store.restoreWindow(targetId)
-                }
-            }
+        const keymap = resolveShortcutKeymap(overrides)
+        const conflicts = detectShortcutConflicts(keymap)
+        if (conflicts.length > 0) {
+            // Conflicts should be blocked in settings validation; this guards against stale invalid persisted state.
+            console.warn('Shortcut conflicts detected', conflicts)
         }
+
+        const onKeyDown = createShortcutKeydownHandler([
+            {
+                actionId: SHORTCUT_ACTION_IDS.launcherToggle,
+                combo: keymap[SHORTCUT_ACTION_IDS.launcherToggle],
+                handler: () => {
+                    dispatchLauncherToggleShortcut()
+                },
+            },
+            {
+                actionId: SHORTCUT_ACTION_IDS.appSwitcherNext,
+                combo: keymap[SHORTCUT_ACTION_IDS.appSwitcherNext],
+                handler: () => {
+                    useWindowStore.getState().cycleFocus(1)
+                },
+            },
+            {
+                actionId: SHORTCUT_ACTION_IDS.appSwitcherPrevious,
+                combo: keymap[SHORTCUT_ACTION_IDS.appSwitcherPrevious],
+                handler: () => {
+                    useWindowStore.getState().cycleFocus(-1)
+                },
+            },
+            {
+                actionId: SHORTCUT_ACTION_IDS.openTaskManager,
+                combo: keymap[SHORTCUT_ACTION_IDS.openTaskManager],
+                handler: () => {
+                    const app = APP_BY_ID.get('taskmgr')
+                    if (!app) {
+                        return
+                    }
+
+                    const state = useWindowStore.getState()
+                    if (state.windows.taskmgr) {
+                        state.restoreWindow('taskmgr')
+                        return
+                    }
+                    state.openWindow(app)
+                },
+            },
+            {
+                actionId: SHORTCUT_ACTION_IDS.openTerminal,
+                combo: keymap[SHORTCUT_ACTION_IDS.openTerminal],
+                handler: () => {
+                    const app = APP_BY_ID.get('term')
+                    if (!app) {
+                        return
+                    }
+
+                    const state = useWindowStore.getState()
+                    if (state.windows.term) {
+                        state.restoreWindow('term')
+                        return
+                    }
+                    state.openWindow(app)
+                },
+            },
+            {
+                actionId: SHORTCUT_ACTION_IDS.closeFocusedWindow,
+                combo: keymap[SHORTCUT_ACTION_IDS.closeFocusedWindow],
+                handler: () => {
+                    const { focusedWindowId, closeWindow } = useWindowStore.getState()
+                    if (focusedWindowId) {
+                        closeWindow(focusedWindowId)
+                    }
+                },
+            },
+            {
+                actionId: SHORTCUT_ACTION_IDS.minimizeFocusedWindow,
+                combo: keymap[SHORTCUT_ACTION_IDS.minimizeFocusedWindow],
+                handler: () => {
+                    const { focusedWindowId, toggleMinimize } = useWindowStore.getState()
+                    if (focusedWindowId) {
+                        toggleMinimize(focusedWindowId)
+                    }
+                },
+            },
+            {
+                actionId: SHORTCUT_ACTION_IDS.maximizeFocusedWindow,
+                combo: keymap[SHORTCUT_ACTION_IDS.maximizeFocusedWindow],
+                handler: () => {
+                    const { focusedWindowId, toggleMaximize } = useWindowStore.getState()
+                    if (focusedWindowId) {
+                        toggleMaximize(focusedWindowId)
+                    }
+                },
+            },
+            {
+                actionId: 'window.restore-focused',
+                combo: 'Ctrl+Alt+R',
+                handler: () => {
+                    const { focusedWindowId, restoreWindow } = useWindowStore.getState()
+                    if (focusedWindowId) {
+                        restoreWindow(focusedWindowId)
+                    }
+                },
+            }
+        ])
 
         window.addEventListener('keydown', onKeyDown)
         return () => window.removeEventListener('keydown', onKeyDown)
-    }, [])
+    }, [overrides])
 }

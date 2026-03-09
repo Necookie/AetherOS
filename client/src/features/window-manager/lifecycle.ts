@@ -1,8 +1,10 @@
-import type { AppDefinition, WindowBounds, WindowData } from '../../types/windowManager'
+import type { AppDefinition, SnapMode, WindowBounds, WindowData } from '../../types/windowManager'
 import { bringWindowToFront, clearFocusedWindow, focusWindow } from './focus'
 import { DEFAULT_WINDOW_BOUNDS, clampBoundsToViewport, getCenteredBounds, mergeWindowBounds } from './geometry'
 import { getVisibleWindowIds } from './navigation'
-import type { Viewport, WindowSnapshot } from './types'
+import { getSnapRegion } from './snap'
+import type { SnapContext, Viewport, WindowSnapshot } from './types'
+import { getWorkspaceRect } from './workspace'
 
 export function createWindowSnapshot(): WindowSnapshot {
     return {
@@ -143,6 +145,7 @@ export function toggleMaximizeState(state: WindowSnapshot, id: string, viewport:
                     isFocused: true,
                     isMinimized: false,
                     isMaximized: isMaximizing,
+                    snapMode: undefined,
                     previousBounds: isMaximizing ? focusedWindow.bounds : focusedWindow.state.previousBounds,
                 },
             },
@@ -150,7 +153,11 @@ export function toggleMaximizeState(state: WindowSnapshot, id: string, viewport:
     }
 }
 
-export function restoreWindowState(state: WindowSnapshot, id: string, viewport: Viewport): WindowSnapshot {
+export function restoreWindowState(
+    state: WindowSnapshot,
+    id: string,
+    viewport: Viewport,
+): WindowSnapshot {
     const targetWindow = state.windows[id]
     if (!targetWindow) {
         return state
@@ -196,7 +203,79 @@ export function restoreWindowState(state: WindowSnapshot, id: string, viewport: 
         }
     }
 
+    if (targetWindow.state.snapMode) {
+        const focusedState = focusWindowState(state, id)
+        const focusedWindow = focusedState.windows[id]
+        if (!focusedWindow) {
+            return focusedState
+        }
+
+        const restoredBounds = focusedWindow.state.previousBounds || focusedWindow.bounds
+        const bounds = clampBoundsToViewport(restoredBounds, viewport)
+
+        return {
+            ...focusedState,
+            windows: {
+                ...focusedState.windows,
+                [id]: {
+                    ...focusedWindow,
+                    bounds,
+                    state: {
+                        ...focusedWindow.state,
+                        isFocused: true,
+                        snapMode: undefined,
+                    },
+                },
+            },
+        }
+    }
+
     return focusWindowState(state, id)
+}
+
+export function applyWindowSnapState(
+    state: WindowSnapshot,
+    id: string,
+    mode: SnapMode,
+    context: SnapContext,
+): WindowSnapshot {
+    const targetWindow = state.windows[id]
+    if (!targetWindow || targetWindow.state.isMinimized) {
+        return state
+    }
+
+    const focusedState = focusWindowState(state, id)
+    const focusedWindow = focusedState.windows[id]
+    if (!focusedWindow) {
+        return focusedState
+    }
+
+    const workspace = getWorkspaceRect(context)
+    const region = getSnapRegion(mode, workspace, context)
+    const previousBounds = focusedWindow.state.snapMode && focusedWindow.state.previousBounds
+        ? focusedWindow.state.previousBounds
+        : focusedWindow.state.isMaximized
+            ? (focusedWindow.state.previousBounds || focusedWindow.bounds)
+            : focusedWindow.bounds
+
+    return {
+        ...focusedState,
+        windows: {
+            ...focusedState.windows,
+            [id]: {
+                ...focusedWindow,
+                bounds: region.bounds,
+                state: {
+                    ...focusedWindow.state,
+                    isFocused: true,
+                    isMinimized: false,
+                    isMaximized: false,
+                    snapMode: mode,
+                    previousBounds,
+                },
+            },
+        },
+    }
 }
 
 export function updateWindowBoundsState(
@@ -217,6 +296,10 @@ export function updateWindowBoundsState(
             [id]: {
                 ...targetWindow,
                 bounds: clampBoundsToViewport(mergeWindowBounds(targetWindow.bounds, bounds), viewport),
+                state: {
+                    ...targetWindow.state,
+                    snapMode: undefined,
+                },
             },
         },
     }

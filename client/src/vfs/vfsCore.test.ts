@@ -35,8 +35,45 @@ describe('AetherVFS core operations', () => {
 
         vfs.delete('/home/user/Documents', true);
 
-        expect(() => vfs.resolvePath('/home/user/Documents')).toThrow();
-        expect(() => vfs.resolvePath('/home/user/Documents/notes.txt')).toThrow();
+        const trashed = vfs.resolvePath('/home/user/.Trash/Documents');
+        expect(trashed.name).toBe('Documents');
+        expect(trashed.trash?.originalPath).toBe('/home/user/Documents');
+        expect(vfs.resolvePath('/home/user/.Trash/Documents/notes.txt').name).toBe('notes.txt');
+    });
+
+    it('restores trashed items and resolves name conflicts by keeping both', () => {
+        const vfs = new AetherVFS();
+        seedUserTree(vfs);
+
+        vfs.delete('/home/user/Documents/notes.txt', true);
+        vfs.createNode('/home/user/Documents', 'notes.txt', VfsNodeType.FILE, 'new', 'text/plain', true);
+        vfs.createNode('/home/user/Documents', 'notes (restored 1).txt', VfsNodeType.FILE, 'existing', 'text/plain', true);
+        const restored = vfs.restoreFromTrash('/home/user/.Trash/notes.txt', 'keep-both', true);
+
+        expect(restored.name).toBe('notes (restored 2).txt');
+        expect(restored.trash).toBeNull();
+        expect(vfs.resolvePath('/home/user/Documents/notes (restored 2).txt').name).toBe('notes (restored 2).txt');
+    });
+
+    it('permanently deletes items from trash', () => {
+        const vfs = new AetherVFS();
+        seedUserTree(vfs);
+
+        vfs.delete('/home/user/Documents/notes.txt', true);
+        vfs.deletePermanently('/home/user/.Trash/notes.txt', true);
+
+        expect(() => vfs.resolvePath('/home/user/.Trash/notes.txt')).toThrow();
+    });
+
+    it('restores to home when original parent is missing', () => {
+        const vfs = new AetherVFS();
+        seedUserTree(vfs);
+
+        vfs.delete('/home/user/Documents/notes.txt', true);
+        vfs.deletePermanently('/home/user/Documents', true);
+        const restored = vfs.restoreFromTrash('/home/user/.Trash/notes.txt', 'keep-both', true);
+
+        expect(vfs.getPath(restored.id)).toBe('/home/user/notes.txt');
     });
 
     it('supports indexed search under a root path', () => {
