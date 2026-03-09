@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { autosaveDraft, productivityRepository } from '../../../features/productivity'
+import { reportKernelActivity } from '../../../features/kernel/activityReporter'
 import type { ProductivityAppId, ProductivityRecord, ProductivityRepository } from '../../../features/productivity'
 
 interface Defaults {
@@ -108,6 +109,7 @@ export function useProductivityEditor(options: UseProductivityEditorOptions) {
         }
 
         const timerId = window.setTimeout(() => {
+            const burstUnits = Math.min(3.5, Math.max(0.7, (title.length + body.length + attachments.join('').length) / 1_200))
             const result = autosaveDraft(repository, {
                 appId: options.appId,
                 id: activeId,
@@ -118,12 +120,24 @@ export function useProductivityEditor(options: UseProductivityEditorOptions) {
             })
 
             if (result.status === 'conflict') {
+                reportKernelActivity({
+                    type: 'productivity-autosave',
+                    sourceAppId: options.appId,
+                    targetAppId: options.appId,
+                    units: burstUnits * 1.15,
+                })
                 baseRevisionRef.current = result.current.revision
                 setStatusLabel(`Conflict saved to ${result.conflictPath}`)
                 return
             }
 
             if (result.status === 'saved') {
+                reportKernelActivity({
+                    type: 'productivity-autosave',
+                    sourceAppId: options.appId,
+                    targetAppId: options.appId,
+                    units: burstUnits,
+                })
                 baseRevisionRef.current = result.record.revision
                 loadedSnapshotRef.current = snapshotFromState(result.record.title, result.record.body, result.record.attachments)
                 setRecords((currentRecords) => {
