@@ -78,8 +78,8 @@ Date: 2026-03-09
 - [ ] Multi-select desktop/file operations with marquee and modifier keys
 - [ ] Recycle Bin/Trash flow with restore and permanent delete
 - [ ] Real Task Manager impact from active app actions (more causal metrics)
-- [ ] Global keyboard shortcut map (`Alt+Tab`, `Win`, `Ctrl+Shift+Esc`, etc.)
-- [ ] Consistent unsaved-change guards for all editors and window close actions
+- [x] Global browser-safe keyboard shortcut map (launcher/app switcher/task manager/terminal/window actions) with remapping support
+- [x] Consistent unsaved-change guards for Notes/Docs/Boards plus window close/minimize and session lock/logout flows
 
 ### P1 - OS Realism and HCI Quality
 

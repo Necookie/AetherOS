@@ -10,7 +10,17 @@ const tabClasses = (active: boolean) =>
     `rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${active ? 'bg-slate-800 text-slate-100 border border-slate-600' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'}`
 
 export default function TaskManagerWindow({ id }: { id: string }) {
-    const { processes, killProcess, cpuUsage, memUsage, diskUsage, netUsage, networkLatencyMs } = useKernelStore((state) => ({
+    const {
+        processes,
+        killProcess,
+        cpuUsage,
+        memUsage,
+        diskUsage,
+        netUsage,
+        networkLatencyMs,
+        recentSpikes,
+        topContributors,
+    } = useKernelStore((state) => ({
         processes: state.processes,
         killProcess: state.killProcess,
         cpuUsage: state.cpuUsage,
@@ -18,6 +28,8 @@ export default function TaskManagerWindow({ id }: { id: string }) {
         diskUsage: state.diskUsage,
         netUsage: state.netUsage,
         networkLatencyMs: state.networkLatencyMs,
+        recentSpikes: state.recentSpikes,
+        topContributors: state.topContributors,
     }), shallow)
     const [tab, setTab] = useState<Tab>('Processes')
 
@@ -58,6 +70,12 @@ export default function TaskManagerWindow({ id }: { id: string }) {
                             <div className="mb-1 font-medium text-slate-400">Disk</div>
                             <div className="text-lg font-semibold text-amber-400">{totals.disk.toFixed(1)}%</div>
                         </div>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-slate-400">
+                        <span className="rounded-md border border-slate-700 bg-slate-900/80 px-2 py-1">CPU spike +{recentSpikes.cpu.toFixed(1)}%</span>
+                        <span className="rounded-md border border-slate-700 bg-slate-900/80 px-2 py-1">Mem spike +{recentSpikes.mem.toFixed(0)} MB</span>
+                        <span className="rounded-md border border-slate-700 bg-slate-900/80 px-2 py-1">Disk spike +{recentSpikes.disk.toFixed(1)}</span>
+                        <span className="rounded-md border border-slate-700 bg-slate-900/80 px-2 py-1">Net spike +{recentSpikes.net.toFixed(1)}</span>
                     </div>
                 </div>
 
@@ -117,6 +135,23 @@ export default function TaskManagerWindow({ id }: { id: string }) {
                                 </div>
                             </div>
                         ))}
+                        <div className="rounded-lg border border-slate-700 bg-slate-900/70 p-4">
+                            <div className="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Top Event Contributors</div>
+                            {topContributors.length > 0 ? (
+                                <div className="space-y-2">
+                                    {topContributors.slice(0, 5).map((entry, index) => (
+                                        <div key={`${entry.pid}-${entry.metric}-${index}`} className="flex items-center justify-between rounded border border-slate-800 bg-slate-950/50 px-3 py-2 text-xs">
+                                            <div className="text-slate-300">
+                                                <span className="font-semibold text-slate-100">{entry.name}</span> [{entry.metric}] {entry.source}
+                                            </div>
+                                            <div className="font-term text-slate-300">+{entry.delta.toFixed(1)}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-xs text-slate-500">No recent event spikes detected.</div>
+                            )}
+                        </div>
                     </div>
                 )}
 

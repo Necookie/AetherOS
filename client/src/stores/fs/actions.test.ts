@@ -84,6 +84,23 @@ describe('filesystem actions optimistic behavior', () => {
         expect(harness.getState().currentPath).toBe(HOME_PATH + '/Documents');
     });
 
+    it('soft-deletes files into trash for admin profile', () => {
+        const harness = createHarness();
+        const state = harness.getState();
+        state.navigate('/home/user/Documents');
+        const readme = harness.getState().items.find((item) => item.name === 'readme.txt');
+        expect(readme).toBeTruthy();
+        if (!readme) {
+            return;
+        }
+
+        state.deleteItems([readme.id]);
+
+        expect(() => fsService.resolvePath('/home/user/Documents/readme.txt')).toThrow();
+        const trashed = fsService.resolvePath('/home/user/.Trash/readme.txt');
+        expect(trashed.trash?.originalPath).toBe('/home/user/Documents/readme.txt');
+    });
+
     it('blocks guest profile from deleting files', () => {
         setActiveUserId('guest');
         useSessionStore.setState((state) => ({
@@ -107,5 +124,86 @@ describe('filesystem actions optimistic behavior', () => {
         const recovered = fsService.resolvePath('/home/user/Documents/readme.txt');
         expect(recovered.name).toBe('readme.txt');
         expect(harness.getState().error).toContain('read-only');
+    });
+
+    it('restores files from trash back to original location', () => {
+        const harness = createHarness();
+        const state = harness.getState();
+
+        state.navigate('/home/user/Documents');
+        const readme = harness.getState().items.find((item) => item.name === 'readme.txt');
+        expect(readme).toBeTruthy();
+        if (!readme) {
+            return;
+        }
+        state.deleteItems([readme.id]);
+
+        state.navigate('/home/user/.Trash');
+        const trashed = harness.getState().items.find((item) => item.name === 'readme.txt');
+        expect(trashed).toBeTruthy();
+        if (!trashed) {
+            return;
+        }
+
+        state.restoreItems([trashed.id]);
+        const restored = fsService.resolvePath('/home/user/Documents/readme.txt');
+        expect(restored.name).toBe('readme.txt');
+    });
+
+    it('rolls back permanent-delete request when target is outside trash', () => {
+        const harness = createHarness();
+        const state = harness.getState();
+        state.navigate('/home/user/Documents');
+        const readme = harness.getState().items.find((item) => item.name === 'readme.txt');
+        expect(readme).toBeTruthy();
+        if (!readme) {
+            return;
+        }
+
+        state.permanentlyDeleteItems([readme.id]);
+
+        const recovered = fsService.resolvePath('/home/user/Documents/readme.txt');
+        expect(recovered.name).toBe('readme.txt');
+        expect(harness.getState().error).toContain('only available for items in Trash');
+    });
+
+    it('supports single to multi and range selection transitions', () => {
+        const harness = createHarness();
+        const state = harness.getState();
+
+        state.navigate('/home/user');
+        const ids = harness.getState().items.map((item) => item.id);
+        expect(ids.length).toBeGreaterThanOrEqual(2);
+        if (ids.length < 2) {
+            return;
+        }
+
+        state.selectItem(ids[0], false, false);
+        expect(harness.getState().selectedIds).toEqual([ids[0]]);
+
+        state.selectItem(ids[1], true, false);
+        expect(harness.getState().selectedIds).toEqual([ids[0], ids[1]]);
+
+        state.selectItem(ids[ids.length - 1], false, true);
+        const expectedRange = ids.slice(1);
+        expect(harness.getState().selectedIds).toEqual(expectedRange);
+    });
+
+    it('clears selection and anchor together', () => {
+        const harness = createHarness();
+        const state = harness.getState();
+        state.navigate('/home/user/Documents');
+        const firstId = harness.getState().items[0]?.id;
+        expect(firstId).toBeTruthy();
+        if (!firstId) {
+            return;
+        }
+
+        state.selectItem(firstId, false, false);
+        expect(harness.getState().selectionAnchorId).toBe(firstId);
+
+        state.clearSelection();
+        expect(harness.getState().selectedIds).toEqual([]);
+        expect(harness.getState().selectionAnchorId).toBeNull();
     });
 });

@@ -4,12 +4,15 @@ import {
     VfsError,
     type VfsNode,
     VfsNodeType,
+    type VfsRestoreConflictStrategy,
     type VfsSearchOptions,
     type VfsSnapshot,
+    type VfsTrashMetadata,
     type VfsTreeOptions,
 } from './types';
 
 export class AetherVFS {
+    public static readonly TRASH_PATH = '/home/user/.Trash';
     private nodes: Map<string, VfsNode> = new Map();
     private childrenByName: Map<string, Map<string, string>> = new Map();
     private nameTokenIndex: Map<string, Set<string>> = new Map();
@@ -40,6 +43,7 @@ export class AetherVFS {
             mime: 'inode/directory',
             content: '',
             childrenIds: [],
+            trash: null,
         };
 
         this.nodes.set(rootNode.id, rootNode);
@@ -186,6 +190,7 @@ export class AetherVFS {
             mime: type === VfsNodeType.DIR ? 'inode/directory' : (mime || 'text/plain'),
             content,
             childrenIds: [],
+            trash: null,
         };
 
         this.nodes.set(newNode.id, newNode);
@@ -320,13 +325,93 @@ export class AetherVFS {
     }
 
     public delete(path: string, systemOverride: boolean = false) {
+        this.softDelete(path, systemOverride);
+    }
+
+    public softDelete(path: string, systemOverride: boolean = false) {
         const node = this.resolvePath(path);
         if (node.id === this.rootId) {
             throw new VfsError(ErrorCodes.EPERM, 'Cannot delete root');
         }
 
+        if (this.isTrashPath(path)) {
+            this.deletePermanently(path, systemOverride);
+            return;
+        }
+
         if (!systemOverride) {
             this.checkWritePermission(path);
+        }
+
+        const originalPath = this.getPath(node.id);
+        const trashDir = this.ensureTrashDirectory();
+        const trashName = this.getAvailableName(trashDir.id, node.name);
+        this.move(path, AetherVFS.TRASH_PATH, trashName, true);
+
+        const trashedNode = this.nodes.get(node.id);
+        if (!trashedNode) {
+            throw new VfsError(ErrorCodes.ENOENT, 'Node missing after trash move');
+        }
+
+        const now = kernelClock.now();
+        trashedNode.trash = {
+            originalPath,
+            deletedAt: now,
+        };
+        trashedNode.modifiedAt = now;
+        this.invalidatePathCacheSubtree(trashedNode.id);
+    }
+
+    public restoreFromTrash(path: string, conflictStrategy: VfsRestoreConflictStrategy = 'keep-both', systemOverride: boolean = false): VfsNode {
+        const normalizedPath = this.normalizePath(path);
+        if (!this.isTrashPath(normalizedPath)) {
+            throw new VfsError(ErrorCodes.EINVAL, 'Node is not in Trash');
+        }
+
+        const node = this.resolvePath(normalizedPath);
+        if (node.id === this.rootId) {
+            throw new VfsError(ErrorCodes.EPERM, 'Cannot restore root');
+        }
+
+        const trashMeta = node.trash;
+        if (!trashMeta) {
+            throw new VfsError(ErrorCodes.EINVAL, 'Missing trash metadata');
+        }
+
+        const { parentPath: originalParentPath, name: originalName } = this.splitParentPath(trashMeta.originalPath);
+        const destinationDirectory = this.resolveRestoreDirectory(originalParentPath);
+        const destinationNode = this.resolvePath(destinationDirectory);
+        const destinationPath = this.normalizePath(`${destinationDirectory}/${originalName}`);
+
+        if (!systemOverride) {
+            this.checkWritePermission(destinationPath);
+        }
+
+        let finalName = originalName;
+        if (this.childExists(destinationNode.id, originalName)) {
+            if (conflictStrategy === 'overwrite') {
+                this.deletePermanently(destinationPath, true);
+            } else {
+                finalName = this.getAvailableName(destinationNode.id, originalName, 'restored');
+            }
+        }
+
+        const restored = this.move(normalizedPath, destinationDirectory, finalName, true);
+        restored.trash = null;
+        restored.modifiedAt = kernelClock.now();
+        this.invalidatePathCacheSubtree(restored.id);
+        return restored;
+    }
+
+    public deletePermanently(path: string, systemOverride: boolean = false) {
+        const normalizedPath = this.normalizePath(path);
+        const node = this.resolvePath(normalizedPath);
+        if (node.id === this.rootId) {
+            throw new VfsError(ErrorCodes.EPERM, 'Cannot delete root');
+        }
+
+        if (!systemOverride) {
+            this.checkWritePermission(normalizedPath);
         }
 
         const parentId = node.parentId;
@@ -345,6 +430,23 @@ export class AetherVFS {
 
         this.deleteRecursive(node.id);
         this.invalidatePathCacheSubtree(parent.id);
+    }
+
+    public emptyTrash(systemOverride: boolean = false) {
+        const trashDir = this.ensureTrashDirectory();
+        const childPaths = trashDir.childrenIds
+            .map((id) => this.nodes.get(id))
+            .filter((node): node is VfsNode => node !== undefined)
+            .map((node) => this.getPath(node.id));
+
+        for (const childPath of childPaths) {
+            this.deletePermanently(childPath, systemOverride);
+        }
+    }
+
+    public listTrash(): VfsNode[] {
+        this.ensureTrashDirectory();
+        return this.readDir(AetherVFS.TRASH_PATH);
     }
 
     public readDir(path: string): VfsNode[] {
@@ -504,6 +606,95 @@ export class AetherVFS {
         return result;
     }
 
+    private isTrashPath(path: string): boolean {
+        const normalized = this.normalizePath(path);
+        return normalized === AetherVFS.TRASH_PATH || normalized.startsWith(`${AetherVFS.TRASH_PATH}/`);
+    }
+
+    private ensureTrashDirectory(): VfsNode {
+        const parts = AetherVFS.TRASH_PATH.split('/').filter(Boolean);
+        let currentPath = '/';
+
+        for (const part of parts) {
+            const nextPath = currentPath === '/' ? `/${part}` : `${currentPath}/${part}`;
+            try {
+                const existing = this.resolvePath(nextPath);
+                if (existing.type !== VfsNodeType.DIR) {
+                    throw new VfsError(ErrorCodes.ENOTDIR, `Trash component is not directory: ${nextPath}`);
+                }
+            } catch (error) {
+                if (!(error instanceof VfsError) || error.code !== ErrorCodes.ENOENT) {
+                    throw error;
+                }
+                this.createNode(currentPath, part, VfsNodeType.DIR, '', '', true);
+            }
+            currentPath = nextPath;
+        }
+
+        return this.resolvePath(AetherVFS.TRASH_PATH);
+    }
+
+    private getAvailableName(parentId: string, preferredName: string, suffix: 'copy' | 'restored' = 'copy'): string {
+        if (!this.childExists(parentId, preferredName)) {
+            return preferredName;
+        }
+
+        const lastDot = preferredName.lastIndexOf('.');
+        const hasExtension = lastDot > 0 && lastDot < preferredName.length - 1;
+        const baseName = hasExtension ? preferredName.slice(0, lastDot) : preferredName;
+        const extension = hasExtension ? preferredName.slice(lastDot) : '';
+        const label = suffix === 'restored' ? 'restored' : 'copy';
+
+        let counter = 1;
+        while (counter < 10000) {
+            const candidate = `${baseName} (${label} ${counter})${extension}`;
+            if (!this.childExists(parentId, candidate)) {
+                return candidate;
+            }
+            counter += 1;
+        }
+
+        throw new VfsError(ErrorCodes.EEXIST, `Could not allocate available name for ${preferredName}`);
+    }
+
+    private splitParentPath(path: string): { parentPath: string; name: string } {
+        const normalized = this.normalizePath(path);
+        if (normalized === '/') {
+            throw new VfsError(ErrorCodes.EINVAL, 'Root has no parent');
+        }
+
+        const segments = normalized.split('/').filter(Boolean);
+        const name = segments.pop();
+        if (!name) {
+            throw new VfsError(ErrorCodes.EINVAL, `Invalid path: ${path}`);
+        }
+
+        const parentPath = segments.length === 0 ? '/' : `/${segments.join('/')}`;
+        return { parentPath, name };
+    }
+
+    private resolveRestoreDirectory(originalParentPath: string): string {
+        try {
+            const node = this.resolvePath(originalParentPath);
+            if (node.type === VfsNodeType.DIR) {
+                return this.getPath(node.id);
+            }
+        } catch {
+            // fallback handled below
+        }
+
+        try {
+            const home = this.resolvePath('/home/user');
+            if (home.type === VfsNodeType.DIR) {
+                return '/home/user';
+            }
+        } catch {
+            // final fallback below
+        }
+
+        return '/';
+    }
+
     private loadSnapshot(snapshot: VfsSnapshot) {
         this.nodes.clear();
         this.childrenByName.clear();
@@ -531,9 +722,17 @@ export class AetherVFS {
     }
 
     private cloneNode(node: VfsNode): VfsNode {
+        const trash: VfsTrashMetadata | null = node.trash
+            ? {
+                originalPath: this.normalizePath(node.trash.originalPath),
+                deletedAt: node.trash.deletedAt,
+            }
+            : null;
+
         return {
             ...node,
             childrenIds: [...node.childrenIds],
+            trash,
         };
     }
 

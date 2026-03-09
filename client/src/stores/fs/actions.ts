@@ -5,7 +5,16 @@ import { getActiveAccount } from '../../features/accounts/services/sessionSelect
 import { useSessionStore } from '../useSessionStore';
 import { checkFileMutationAccess, checkFilePathAccess } from '../../features/permissions/guards';
 import { permissionService } from '../../features/permissions/permissionService';
+import { resolveClickSelection } from '../../features/selection/selectionDomain';
+import { reportKernelActivity } from '../../features/kernel/activityReporter';
 import type { FsStore } from './types';
+
+const TRASH_PATH = '/home/user/.Trash';
+
+function isTrashPath(path: string): boolean {
+    const normalized = fsService.normalizePath(path);
+    return normalized === TRASH_PATH || normalized.startsWith(`${TRASH_PATH}/`);
+}
 
 function toErrorMessage(error: unknown): string {
     return error instanceof Error ? error.message : String(error);
@@ -29,6 +38,7 @@ function restoreUiState(set: StoreSet, snapshot: FsStore) {
         historyIndex: snapshot.historyIndex,
         viewMode: snapshot.viewMode,
         selectedIds: snapshot.selectedIds,
+        selectionAnchorId: snapshot.selectionAnchorId,
         showHidden: snapshot.showHidden,
         searchQuery: snapshot.searchQuery,
         sortBy: snapshot.sortBy,
@@ -70,6 +80,7 @@ function runOptimisticMutation(set: StoreSet, get: StoreGet, action: () => void)
             ...buildViewState(currentState),
             isMutating: false,
             selectedIds: [],
+            selectionAnchorId: null,
             error: null,
         });
     } catch (error: unknown) {
@@ -131,6 +142,7 @@ export function createFsActions(set: StoreSet, get: StoreGet) {
                 history: nextState.history,
                 historyIndex: nextState.historyIndex,
                 selectedIds: [],
+                selectionAnchorId: null,
                 searchQuery: nextState.searchQuery,
                 error: null,
             });
@@ -147,6 +159,7 @@ export function createFsActions(set: StoreSet, get: StoreGet) {
                 currentPath: nextState.currentPath,
                 historyIndex: nextState.historyIndex,
                 selectedIds: [],
+                selectionAnchorId: null,
                 searchQuery: nextState.searchQuery,
                 error: null,
             });
@@ -163,6 +176,7 @@ export function createFsActions(set: StoreSet, get: StoreGet) {
                 currentPath: nextState.currentPath,
                 historyIndex: nextState.historyIndex,
                 selectedIds: [],
+                selectionAnchorId: null,
                 searchQuery: nextState.searchQuery,
                 error: null,
             });
@@ -197,19 +211,29 @@ export function createFsActions(set: StoreSet, get: StoreGet) {
         },
         selectItem: (id: string, multi: boolean, range: boolean) => {
             set((state) => {
-                if (multi || range) {
-                    const exists = state.selectedIds.includes(id);
-                    return {
-                        selectedIds: exists
-                            ? state.selectedIds.filter((selectedId) => selectedId !== id)
-                            : [...state.selectedIds, id],
-                    };
-                }
+                const { selectedIds, anchorId } = resolveClickSelection({
+                    currentSelection: state.selectedIds,
+                    orderedIds: state.items.map((item) => item.id),
+                    clickedId: id,
+                    anchorId: state.selectionAnchorId,
+                    multi,
+                    range,
+                });
 
-                return { selectedIds: [id] };
+                return {
+                    selectedIds,
+                    selectionAnchorId: anchorId,
+                };
             });
         },
-        clearSelection: () => set({ selectedIds: [] }),
+        setSelection: (ids: string[], anchorId: string | null = null) => set({
+            selectedIds: ids,
+            selectionAnchorId: anchorId,
+        }),
+        clearSelection: () => set({
+            selectedIds: [],
+            selectionAnchorId: null,
+        }),
         createFolder: (name: string) => runOptimisticMutation(set, get, () => {
             assertFilePermission('create', get().currentPath);
             fsService.createNode(get().currentPath, name, VfsNodeType.DIR);
@@ -239,6 +263,59 @@ export function createFsActions(set: StoreSet, get: StoreGet) {
                 assertFilePermission('delete', nodePath);
                 fsService.delete(nodePath);
             }
+            reportKernelActivity({
+                type: 'file-delete',
+                sourceAppId: 'explorer',
+                targetAppId: 'explorer',
+                units: Math.max(1, ids.length * 0.75),
+            });
+        }),
+        restoreItems: (ids: string[]) => runOptimisticMutation(set, get, () => {
+            for (const id of ids) {
+                const node = fsService.getNodeById(id);
+                if (!node) {
+                    throw new Error(`Missing file node: ${id}`);
+                }
+
+                const nodePath = fsService.getPath(node.id);
+                if (!isTrashPath(nodePath)) {
+                    throw new Error('Restore is only available for items in Trash.');
+                }
+
+                assertFilePermission('move', nodePath);
+                fsService.restoreFromTrash(nodePath, 'keep-both');
+            }
+            reportKernelActivity({
+                type: 'file-restore',
+                sourceAppId: 'explorer',
+                targetAppId: 'explorer',
+                units: Math.max(1, ids.length * 0.7),
+            });
+        }),
+        permanentlyDeleteItems: (ids: string[]) => runOptimisticMutation(set, get, () => {
+            for (const id of ids) {
+                const node = fsService.getNodeById(id);
+                if (!node) {
+                    throw new Error(`Missing file node: ${id}`);
+                }
+
+                const nodePath = fsService.getPath(node.id);
+                if (!isTrashPath(nodePath)) {
+                    throw new Error('Permanent delete is only available for items in Trash.');
+                }
+
+                assertFilePermission('delete', nodePath);
+                fsService.deletePermanently(nodePath);
+            }
+        }),
+        emptyTrash: () => runOptimisticMutation(set, get, () => {
+            const trashNodes = fsService.listTrash();
+            for (const node of trashNodes) {
+                const nodePath = fsService.getPath(node.id);
+                assertFilePermission('delete', nodePath);
+            }
+
+            fsService.emptyTrash();
         }),
         moveItems: (ids: string[], destinationPath: string) => runOptimisticMutation(set, get, () => {
             assertFilePermission('move', destinationPath);
@@ -250,9 +327,18 @@ export function createFsActions(set: StoreSet, get: StoreGet) {
 
                 fsService.move(fsService.getPath(node.id), destinationPath);
             }
+            reportKernelActivity({
+                type: 'file-move',
+                sourceAppId: 'explorer',
+                targetAppId: 'explorer',
+                units: Math.max(1, ids.length * 0.8),
+            });
 
             if (destinationPath !== get().currentPath) {
-                set({ selectedIds: [] });
+                set({
+                    selectedIds: [],
+                    selectionAnchorId: null,
+                });
             }
         }),
         clearError: () => set({ error: null }),

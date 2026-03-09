@@ -1,4 +1,5 @@
 import { DEFAULT_SETTINGS, WALLPAPER_OPTIONS } from './defaults'
+import { validateShortcutOverrides } from '../shortcuts/shortcutConfig'
 import type {
     AccessibilitySettings,
     BehaviorSettings,
@@ -82,6 +83,20 @@ function normalizeBehavior(value: unknown): BehaviorSettings {
     }
 }
 
+function normalizeShortcuts(value: unknown) {
+    if (!value || typeof value !== 'object') {
+        return { ...DEFAULT_SETTINGS.shortcuts }
+    }
+
+    const source = value as { overrides?: unknown }
+    const overrides = source.overrides && typeof source.overrides === 'object' ? source.overrides : undefined
+    const validation = validateShortcutOverrides(overrides)
+
+    return {
+        overrides: validation.normalizedOverrides,
+    }
+}
+
 export function normalizeSettingsState(value: unknown): OsSettingsState {
     if (!value || typeof value !== 'object') {
         return structuredClone(DEFAULT_SETTINGS)
@@ -102,5 +117,6 @@ export function normalizeSettingsState(value: unknown): OsSettingsState {
         desktop: normalizeDesktop(source.desktop),
         accessibility: normalizeAccessibility(source.accessibility),
         behavior: normalizeBehavior(source.behavior),
+        shortcuts: normalizeShortcuts(source.shortcuts),
     }
 }
