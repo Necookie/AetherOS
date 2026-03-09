@@ -36,6 +36,9 @@ export interface FsStoreActions {
     createFile: (name: string, content?: string) => void;
     renameItem: (id: string, newName: string) => void;
     deleteItems: (ids: string[]) => void;
+    restoreItems: (ids: string[]) => void;
+    permanentlyDeleteItems: (ids: string[]) => void;
+    emptyTrash: () => void;
     moveItems: (ids: string[], destinationPath: string) => void;
     clearError: () => void;
     refresh: () => void;

@@ -6,6 +6,7 @@ import {
     Copy,
     Edit2,
     Trash2,
+    RotateCcw,
     Info,
     Check,
     EyeOff,
@@ -53,6 +54,7 @@ const Separator = () => <div className="mx-2 my-1 h-px bg-slate-700" />;
 export default function ContextMenu({ onClose, position, targetId }: ContextMenuProps) {
     const {
         selectedIds,
+        currentPath,
         viewMode,
         setViewMode,
         showHidden,
@@ -61,9 +63,13 @@ export default function ContextMenu({ onClose, position, targetId }: ContextMenu
         createFile,
         renameItem,
         deleteItems,
+        restoreItems,
+        permanentlyDeleteItems,
+        emptyTrash,
         moveItems,
         isMutating,
     } = useFsStore();
+    const inTrash = currentPath === '/home/user/.Trash';
 
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -110,8 +116,22 @@ export default function ContextMenu({ onClose, position, targetId }: ContextMenu
     };
 
     const handleDelete = () => {
-        if (selectedIds.length > 0 && confirm(`Are you sure you want to delete ${selectedIds.length} item(s)?`)) {
+        if (selectedIds.length > 0 && confirm(`Move ${selectedIds.length} item(s) to Trash?`)) {
             deleteItems(selectedIds);
+        }
+        onClose();
+    };
+
+    const handleRestore = () => {
+        if (selectedIds.length > 0) {
+            restoreItems(selectedIds);
+        }
+        onClose();
+    };
+
+    const handlePermanentDelete = () => {
+        if (selectedIds.length > 0 && confirm(`Permanently delete ${selectedIds.length} item(s)? This cannot be undone.`)) {
+            permanentlyDeleteItems(selectedIds);
         }
         onClose();
     };
@@ -155,9 +175,20 @@ export default function ContextMenu({ onClose, position, targetId }: ContextMenu
         >
             {onEmptySpace ? (
                 <>
-                    <MenuItem icon={<FolderPlus size={14} />} label="New Folder" onClick={handleNewFolder} disabled={isMutating} />
-                    <MenuItem icon={<FilePlus size={14} />} label="New File" onClick={handleNewFile} disabled={isMutating} />
+                    <MenuItem icon={<FolderPlus size={14} />} label="New Folder" onClick={handleNewFolder} disabled={isMutating || inTrash} />
+                    <MenuItem icon={<FilePlus size={14} />} label="New File" onClick={handleNewFile} disabled={isMutating || inTrash} />
                     <Separator />
+                    {inTrash && (
+                        <>
+                            <MenuItem icon={<Trash2 size={14} />} label="Empty Trash" onClick={() => {
+                                if (confirm('Empty Trash permanently? This cannot be undone.')) {
+                                    emptyTrash();
+                                }
+                                onClose();
+                            }} disabled={isMutating} />
+                            <Separator />
+                        </>
+                    )}
                     <MenuItem icon={<EyeOff size={14} />} label="Show hidden files" onClick={() => { toggleHidden(); onClose(); }} showCheck={showHidden} />
                     <div className="relative group">
                         <MenuItem icon={<Check size={14} className="opacity-0" />} label="View" />
@@ -172,9 +203,11 @@ export default function ContextMenu({ onClose, position, targetId }: ContextMenu
                     <MenuItem icon={<Scissors size={14} />} label="Cut" disabled />
                     <MenuItem icon={<Copy size={14} />} label="Copy" disabled />
                     <Separator />
-                    <MenuItem icon={<FolderInput size={14} />} label="Move To..." onClick={handleMove} disabled={!hasSelection || isMutating} />
-                    <MenuItem icon={<Edit2 size={14} />} label="Rename" onClick={handleRename} disabled={!singleSelection || isMutating} />
-                    <MenuItem icon={<Trash2 size={14} />} label="Delete" onClick={handleDelete} disabled={!hasSelection || isMutating} />
+                    {!inTrash && <MenuItem icon={<FolderInput size={14} />} label="Move To..." onClick={handleMove} disabled={!hasSelection || isMutating} />}
+                    {!inTrash && <MenuItem icon={<Edit2 size={14} />} label="Rename" onClick={handleRename} disabled={!singleSelection || isMutating} />}
+                    {!inTrash && <MenuItem icon={<Trash2 size={14} />} label="Move to Trash" onClick={handleDelete} disabled={!hasSelection || isMutating} />}
+                    {inTrash && <MenuItem icon={<RotateCcw size={14} />} label="Restore" onClick={handleRestore} disabled={!hasSelection || isMutating} />}
+                    {inTrash && <MenuItem icon={<Trash2 size={14} />} label="Delete Permanently" onClick={handlePermanentDelete} disabled={!hasSelection || isMutating} />}
                     <Separator />
                     <MenuItem icon={<Info size={14} />} label="Properties" disabled={!singleSelection} />
                 </>

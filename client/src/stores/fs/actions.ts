@@ -8,6 +8,13 @@ import { permissionService } from '../../features/permissions/permissionService'
 import { resolveClickSelection } from '../../features/selection/selectionDomain';
 import type { FsStore } from './types';
 
+const TRASH_PATH = '/home/user/.Trash';
+
+function isTrashPath(path: string): boolean {
+    const normalized = fsService.normalizePath(path);
+    return normalized === TRASH_PATH || normalized.startsWith(`${TRASH_PATH}/`);
+}
+
 function toErrorMessage(error: unknown): string {
     return error instanceof Error ? error.message : String(error);
 }
@@ -255,6 +262,47 @@ export function createFsActions(set: StoreSet, get: StoreGet) {
                 assertFilePermission('delete', nodePath);
                 fsService.delete(nodePath);
             }
+        }),
+        restoreItems: (ids: string[]) => runOptimisticMutation(set, get, () => {
+            for (const id of ids) {
+                const node = fsService.getNodeById(id);
+                if (!node) {
+                    throw new Error(`Missing file node: ${id}`);
+                }
+
+                const nodePath = fsService.getPath(node.id);
+                if (!isTrashPath(nodePath)) {
+                    throw new Error('Restore is only available for items in Trash.');
+                }
+
+                assertFilePermission('move', nodePath);
+                fsService.restoreFromTrash(nodePath, 'keep-both');
+            }
+        }),
+        permanentlyDeleteItems: (ids: string[]) => runOptimisticMutation(set, get, () => {
+            for (const id of ids) {
+                const node = fsService.getNodeById(id);
+                if (!node) {
+                    throw new Error(`Missing file node: ${id}`);
+                }
+
+                const nodePath = fsService.getPath(node.id);
+                if (!isTrashPath(nodePath)) {
+                    throw new Error('Permanent delete is only available for items in Trash.');
+                }
+
+                assertFilePermission('delete', nodePath);
+                fsService.deletePermanently(nodePath);
+            }
+        }),
+        emptyTrash: () => runOptimisticMutation(set, get, () => {
+            const trashNodes = fsService.listTrash();
+            for (const node of trashNodes) {
+                const nodePath = fsService.getPath(node.id);
+                assertFilePermission('delete', nodePath);
+            }
+
+            fsService.emptyTrash();
         }),
         moveItems: (ids: string[], destinationPath: string) => runOptimisticMutation(set, get, () => {
             assertFilePermission('move', destinationPath);

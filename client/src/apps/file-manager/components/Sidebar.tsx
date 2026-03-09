@@ -1,5 +1,5 @@
 import React from 'react';
-import { HardDrive, Home, Download, Image, FileText, Settings, Monitor } from 'lucide-react';
+import { HardDrive, Home, Download, Image, FileText, Settings, Monitor, Trash2 } from 'lucide-react';
 import { useFsStore } from '../../../stores/fsStore';
 import DirectoryTree from './DirectoryTree';
 
@@ -33,6 +33,7 @@ export default function Sidebar() {
             <SidebarItem icon={<FileText size={16} />} label="Documents" path="/home/user/Documents" />
             <SidebarItem icon={<Download size={16} />} label="Downloads" path="/home/user/Downloads" />
             <SidebarItem icon={<Image size={16} />} label="Pictures" path="/home/user/Pictures" />
+            <SidebarItem icon={<Trash2 size={16} />} label="Trash" path="/home/user/.Trash" />
 
             <div className="mb-4 mt-2">
                 <div className="mb-1 px-4 py-1 text-xs font-semibold text-slate-500">This PC</div>

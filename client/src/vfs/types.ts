@@ -4,6 +4,11 @@ export enum VfsNodeType {
     SYMLINK = 'SYMLINK',
 }
 
+export interface VfsTrashMetadata {
+    originalPath: string;
+    deletedAt: number;
+}
+
 export interface VfsNode {
     id: string;
     type: VfsNodeType;
@@ -18,6 +23,7 @@ export interface VfsNode {
     mime: string;
     content: string;
     childrenIds: string[];
+    trash: VfsTrashMetadata | null;
 }
 
 export interface VfsSnapshot {
@@ -35,6 +41,8 @@ export interface VfsTreeOptions {
     depth?: number;
     includeHidden?: boolean;
 }
+
+export type VfsRestoreConflictStrategy = 'keep-both' | 'overwrite';
 
 export class VfsError extends Error {
     public readonly code: string;

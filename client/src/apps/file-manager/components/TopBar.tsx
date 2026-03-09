@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, ArrowUp, Search, FolderPlus, FilePlus, ArrowUpDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowUp, Search, FolderPlus, FilePlus, ArrowUpDown, RotateCcw, Trash2 } from 'lucide-react';
 import { useFsStore } from '../../../stores/fsStore';
 import AddressBar from './AddressBar';
 
@@ -19,7 +19,12 @@ export default function TopBar() {
         sortDirection,
         setSort,
         isMutating,
+        selectedIds,
+        restoreItems,
+        permanentlyDeleteItems,
+        emptyTrash,
     } = useFsStore();
+    const inTrash = currentPath === '/home/user/.Trash';
 
     const canGoBack = historyIndex > 0;
     const canGoForward = historyIndex < history.length - 1;
@@ -88,7 +93,7 @@ export default function TopBar() {
 
                 <button
                     onClick={() => createFolder('New Folder')}
-                    disabled={isMutating}
+                    disabled={isMutating || inTrash}
                     className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800 disabled:opacity-50"
                     title="New folder"
                 >
@@ -96,12 +101,51 @@ export default function TopBar() {
                 </button>
                 <button
                     onClick={() => createFile('New File.txt', '')}
-                    disabled={isMutating}
+                    disabled={isMutating || inTrash}
                     className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800 disabled:opacity-50"
                     title="New file"
                 >
                     <FilePlus size={14} />
                 </button>
+                {inTrash && (
+                    <>
+                        <button
+                            onClick={() => restoreItems(selectedIds)}
+                            disabled={isMutating || selectedIds.length === 0}
+                            className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+                            title="Restore selected"
+                        >
+                            <RotateCcw size={14} />
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (selectedIds.length === 0) {
+                                    return;
+                                }
+                                if (confirm(`Permanently delete ${selectedIds.length} item(s)? This cannot be undone.`)) {
+                                    permanentlyDeleteItems(selectedIds);
+                                }
+                            }}
+                            disabled={isMutating || selectedIds.length === 0}
+                            className="rounded border border-red-800/70 bg-red-950/60 px-2 py-1 text-xs text-red-200 hover:bg-red-900/70 disabled:opacity-50"
+                            title="Delete permanently"
+                        >
+                            <Trash2 size={14} />
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (confirm('Empty Trash permanently? This cannot be undone.')) {
+                                    emptyTrash();
+                                }
+                            }}
+                            disabled={isMutating}
+                            className="rounded border border-red-800/70 bg-red-950/60 px-2 py-1 text-xs text-red-200 hover:bg-red-900/70 disabled:opacity-50"
+                            title="Empty trash"
+                        >
+                            Empty Trash
+                        </button>
+                    </>
+                )}
             </div>
         </div>
     );
