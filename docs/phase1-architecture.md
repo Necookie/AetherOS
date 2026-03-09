@@ -1,32 +1,43 @@
-# Phase 1 Architecture Notes
+# Phase 1 Architecture Notes (Current Baseline)
 
-## Overview
-Phase 1 establishes a feature-first shell architecture and a design-system baseline for AetherOS while preserving existing app/window domains.
+## Objective
 
-## Module Boundaries
-- `client/src/features/shell/components`
-  - Shell frame and layout composition (`ShellFrame`, `TopBar`, `Dock`, launcher and flyouts).
-  - Desktop chrome is isolated from app implementations.
-- `client/src/features/shell/model`
-  - Shell-specific pure logic (`appCatalog`, `calendar`, icon mapping).
-  - Shared data and logic for launcher, dock, and flyouts.
-- `client/src/design-system`
-  - Token and primitive CSS layers (`tokens.css`, `primitives.css`) plus typed constants (`tokens.ts`).
-  - Provides stable extension points for future theming and spacing/radius/z-index changes.
-- Existing domains kept intact:
-  - `features/window-manager` remains source of truth for window behavior.
-  - `stores/windowStore` remains the orchestration point for launching/focusing/minimizing windows.
+Phase 1 established a feature-first shell architecture with clear domain boundaries and reusable UI primitives.
+That foundation is still the active architecture in the current codebase.
+
+## Stable Module Boundaries
+
+- `client/src/features/shell/*`
+  - Shell chrome and interaction surfaces: top bar, dock, launcher, flyouts.
+  - Presentation models (`appCatalog`, `calendar`, `launcher`) remain pure and reusable.
+- `client/src/features/window-manager/*`
+  - Source of truth for window lifecycle, focus, geometry, z-order, and selectors.
+- `client/src/design-system/*`
+  - Token and primitive CSS layers used by shell and apps.
+- `client/src/stores/*`
+  - Zustand orchestration layer across windows, kernel, VFS, browser, session, and settings.
+
+## Important Additions Since Initial Phase 1
+
+- `features/notifications`: grouped notification center + action model.
+- `features/background-jobs`: scheduler used for periodic system alerts.
+- `features/accounts`: local profile/PIN session simulation with per-user storage scoping.
+- `features/permissions`: role guards and local permission grants.
+- `features/app-registry`: catalog, semver/dependency validation, lifecycle hooks.
+- `features/productivity`: shared autosave/repository domain for Notes/Docs/Boards.
 
 ## Extension Points
-- Add new apps by updating `client/src/config/windows.ts`; dock and launcher pick them up through `appCatalog`.
-- Add shell flyouts as independent components under `features/shell/components`.
-- Adjust shell layering or dimensions through design tokens (`--shell-*`, `--ds-z-*`).
-- Future theme variants can override token files without changing feature components.
 
-## Quality Gates Added
-- Client:
-  - `npm run typecheck --workspace=client`
-  - `npm run lint --workspace=client`
-  - `npm run test --workspace=client`
-- Server:
-  - Added `typecheck` script (`tsc --noEmit`) for workspace-level validation.
+- Add apps via:
+  - `client/src/config/appManifest.ts`
+  - `client/src/config/windows.ts`
+- Add shell surfaces in `client/src/features/shell/components`.
+- Keep derived logic in `client/src/features/shell/model`.
+- Add role/permission rules in `client/src/features/permissions`.
+- Extend app package simulation in `client/src/features/app-registry`.
+
+## Guardrails
+
+- Keep cross-feature contracts typed and explicit.
+- Keep stores orchestration-focused; place pure logic in feature modules.
+- Preserve per-user scoping for any new persisted local keys.

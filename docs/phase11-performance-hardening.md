@@ -1,72 +1,38 @@
 # Phase 11: Performance, Reliability, and Quality Hardening
 
-## Measured Performance Improvements
+## What Phase 11 Delivered
 
-Build baseline (before this phase):
-- Command: `npm run build` in `client/`
-- Main JS bundle: `dist/assets/index-C06Vf5hX.js` = **652.18 kB** (gzip **176.74 kB**)
-- Result: single heavy entry chunk with Vite warning for >500 kB chunks
+- Lazy loading/code splitting for app windows via recoverable lazy wrappers.
+- Narrower Zustand subscriptions to reduce unnecessary shell rerenders.
+- Window-level error recovery (`Retry window`, `Close app`) plus app-level reset fallback.
+- Selector-focused tests for window-manager behavior.
 
-Build after this phase:
-- Command: `npm run build` in `client/`
-- Main JS bundle: `dist/assets/index-D9QO5UEu.js` = **265.07 kB** (gzip **80.89 kB**)
-- Deferred chunks created for heavy app windows:
-  - `TerminalWindow-TXM1VzCc.js` = 293.87 kB (gzip 74.29 kB)
-  - `BrowserApp-BFiwrINa.js` = 27.50 kB (gzip 8.86 kB)
-  - `FileManagerApp-N9sDiVmx.js` = 26.98 kB (gzip 7.27 kB)
-  - Additional app chunks (`SettingsApp`, `AppStoreApp`, `TaskManagerWindow`, `NotesApp`, `DocsApp`, `BoardsApp`)
+## Last Recorded Build Snapshot
 
-Impact summary:
-- Initial entry bundle reduced by **387.11 kB** (about **59.4%** smaller uncompressed).
-- Heavy app code now loads on demand when opening each app window.
+Historical measurements recorded in this phase:
 
-## Architecture and Coupling Improvements
+- Before: main entry bundle around 652 kB (uncompressed)
+- After: main entry bundle around 265 kB (uncompressed)
+- Heavy modules deferred (Terminal, Browser, File Manager, etc.)
 
-- Switched app window registration from eager static imports to lazy module loaders with recoverable wrappers.
-- Reduced top-level shell rerender pressure by narrowing `ShellFrame` subscriptions and moving window-map subscriptions into localized components (`Dock`, `AppLauncher`).
-- Reworked desktop window rendering to:
-  - Subscribe to `windowOrder` only at container level
-  - Render each window via per-window component selectors, minimizing unrelated rerenders
+These values are phase measurements, not strict current guarantees.
 
-## Reliability Hardening
+## Why It Still Matters
 
-- Added per-window recovery boundary with:
-  - Crash capture and error message surface
-  - `Retry window` recovery action
-  - `Close app` recovery action
-- Added lazy-load fallback UI for window modules (`Loading module` state).
-- Expanded app-level crash fallback with `Reset desktop session` recovery action in addition to full reload.
+This hardening is still active in the current architecture:
 
-## Test and Verification
-
-- Added selector coverage for new window selector behavior:
-  - `client/src/features/window-manager/selectors.test.ts`
-- Validation run results:
-  - `npm run test`: passed (23 files / 62 tests)
-  - `npm run build`: passed
-  - Lint status:
-    - Touched files lint clean
-    - Project-wide lint still has pre-existing issues in `browserConnectivityService.test.ts`
-
-## Hardening Checklist
-
-- [x] Introduced lazy loading/code splitting for desktop apps.
-- [x] Added granular fallback UI during lazy app boot.
-- [x] Added window-level error boundaries with recovery flows.
-- [x] Added app-level session recovery action.
-- [x] Reduced unnecessary shell-level rerenders via selector/subscription isolation.
-- [x] Added tests for selector changes.
-- [x] Documented measured before/after build performance.
+- Desktop startup cost remains lower due to deferred app loading.
+- Failure isolation is improved through window-level boundaries.
+- Rerender pressure remains reduced through selector/subscription isolation.
 
 ## Residual Risks
 
-- Terminal app chunk remains large because of terminal runtime + `xterm`; startup cost is deferred but still significant when Terminal is first opened.
-- No browser-level profiling trace artifacts (React Profiler flamecharts) are committed yet; current measurements are bundle/build based.
-- Project-wide lint has unrelated existing failures outside touched scope.
+- Terminal first-open cost is still relatively high because of xterm/runtime footprint.
+- No committed profiling trace set yet for repeatable interaction benchmarks.
+- Project-wide lint can still contain unrelated baseline issues outside touched scope.
 
-## Suggested Follow-up for Phase 12
+## Follow-up Direction
 
-1. Add interactive performance profiling harness (React Profiler marks + scripted window open/drag scenarios) and store baseline traces in `docs/perf/`.
-2. Split terminal runtime internals further (parser/engine/fit dependencies) to reduce first-open latency.
-3. Add integration tests for crash recovery paths (window retry/close behavior) with a browser test runner.
-4. Resolve remaining baseline lint issues and enforce clean lint in CI gate.
+- Add repeatable shell interaction profiling harness and baselines.
+- Further split terminal runtime path if first-open latency becomes a blocker.
+- Add integration tests for window recovery and shell-level interactions.

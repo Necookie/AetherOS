@@ -1,51 +1,37 @@
-# Phase 12: Final Polish, Showcase Experience, and Release Readiness
+# Phase 12: Release Readiness Snapshot
 
 Date: 2026-03-09
 
-## Final Polish Implemented
+## Current State Summary
 
-- Added consistent flyout entrance motion for launcher, dock previews, quick settings, calendar, and notification center.
-- Added shared interaction utility (`.os-interactive`) for hover/active tactile feedback across shell controls.
-- Refined launcher UX with explicit runtime states (`Running`, `Minimized`, `Not running`) and contextual empty-state messaging.
-- Improved notification center controls by disabling invalid actions (`Mark all`, `Clear`) when no actionable items exist.
-- Preserved `prefers-reduced-motion` behavior for all new animations.
+Phase 12 status in this repository is focused on polish and consistency for the OS simulation layer:
 
-## Architecture Cleanup
+- Consistent flyout/interaction motion across launcher, quick settings, date-time, and notifications.
+- Improved launcher status states and empty-state messaging.
+- Notification center action safeguards (`Mark all` / `Clear` disable correctly).
+- Architecture map and extension guidance documented.
 
-- Extracted launcher state derivation into a focused model module:
-  - [`client/src/features/shell/model/launcher.ts`](/C:/Users/dheyn/Documents/02_Dev/AetherOS/client/src/features/shell/model/launcher.ts)
-- Reduced presentation logic inside `AppLauncher` by consuming model helpers instead of embedding status/empty-state rules inline.
+## Functional Readiness (Now)
 
-## Validation Results
+- Shell, windowing, and core app flows are functional.
+- Local multi-profile session flow works (simulated PIN auth).
+- Per-user local persistence exists for session/settings/VFS/permissions.
+- Server contract is stable for `GET /health` and `POST /api/ai`.
 
-- Client tests:
-  - Command: `npm run test --workspace=client`
-  - Result: 24 test files passed, 66 tests passed
-- Client production build:
-  - Command: `npm run build --workspace=client`
-  - Result: passed
-  - Main entry chunk: `dist/assets/index-juiXwdi1.js` = 266.61 kB (gzip 81.17 kB)
+## Explicit Out-of-Scope for This Release
 
-## Release Checklist
+- Real authentication providers
+- Database-backed persistence
+- Cloud file storage integration
 
-- [x] Shell visual language and motion pass completed.
-- [x] Empty-state behavior improved for launcher search results.
-- [x] Notification center action safeguards implemented.
-- [x] Critical new behavior covered with tests (`launcher.test.ts`).
-- [x] Typecheck and production build pass.
-- [x] Architecture map and extension guide documented.
-- [x] Known limitations recorded.
+These are intentionally deferred to a later phase.
 
 ## Known Limitations
 
-- Terminal first-open chunk remains large due to terminal runtime dependencies.
-- Launcher Power button is currently visual only (no shutdown/restart flow).
-- Browser app still relies on simulated/embed constraints and is not a full secure browser sandbox.
-- Persistence for full multi-user desktop state is still not implemented.
+- Browser is a simulation and not a secure full browser sandbox.
+- Terminal initial open still carries heavy runtime load.
+- Power menu actions are not fully implemented (UI affordance exists).
 
-## Future Roadmap Notes
+## Next Gate
 
-1. Implement actual Power menu actions (lock, restart simulation, sign out, optional sleep mode).
-2. Add end-to-end UI tests for shell flyouts and window interactions.
-3. Introduce persistence adapters for sessions, VFS, and settings.
-4. Split terminal runtime further to lower first-open latency.
+Use `feature_plan.md` as the execution checklist for the next milestone: a stronger OS/HCI-grade simulator with function-first improvements and no auth/database dependency.

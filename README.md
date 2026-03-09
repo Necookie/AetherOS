@@ -1,167 +1,151 @@
 # AetherOS
 
-AI-integrated web-based operating system simulator built as a TypeScript monorepo.
+AetherOS is a web-based OS simulator for OS/HCI coursework, built as a TypeScript monorepo.
 
-Live demo: [aetheros.necookie.dev](https://aetheros.necookie.dev)
+## Current Scope
 
-## What It Is
+This project currently focuses on functional OS simulation only.
 
-AetherOS simulates a desktop shell in the browser:
-- boot flow from loading screen to login to desktop
-- floating window manager with focus, z-order, drag, resize, minimize, and maximize
-- terminal, task manager, file manager, and browser-style app surfaces
-- kernel metrics generated in a Web Worker
-- in-memory virtual filesystem for file-manager interactions
-- Fastify server that proxies AI requests and falls back to mock mode when no OpenAI key is present
+- Included: shell UX, windowing, process simulation, in-memory/local-persistent VFS, core apps, settings, notifications, and app lifecycle simulation.
+- Excluded for now: real authentication, real database, and cloud file storage.
 
-## Architecture
+## Implemented Features
 
-Root workspaces:
-- `client`: React 18, Vite, Zustand, Tailwind, xterm.js
-- `server`: Fastify, TypeScript, OpenAI proxy wrapper
+- Boot sequence: loading screen -> lock/login screen -> desktop shell
+- Local multi-profile session simulation (admin/member/guest with PIN)
+- Window manager:
+  - open, close, focus, z-order
+  - drag/resize/maximize/minimize/restore
+  - per-window crash recovery boundary + retry/close
+- Kernel simulation (Web Worker):
+  - process list
+  - CPU, memory, disk, network usage
+  - simulated latency
+  - app-linked process spawn/kill flow
+- Task Manager:
+  - processes tab with kill action
+  - performance + network views
+- File Manager (VFS-backed):
+  - directory navigation/tree
+  - icon/details views
+  - rename, move, delete, hidden toggle
+  - keyboard shortcuts
+- Terminal:
+  - built-in commands (`help`, `pwd`, `ls`, `cd`, `cat`, `mkdir`, `touch`, `rm`, `mv`, `cp`, `clear`)
+  - history navigation and tab completion
+- Browser app:
+  - tabbed browsing model
+  - safe URL normalization/blocking for unsafe schemes
+  - embed/external fallback
+  - offline cache simulation + connectivity toggles
+  - bookmarks/history side panels
+- Settings app:
+  - appearance (theme/wallpaper/custom palette)
+  - desktop controls (icon scale/taskbar position/accent strength)
+  - accessibility controls + checks
+  - behavior toggles (animations/translucency/clock seconds)
+- Notifications + background jobs:
+  - grouped notification center with actions
+  - periodic system-health and latency alerts
+- Productivity apps:
+  - Notes, Docs, Boards
+  - autosave, draft recovery, linked records, attachment path validation
+- App Store simulation:
+  - install/update/uninstall simulation
+  - dependency and version validation
+  - lifecycle hooks
+- Per-user local persistence:
+  - session snapshot
+  - settings
+  - VFS snapshot
+  - permission grants
 
-Current folder map:
+## Monorepo Layout
+
 ```text
 client/
   src/
-    apps/
-      browser/
-      file-manager/
-    components/
+    apps/                  # app implementations (browser, file manager, notes, docs, boards, settings, app store)
+    components/            # shared UI components (window, terminal, task manager, login)
+    config/                # app/window manifest and desktop icon config
     features/
-      kernel/
-      vfs/
-      window-manager/
-    stores/
-    vfs/
-    worker/
+      accounts/            # local profile and session services
+      app-registry/        # package catalog/version/dependency domain
+      background-jobs/     # scheduler
+      notifications/       # notification domain and flyout
+      permissions/         # role guards + local grants
+      settings/            # settings defaults, normalization, storage, theming
+      shell/               # top bar, dock, launcher, flyouts
+      window-manager/      # window lifecycle/geometry/focus/selectors
+      productivity/        # shared notes/docs/boards repository + autosave
+    stores/                # Zustand orchestration stores
+    vfs/                   # virtual filesystem core + service
+    worker/                # kernel.worker.ts metrics/process simulation
 server/
   src/
-    config/
-    plugins/
-    routes/
-    services/
+    config/                # env loader
+    plugins/               # cors/rate-limit
+    routes/                # /health and /api/ai
+    services/              # OpenAI wrapper + ai service
 docs/
-  architecture.md
-  refactor-notes.md
-  refactor-plan.md
+  architecture-map-phase12.md
+  brand.md
+  phase1-architecture.md
+  phase11-performance-hardening.md
+  phase12-release-readiness.md
+feature_plan.md            # new functional roadmap checklist
+supabase_plan.md           # deferred persistence/auth roadmap (out of scope now)
 ```
 
-Runtime overview:
-- `client/src/App.tsx` owns loading/login/desktop flow.
-- `client/src/stores/windowStore.ts` delegates window lifecycle transitions to feature helpers.
-- `client/src/worker/kernel.worker.ts` emits typed kernel tick messages to `client/src/stores/useKernelStore.ts`.
-- `client/src/vfs/*` provides the filesystem core, while `client/src/stores/fsStore.ts` adapts it for UI state.
-- `server/src/server.ts` assembles Fastify plugins and routes.
-- `server/src/routes/ai.ts` keeps the existing `POST /api/ai` shape and delegates mock/live behavior to `server/src/services/aiService.ts`.
+## Backend API
 
-## What Works Now
-
-- Boot and login flow
-- Desktop shell with wallpaper, icons, and taskbar
-- Window manager behavior for drag, resize, minimize, maximize, focus, and z-order
-- Terminal app with existing command handling and AI command path
-- Task Manager with live process, CPU, memory, disk, and network metrics
-- File Manager with icon/details views, navigation, rename, and delete on the in-memory VFS
-- Browser app with tabs, embed/external fallback behavior, and URL safety checks
-- AI proxy mock mode when `OPENAI_API_KEY` is unset
-
-## What Is Still Pending
-
-- True browser sandboxing and richer site compatibility
-- Settings application implementation behind the desktop affordances
-- Persistence layer for session state, VFS state, and user settings
-- Stronger shared contracts if client and server begin sharing repo-level types
+- `GET /health` -> health + timestamp
+- `POST /api/ai` -> `{ reply, mode }`
+  - `mode: "mock"` when `OPENAI_API_KEY` is missing
+  - `mode: "live"` when key is configured
 
 ## Local Development
 
 Prerequisites:
+
 - Node.js 18+
 - npm
-- Docker only if you want the optional local Postgres container
 
 Install:
+
 ```bash
 npm install
 ```
 
-Environment:
+Environment setup:
+
 ```bash
 cp client/.env.example client/.env
 cp server/.env.example server/.env
 ```
 
-Defaults:
-- `client/.env.example` sets `VITE_API_URL=http://localhost:3000`
-- `server/.env.example` sets `PORT=3000`
-- Leave `OPENAI_API_KEY` empty to use safe mock responses
+Run both workspaces:
 
-Run:
 ```bash
 npm run dev
 ```
 
 Workspace URLs:
-- client: `http://localhost:5173`
-- server: `http://localhost:3000`
 
-Validation:
+- Client: `http://localhost:5173`
+- Server: `http://localhost:3000`
+
+Quality checks:
+
 ```bash
 npm run lint
+npm run typecheck
+npm run test
 npm run build
 ```
 
-Optional local Postgres container:
-```bash
-docker-compose up -d
-```
+## Notes for OS/HCI Scope
 
-Current Docker scope:
-- Docker starts a standalone Postgres instance only.
-- The running app does not yet persist AetherOS state into that database.
-
-## Security Notes
-
-- `OPENAI_API_KEY` stays server-side only.
-- Client requests go to the Fastify proxy at `POST /api/ai`.
-- Fastify registers permissive CORS and a basic rate limit of `100` requests per minute.
-- Without an API key, the AI route returns mock responses instead of failing open.
-
-## Recommended Next Features
-
-Recommended means not implemented yet.
-
-Realism:
-- `M` Session resume for open windows, bounds, and active app state. Dependency: persistence layer.
-- `M` Better process modeling in the kernel worker with stable per-app profiles and lifecycle states. Dependency: current worker protocol.
-- `L` VFS persistence with seeded system directories plus user-writable overlays. Dependency: storage design.
-
-Security:
-- `M` Harden browser isolation with clearer allow/block rules and sandbox diagnostics. Dependency: browser feature work.
-- `S` Add server-side request schema validation for `/api/ai`. Dependency: none.
-- `M` Restrict CORS by environment instead of `*`. Dependency: deployment env values.
-
-Persistence:
-- `S` Save browser history and settings locally. Dependency: storage choice.
-- `M` Persist file-manager mutations across reloads. Dependency: VFS serialization.
-- `L` Add multi-user profiles with separate home directories and session state. Dependency: persistence plus auth model.
-
-UX:
-- `S` Build the Settings app already hinted at by the desktop/taskbar shell. Dependency: none.
-- `M` Add window snapping and keyboard shortcuts for layout control. Dependency: window-manager helpers already extracted.
-- `M` Add notifications/toasts at shell level instead of per-app only. Dependency: shared desktop event channel.
-
-DevEx:
-- `S` Add lightweight route and worker protocol validation tests without introducing a large framework. Dependency: pick existing tooling strategy.
-- `M` Promote shared client-worker contracts into a dedicated `shared/` package if server reuse appears. Dependency: broader cross-runtime type reuse.
-- `S` Add CI for `lint`, TypeScript checks, and build verification. Dependency: target CI provider.
-
-## Verification Snapshot
-
-Verified during this refactor:
-- `npm run lint`
-- `npx tsc -p client/tsconfig.json --noEmit`
-- `npx tsc -p server/tsconfig.json --noEmit`
-
-Known limitation in this sandbox:
-- `npm run build` is blocked here during the client Vite step because the sandbox denies the `esbuild` child-process spawn used by Vite config loading.
+- This repository intentionally uses local simulation over backend persistence for now.
+- The next major milestone is functional realism and interaction quality, not auth/database integration.
+- See `feature_plan.md` for the done-vs-needed checklist.

@@ -1,40 +1,91 @@
-# AetherOS - Server (Backend)
+# AetherOS Server
 
-This is the API backend for AetherOS, handling system health checks and AI diagnostics via OpenAI.
+Backend API workspace for AetherOS.
 
-## Tech Stack
-- Node.js & TypeScript
+## Stack
+
+- Node.js + TypeScript
 - Fastify
-- @fastify/cors & @fastify/rate-limit
+- `@fastify/cors`
+- `@fastify/rate-limit`
 
-## Setup
-1. Copy `.env.example` to `.env`:
-   ```bash
-   cp .env.example .env
-   ```
-2. (Optional) Provide your `OPENAI_API_KEY`. If left empty, the server will safely return mocked responses.
-3. Install dependencies from the root monorepo:
-   ```bash
-   npm install
-   ```
+## Current Responsibilities
 
-## Running the Server
-The Server can be started using the root script `npm run dev`, or locally via:
-```bash
-npm run dev
-```
+- Health endpoint for runtime checks
+- AI proxy endpoint used by the client
+- Mock response fallback when OpenAI key is not set
 
 ## Endpoints
+
 ### `GET /health`
-Returns the server status and timestamp.
+
+Returns server status and timestamp.
+
 ```bash
 curl http://localhost:3000/health
 ```
 
 ### `POST /api/ai`
-Processes AI prompts.
+
+Request:
+
+```json
+{ "message": "What is thrashing?" }
+```
+
+Response shape:
+
+```json
+{ "reply": "...", "mode": "mock|live" }
+```
+
+Example:
+
 ```bash
 curl -X POST http://localhost:3000/api/ai \
-     -H "Content-Type: application/json" \
-     -d '{"message": "What is thrashing?"}'
+  -H "Content-Type: application/json" \
+  -d '{"message":"What is thrashing?"}'
 ```
+
+## Setup
+
+From repo root:
+
+```bash
+npm install
+cp server/.env.example server/.env
+```
+
+Env values:
+
+- `PORT` defaults to `3000`
+- `OPENAI_API_KEY` optional
+  - empty -> `mode: "mock"`
+  - set -> `mode: "live"`
+
+## Run
+
+From repo root:
+
+```bash
+npm run dev --workspace=server
+```
+
+or run both workspaces:
+
+```bash
+npm run dev
+```
+
+## Scripts
+
+```bash
+npm run lint --workspace=server
+npm run typecheck --workspace=server
+npm run build --workspace=server
+```
+
+## Scope Note
+
+Server persistence/auth endpoints are intentionally out of scope for this phase.
+The API is currently focused on health + AI relay only.
