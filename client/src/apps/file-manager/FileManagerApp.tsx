@@ -15,6 +15,9 @@ export default function FileManagerApp({ id }: { id: string }) {
         toggleHidden,
         setViewMode,
         deleteItems,
+        restoreItems,
+        permanentlyDeleteItems,
+        emptyTrash,
         renameItem,
         moveItems,
     } = useFsStore((state) => ({
@@ -25,9 +28,13 @@ export default function FileManagerApp({ id }: { id: string }) {
         toggleHidden: state.toggleHidden,
         setViewMode: state.setViewMode,
         deleteItems: state.deleteItems,
+        restoreItems: state.restoreItems,
+        permanentlyDeleteItems: state.permanentlyDeleteItems,
+        emptyTrash: state.emptyTrash,
         renameItem: state.renameItem,
         moveItems: state.moveItems,
     }), shallow);
+    const inTrash = currentPath === '/home/user/.Trash';
 
     useEffect(() => {
         refresh();
@@ -52,18 +59,32 @@ export default function FileManagerApp({ id }: { id: string }) {
             }
             if (event.key === 'Delete' && !isInput && selectedIds.length > 0) {
                 event.preventDefault();
-                if (confirm(`Are you sure you want to delete ${selectedIds.length} item(s)?`)) {
+                if (inTrash) {
+                    if (confirm(`Permanently delete ${selectedIds.length} item(s)? This cannot be undone.`)) {
+                        permanentlyDeleteItems(selectedIds);
+                    }
+                } else if (confirm(`Move ${selectedIds.length} item(s) to Trash?`)) {
                     deleteItems(selectedIds);
                 }
             }
-            if (event.key === 'F2' && !isInput && selectedIds.length === 1) {
+            if (event.ctrlKey && event.key.toLowerCase() === 'r' && !isInput && selectedIds.length > 0 && inTrash) {
+                event.preventDefault();
+                restoreItems(selectedIds);
+            }
+            if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'delete' && !isInput && inTrash) {
+                event.preventDefault();
+                if (confirm('Empty Trash permanently? This cannot be undone.')) {
+                    emptyTrash();
+                }
+            }
+            if (event.key === 'F2' && !isInput && selectedIds.length === 1 && !inTrash) {
                 event.preventDefault();
                 const newName = prompt('Enter new name:');
                 if (newName) {
                     renameItem(selectedIds[0], newName);
                 }
             }
-            if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'm' && !isInput && selectedIds.length > 0) {
+            if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'm' && !isInput && selectedIds.length > 0 && !inTrash) {
                 event.preventDefault();
                 const destination = prompt('Move selected items to:', '/home/user');
                 if (destination) {
@@ -74,7 +95,7 @@ export default function FileManagerApp({ id }: { id: string }) {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [deleteItems, moveItems, renameItem, selectedIds, setViewMode, toggleHidden]);
+    }, [deleteItems, emptyTrash, inTrash, moveItems, permanentlyDeleteItems, renameItem, restoreItems, selectedIds, setViewMode, toggleHidden]);
 
     return (
         <Window id={id} title="File Manager">
@@ -89,7 +110,7 @@ export default function FileManagerApp({ id }: { id: string }) {
                         <span>{items.length} item{items.length !== 1 ? 's' : ''}</span>
                         {selectedIds.length > 0 && <span>{selectedIds.length} item{selectedIds.length !== 1 ? 's' : ''} selected</span>}
                     </div>
-                    <span className="hidden sm:inline">Ctrl+Shift+M to move selected items</span>
+                    <span className="hidden sm:inline">{inTrash ? 'Ctrl+R restore, Del permanent delete' : 'Ctrl+Shift+M to move selected items'}</span>
                 </div>
             </div>
         </Window>

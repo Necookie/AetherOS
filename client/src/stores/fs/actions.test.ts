@@ -84,6 +84,23 @@ describe('filesystem actions optimistic behavior', () => {
         expect(harness.getState().currentPath).toBe(HOME_PATH + '/Documents');
     });
 
+    it('soft-deletes files into trash for admin profile', () => {
+        const harness = createHarness();
+        const state = harness.getState();
+        state.navigate('/home/user/Documents');
+        const readme = harness.getState().items.find((item) => item.name === 'readme.txt');
+        expect(readme).toBeTruthy();
+        if (!readme) {
+            return;
+        }
+
+        state.deleteItems([readme.id]);
+
+        expect(() => fsService.resolvePath('/home/user/Documents/readme.txt')).toThrow();
+        const trashed = fsService.resolvePath('/home/user/.Trash/readme.txt');
+        expect(trashed.trash?.originalPath).toBe('/home/user/Documents/readme.txt');
+    });
+
     it('blocks guest profile from deleting files', () => {
         setActiveUserId('guest');
         useSessionStore.setState((state) => ({
@@ -107,6 +124,47 @@ describe('filesystem actions optimistic behavior', () => {
         const recovered = fsService.resolvePath('/home/user/Documents/readme.txt');
         expect(recovered.name).toBe('readme.txt');
         expect(harness.getState().error).toContain('read-only');
+    });
+
+    it('restores files from trash back to original location', () => {
+        const harness = createHarness();
+        const state = harness.getState();
+
+        state.navigate('/home/user/Documents');
+        const readme = harness.getState().items.find((item) => item.name === 'readme.txt');
+        expect(readme).toBeTruthy();
+        if (!readme) {
+            return;
+        }
+        state.deleteItems([readme.id]);
+
+        state.navigate('/home/user/.Trash');
+        const trashed = harness.getState().items.find((item) => item.name === 'readme.txt');
+        expect(trashed).toBeTruthy();
+        if (!trashed) {
+            return;
+        }
+
+        state.restoreItems([trashed.id]);
+        const restored = fsService.resolvePath('/home/user/Documents/readme.txt');
+        expect(restored.name).toBe('readme.txt');
+    });
+
+    it('rolls back permanent-delete request when target is outside trash', () => {
+        const harness = createHarness();
+        const state = harness.getState();
+        state.navigate('/home/user/Documents');
+        const readme = harness.getState().items.find((item) => item.name === 'readme.txt');
+        expect(readme).toBeTruthy();
+        if (!readme) {
+            return;
+        }
+
+        state.permanentlyDeleteItems([readme.id]);
+
+        const recovered = fsService.resolvePath('/home/user/Documents/readme.txt');
+        expect(recovered.name).toBe('readme.txt');
+        expect(harness.getState().error).toContain('only available for items in Trash');
     });
 
     it('supports single to multi and range selection transitions', () => {

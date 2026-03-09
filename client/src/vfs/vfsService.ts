@@ -1,5 +1,5 @@
 import { AetherVFS } from './vfsCore';
-import { VfsNodeType, type VfsNode, type VfsSnapshot, type VfsSearchOptions, type VfsTreeOptions } from './types';
+import { VfsNodeType, type VfsNode, type VfsRestoreConflictStrategy, type VfsSnapshot, type VfsSearchOptions, type VfsTreeOptions } from './types';
 import { getScopedStorageKey, onActiveUserChange } from '../features/accounts/services/userScope';
 
 const PERSIST_KEY = 'aether.vfs.snapshot.v1';
@@ -84,6 +84,26 @@ class VfsService {
         this.persist();
     }
 
+    public restoreFromTrash(path: string, conflictStrategy: VfsRestoreConflictStrategy = 'keep-both', systemOverride = false) {
+        const node = this.vfs.restoreFromTrash(path, conflictStrategy, systemOverride);
+        this.persist();
+        return node;
+    }
+
+    public deletePermanently(path: string, systemOverride = false) {
+        this.vfs.deletePermanently(path, systemOverride);
+        this.persist();
+    }
+
+    public emptyTrash(systemOverride = false) {
+        this.vfs.emptyTrash(systemOverride);
+        this.persist();
+    }
+
+    public listTrash(): VfsNode[] {
+        return this.vfs.listTrash();
+    }
+
     public getPath(nodeId: string): string {
         return this.vfs.getPath(nodeId);
     }
@@ -133,6 +153,7 @@ class VfsService {
         this.mkdirP('/home/user/Downloads');
         this.mkdirP('/home/user/Pictures');
         this.mkdirP('/home/user/.config/aether');
+        this.mkdirP('/home/user/.Trash');
 
         this.touch('/home/user/Documents/readme.txt', 'Welcome to AetherOS!\nEnjoy the deterministic filesystem.');
         this.touch('/home/user/.bashrc', '# ~/.bashrc\nexport PS1="\\u@aether:\\w\\$ "');
