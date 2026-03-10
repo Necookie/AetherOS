@@ -18,6 +18,7 @@ interface DownloadManagerOptions {
     tickMs?: number
     publishNotification?: (notification: CreateNotificationInput) => string
     publishEvent?: (event: DownloadManagerEvent) => void
+    materializeFile?: (item: DownloadItem) => { fileName: string; destinationPath: string }
 }
 
 type Listener = () => void
@@ -71,6 +72,7 @@ export function createDownloadManagerService(options: DownloadManagerOptions = {
     const runtimeById = new Map<string, DownloadRuntime>()
     const publishNotification = options.publishNotification
     const publishEvent = options.publishEvent
+    const materializeFile = options.materializeFile
     let idCounter = 0
     let intervalId: IntervalHandle | null = null
     let items: DownloadItem[] = []
@@ -109,6 +111,7 @@ export function createDownloadManagerService(options: DownloadManagerOptions = {
         }
 
         if (event.type === 'completed') {
+            const parentPath = event.item.destinationPath.split('/').slice(0, -1).join('/') || '/'
             publishNotification({
                 title: 'Download complete',
                 message: `${event.item.fileName} is ready in ${event.item.destinationPath}.`,
@@ -124,11 +127,45 @@ export function createDownloadManagerService(options: DownloadManagerOptions = {
                         deepLink: { kind: 'downloads' },
                     },
                     {
-                        id: `show-file-${event.item.id}`,
-                        label: 'Show file',
+                        id: `open-file-${event.item.id}`,
+                        label: 'Open file',
                         deepLink: {
                             kind: 'file-manager-path',
                             path: event.item.destinationPath,
+                        },
+                    },
+                    {
+                        id: `open-folder-${event.item.id}`,
+                        label: 'Open folder',
+                        deepLink: {
+                            kind: 'file-manager-path',
+                            path: parentPath,
+                        },
+                    },
+                    {
+                        id: `copy-path-${event.item.id}`,
+                        label: 'Copy path',
+                        onInvoke: async () => {
+                            try {
+                                await navigator.clipboard.writeText(event.item.destinationPath)
+                                publishNotification({
+                                    title: 'Path copied',
+                                    message: event.item.destinationPath,
+                                    source: 'Downloads',
+                                    groupKey: 'downloads',
+                                    priority: 'low',
+                                    autoCloseMs: 3000,
+                                })
+                            } catch {
+                                publishNotification({
+                                    title: 'Copy failed',
+                                    message: 'The download path could not be copied to the clipboard.',
+                                    source: 'Downloads',
+                                    groupKey: 'downloads',
+                                    priority: 'low',
+                                    autoCloseMs: 4000,
+                                })
+                            }
                         },
                     },
                 ],
@@ -239,16 +276,41 @@ export function createDownloadManagerService(options: DownloadManagerOptions = {
             const receivedBytes = Math.min(item.totalBytes, item.receivedBytes + increment)
 
             if (receivedBytes >= item.totalBytes) {
-                const completedItem = {
-                    ...item,
-                    receivedBytes,
-                    status: 'complete' as const,
-                    updatedAt: currentNow,
-                    errorMessage: undefined,
+                try {
+                    const materialized = materializeFile
+                        ? materializeFile({
+                            ...item,
+                            receivedBytes,
+                        })
+                        : {
+                            fileName: item.fileName,
+                            destinationPath: item.destinationPath,
+                        }
+
+                    const completedItem = {
+                        ...item,
+                        fileName: materialized.fileName,
+                        destinationPath: materialized.destinationPath,
+                        receivedBytes,
+                        status: 'complete' as const,
+                        updatedAt: currentNow,
+                        errorMessage: undefined,
+                    }
+                    didChange = true
+                    publish({ type: 'completed', item: completedItem })
+                    return completedItem
+                } catch (error) {
+                    const failedItem = {
+                        ...item,
+                        receivedBytes,
+                        status: 'failed' as const,
+                        updatedAt: currentNow,
+                        errorMessage: error instanceof Error ? error.message : 'Failed to save downloaded file.',
+                    }
+                    didChange = true
+                    publish({ type: 'failed', item: failedItem })
+                    return failedItem
                 }
-                didChange = true
-                publish({ type: 'completed', item: completedItem })
-                return completedItem
             }
 
             const progressedItem = {
@@ -285,6 +347,7 @@ export function createDownloadManagerService(options: DownloadManagerOptions = {
                 maxRetries: Math.max(0, input.maxRetries ?? 2),
                 sourceUrl: input.sourceUrl,
                 mimeType: input.mimeType,
+                fileContent: input.fileContent,
             }
 
             runtimeById.set(id, {

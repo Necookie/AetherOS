@@ -22,6 +22,7 @@ export interface DownloadItem {
     maxRetries: number
     sourceUrl?: string
     mimeType?: string
+    fileContent?: string
     errorMessage?: string
 }
 
@@ -33,6 +34,7 @@ export interface CreateDownloadInput {
     source: DownloadSource
     sourceUrl?: string
     mimeType?: string
+    fileContent?: string
     maxRetries?: number
     simulation?: DownloadSimulationProfile
 }

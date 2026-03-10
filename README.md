@@ -50,7 +50,7 @@ This project currently focuses on functional OS simulation only.
   - periodic system-health and latency alerts with direct Task Manager/Browser destinations
 - Download Manager:
   - dedicated window with grouped queue, progress bars, retry/cancel controls, and deterministic simulation ticks
-  - completion writes downloaded files into the VFS `Downloads` path and exposes manager/file follow-up actions
+  - browser-triggered downloads now flow through the manager, materialize into the VFS `Downloads` directory with duplicate-name handling, and expose open-file/open-folder/copy-path follow-up actions
   - shell entry point in the top bar plus notification milestones for complete/fail/retry events
 - Boot diagnostics:
   - deterministic staged service startup with timing indicators
