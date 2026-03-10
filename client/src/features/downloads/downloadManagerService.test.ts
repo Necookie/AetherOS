@@ -128,4 +128,39 @@ describe('downloadManagerService', () => {
         expect(snapshot.items[0].receivedBytes).toBe(280)
         expect(notifications).toHaveBeenCalled()
     })
+
+    it('marks the download as failed when file materialization throws', async () => {
+        let currentNow = 0
+        const service = createDownloadManagerService({
+            now: () => currentNow,
+            tickMs: 100,
+            materializeFile: () => {
+                throw new Error('Downloads directory is unavailable.')
+            },
+        })
+
+        service.enqueue({
+            id: 'dl-write-fail',
+            fileName: 'broken.zip',
+            destinationPath: '/home/user/Downloads/broken.zip',
+            totalBytes: 100,
+            source: 'browser',
+            simulation: {
+                queueTicks: 0,
+                progressPattern: [100],
+            },
+        })
+
+        service.start()
+
+        currentNow = 100
+        await vi.advanceTimersByTimeAsync(100)
+        currentNow = 200
+        await vi.advanceTimersByTimeAsync(100)
+
+        const snapshot = service.getSnapshot()
+        expect(snapshot.failedCount).toBe(1)
+        expect(snapshot.items[0].status).toBe('failed')
+        expect(snapshot.items[0].errorMessage).toBe('Downloads directory is unavailable.')
+    })
 })

@@ -1,4 +1,4 @@
-import { FolderOpen, RotateCcw, Trash2, XCircle } from 'lucide-react'
+import { Copy, FolderOpen, RotateCcw, Trash2, XCircle } from 'lucide-react'
 import Window from '../../components/system/Window'
 import { useFsStore } from '../../stores/fsStore'
 import { useWindowStore } from '../../stores/windowStore'
@@ -17,6 +17,16 @@ const STATUS_COPY: Record<DownloadStatus, { label: string; tone: string }> = {
 }
 
 const explorerApp = DEFAULT_APPS.find((app) => app.id === 'explorer')
+
+function getParentPath(path: string) {
+    const normalized = path.replace(/\\/g, '/')
+    const segments = normalized.split('/').filter(Boolean)
+    if (segments.length <= 1) {
+        return '/'
+    }
+
+    return `/${segments.slice(0, -1).join('/')}`
+}
 
 function formatBytes(value: number) {
     if (value >= 1_000_000_000) {
@@ -56,6 +66,13 @@ export default function DownloadManagerApp({ id }: { id: string }) {
     const snapshot = useDownloadManagerSnapshot()
     const openWindow = useWindowStore((state) => state.openWindow)
     const revealPath = useFsStore((state) => state.revealPath)
+    const copyPath = async (path: string) => {
+        try {
+            await navigator.clipboard.writeText(path)
+        } catch {
+            // Ignore clipboard failures in the manager UI.
+        }
+    }
     const grouped = SECTION_ORDER
         .map((status) => ({
             status,
@@ -121,16 +138,35 @@ export default function DownloadManagerApp({ id }: { id: string }) {
 
                                                     <div className="flex items-center gap-2">
                                                         {item.status === 'complete' && explorerApp ? (
-                                                            <button
-                                                                onClick={() => {
-                                                                    openWindow(explorerApp)
-                                                                    revealPath(item.destinationPath)
-                                                                }}
-                                                                className="os-interactive inline-flex items-center gap-1 rounded-lg border border-white/15 bg-white/5 px-2.5 py-2 text-xs text-slate-200 hover:bg-white/10"
-                                                            >
-                                                                <FolderOpen className="h-3.5 w-3.5" />
-                                                                Show file
-                                                            </button>
+                                                            <>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        openWindow(explorerApp)
+                                                                        revealPath(item.destinationPath)
+                                                                    }}
+                                                                    className="os-interactive inline-flex items-center gap-1 rounded-lg border border-white/15 bg-white/5 px-2.5 py-2 text-xs text-slate-200 hover:bg-white/10"
+                                                                >
+                                                                    <FolderOpen className="h-3.5 w-3.5" />
+                                                                    Open file
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        openWindow(explorerApp)
+                                                                        revealPath(getParentPath(item.destinationPath))
+                                                                    }}
+                                                                    className="os-interactive inline-flex items-center gap-1 rounded-lg border border-white/15 bg-white/5 px-2.5 py-2 text-xs text-slate-200 hover:bg-white/10"
+                                                                >
+                                                                    <FolderOpen className="h-3.5 w-3.5" />
+                                                                    Open folder
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => void copyPath(item.destinationPath)}
+                                                                    className="os-interactive inline-flex items-center gap-1 rounded-lg border border-white/15 bg-white/5 px-2.5 py-2 text-xs text-slate-200 hover:bg-white/10"
+                                                                >
+                                                                    <Copy className="h-3.5 w-3.5" />
+                                                                    Copy path
+                                                                </button>
+                                                            </>
                                                         ) : null}
                                                         {canRetry(item) ? (
                                                             <button

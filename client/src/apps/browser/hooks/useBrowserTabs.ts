@@ -8,6 +8,11 @@ import {
 import type { ToastMessage } from '../components/Toasts';
 import type { BrowserSettings } from '../../../types/browser';
 import { browserConnectivityService } from '../services/browserServices';
+import {
+    resolveBrowserDownload,
+    startBrowserDownload,
+    type BrowserDownloadRequest,
+} from '../services/browserDownloadService';
 
 function nextToken(tokens: MutableRefObject<Map<string, number>>, tabId: string) {
     const current = tokens.current.get(tabId) || 0;
@@ -89,6 +94,38 @@ export function useBrowserTabs(activeTabId: string | null, settings: BrowserSett
                 addToast('Offline mode: loaded from cache', 'info');
             }
 
+            const downloadRequest = resolveBrowserDownload(nextNavigation.url);
+            if (downloadRequest) {
+                startBrowserDownload(downloadRequest);
+                addToast(`Downloading ${downloadRequest.fileName}...`, 'info');
+
+                useBrowserStore.setState((state) => {
+                    const tab = state.tabsById[activeTabId];
+                    if (!tab) {
+                        return state;
+                    }
+
+                    return {
+                        tabsById: {
+                            ...state.tabsById,
+                            [activeTabId]: {
+                                ...tab,
+                                title: downloadRequest.fileName,
+                                displayUrl: nextNavigation.url,
+                                isLoading: false,
+                                lastError: undefined,
+                            },
+                        },
+                    };
+                });
+
+                recordHistory({
+                    url: nextNavigation.url,
+                    title: `Download: ${downloadRequest.fileName}`,
+                });
+                return;
+            }
+
             if (nextNavigation.kind === 'external' && connectivity.online) {
                 const win = window.open(nextNavigation.url, '_blank', 'noopener,noreferrer');
                 if (!win) {
@@ -150,6 +187,15 @@ export function useBrowserTabs(activeTabId: string | null, settings: BrowserSett
             });
         }
     }, [activeTabId, settings, addToast, recordHistory, connectivity]);
+
+    const handleTriggerDownload = useCallback((request: BrowserDownloadRequest) => {
+        startBrowserDownload(request);
+        addToast(`Downloading ${request.fileName}...`, 'info');
+        recordHistory({
+            url: request.sourceUrl,
+            title: `Download: ${request.fileName}`,
+        });
+    }, [addToast, recordHistory]);
 
     const handleWebViewLoad = useCallback(() => {
         if (!activeTabId) {
@@ -254,5 +300,7 @@ export function useBrowserTabs(activeTabId: string | null, settings: BrowserSett
         handleWebViewError,
         handleOpenAgain,
         handleTryEmbed,
+        handleTriggerDownload,
+        pushToast: addToast,
     };
 }
