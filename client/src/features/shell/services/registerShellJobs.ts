@@ -36,6 +36,21 @@ export function registerShellJobs({
                     source: 'System Monitor',
                     groupKey: 'system-health',
                     priority: 'high',
+                    deepLink: {
+                        kind: 'task-manager',
+                        tab: 'Performance',
+                    },
+                    actions: [
+                        {
+                            id: 'open-performance',
+                            label: 'Open Performance',
+                            tone: 'primary',
+                            deepLink: {
+                                kind: 'task-manager',
+                                tab: 'Performance',
+                            },
+                        },
+                    ],
                 })
             } else if (cpuUsage <= 65) {
                 cpuAlertOpen = false
@@ -49,6 +64,21 @@ export function registerShellJobs({
                     source: 'System Monitor',
                     groupKey: 'system-health',
                     priority: 'high',
+                    deepLink: {
+                        kind: 'task-manager',
+                        tab: 'Processes',
+                    },
+                    actions: [
+                        {
+                            id: 'open-processes',
+                            label: 'Inspect processes',
+                            tone: 'primary',
+                            deepLink: {
+                                kind: 'task-manager',
+                                tab: 'Processes',
+                            },
+                        },
+                    ],
                 })
             } else if (memUsage <= 70) {
                 memoryAlertOpen = false
@@ -68,6 +98,30 @@ export function registerShellJobs({
                     source: 'Network Watch',
                     groupKey: 'network-watch',
                     priority: 'normal',
+                    deepLink: {
+                        kind: 'task-manager',
+                        tab: 'Network',
+                    },
+                    actions: [
+                        {
+                            id: 'open-network',
+                            label: 'Open network tab',
+                            tone: 'primary',
+                            deepLink: {
+                                kind: 'task-manager',
+                                tab: 'Network',
+                            },
+                        },
+                        {
+                            id: 'open-browser',
+                            label: 'Open browser',
+                            deepLink: {
+                                kind: 'browser-url',
+                                url: 'https://example.com/network-status',
+                                reuseExistingTab: true,
+                            },
+                        },
+                    ],
                     autoCloseMs: 35_000,
                 })
             }

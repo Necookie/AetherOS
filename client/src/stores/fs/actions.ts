@@ -234,6 +234,34 @@ export function createFsActions(set: StoreSet, get: StoreGet) {
             selectedIds: [],
             selectionAnchorId: null,
         }),
+        revealPath: (path: string) => {
+            try {
+                const normalizedPath = fsService.normalizePath(path)
+                assertPathPermission(normalizedPath)
+                const node = fsService.resolvePath(normalizedPath)
+
+                if (node.type === VfsNodeType.DIR) {
+                    get().navigate(normalizedPath)
+                    return true
+                }
+
+                const parentPath = getParentPath(normalizedPath)
+                if (!parentPath) {
+                    return false
+                }
+
+                get().navigate(parentPath)
+                set({
+                    selectedIds: [node.id],
+                    selectionAnchorId: node.id,
+                    error: null,
+                })
+                return true
+            } catch (error: unknown) {
+                set({ error: toErrorMessage(error) })
+                return false
+            }
+        },
         createFolder: (name: string) => runOptimisticMutation(set, get, () => {
             assertFilePermission('create', get().currentPath);
             fsService.createNode(get().currentPath, name, VfsNodeType.DIR);

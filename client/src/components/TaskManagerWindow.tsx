@@ -1,10 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { shallow } from 'zustand/shallow'
+import { useDeepLinkIntentStore } from '../features/deep-links'
+import type { TaskManagerTab } from '../features/deep-links'
 import { useKernelStore } from '../stores/useKernelStore'
 import Window from './system/Window'
-
-const TABS = ['Processes', 'Performance', 'Network', 'Disk'] as const
-type Tab = typeof TABS[number]
 
 const tabClasses = (active: boolean) =>
     `rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${active ? 'bg-slate-800 text-slate-100 border border-slate-600' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'}`
@@ -31,7 +30,8 @@ export default function TaskManagerWindow({ id }: { id: string }) {
         recentSpikes: state.recentSpikes,
         topContributors: state.topContributors,
     }), shallow)
-    const [tab, setTab] = useState<Tab>('Processes')
+    const [tab, setTab] = useState<TaskManagerTab>('Processes')
+    const taskManagerIntent = useDeepLinkIntentStore((state) => state.taskManager)
 
     const totals = useMemo(() => ({
         procCount: processes.length,
@@ -40,6 +40,39 @@ export default function TaskManagerWindow({ id }: { id: string }) {
         disk: diskUsage,
         net: netUsage,
     }), [processes.length, cpuUsage, memUsage, diskUsage, netUsage])
+
+    useEffect(() => {
+        if (!taskManagerIntent) {
+            return
+        }
+
+        setTab(taskManagerIntent.payload.tab)
+    }, [taskManagerIntent])
+
+    useEffect(() => {
+        if (!taskManagerIntent || taskManagerIntent.payload.tab !== 'Processes') {
+            return
+        }
+
+        const { processId, processName } = taskManagerIntent.payload
+        const selector = typeof processId === 'number'
+            ? `[data-process-pid="${processId}"]`
+            : processName
+                ? `[data-process-name="${processName}"]`
+                : null
+
+        if (!selector) {
+            return
+        }
+
+        const timerId = window.setTimeout(() => {
+            const target = document.querySelector<HTMLElement>(selector)
+            target?.scrollIntoView({ block: 'center' })
+            target?.focus()
+        }, 40)
+
+        return () => window.clearTimeout(timerId)
+    }, [processes, taskManagerIntent])
 
     return (
         <Window id={id} title="Task Manager">
@@ -91,7 +124,13 @@ export default function TaskManagerWindow({ id }: { id: string }) {
                             <div>Action</div>
                         </div>
                         {processes.map((process) => (
-                            <div key={process.pid} className="grid grid-cols-7 items-center gap-2 border-b border-slate-800 px-5 py-2.5 transition-colors hover:bg-slate-800/45">
+                            <div
+                                key={process.pid}
+                                data-process-pid={process.pid}
+                                data-process-name={process.name}
+                                tabIndex={-1}
+                                className="grid grid-cols-7 items-center gap-2 border-b border-slate-800 px-5 py-2.5 transition-colors hover:bg-slate-800/45 focus:bg-slate-800/70 focus:outline-none"
+                            >
                                 <div className="font-term text-slate-500">{process.pid}</div>
                                 <div className="font-medium text-slate-200">{process.name}</div>
                                 <div className="font-term text-slate-400">{process.cpu.toFixed(1)}</div>

@@ -206,4 +206,16 @@ describe('filesystem actions optimistic behavior', () => {
         expect(harness.getState().selectedIds).toEqual([]);
         expect(harness.getState().selectionAnchorId).toBeNull();
     });
+
+    it('reveals a file path by navigating to its parent and selecting it', () => {
+        const harness = createHarness();
+        const state = harness.getState();
+
+        const revealed = state.revealPath('/home/user/Documents/readme.txt');
+
+        expect(revealed).toBe(true);
+        expect(harness.getState().currentPath).toBe('/home/user/Documents');
+        expect(harness.getState().selectedIds).toHaveLength(1);
+        expect(fsService.getNodeById(harness.getState().selectedIds[0])?.name).toBe('readme.txt');
+    });
 });

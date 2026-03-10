@@ -45,8 +45,9 @@ This project currently focuses on functional OS simulation only.
   - accessibility controls + checks
   - behavior toggles (animations/translucency/clock seconds)
 - Notifications + background jobs:
-  - grouped notification center with actions
-  - periodic system-health and latency alerts
+  - grouped notification center with typed actions and body deep links
+  - smart notification flows that reuse open windows, restore minimized apps, and route into app context
+  - periodic system-health and latency alerts with direct Task Manager/Browser destinations
 - Boot diagnostics:
   - deterministic staged service startup with timing indicators
   - occasional non-blocking advisory warnings for demo realism

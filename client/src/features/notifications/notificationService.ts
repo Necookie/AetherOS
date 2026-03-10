@@ -4,6 +4,7 @@ import type {
     NotificationService,
     NotificationSnapshot,
 } from './types'
+import { invokeRegisteredNotificationDeepLink } from './deepLinkRuntime'
 
 type Listener = () => void
 
@@ -27,6 +28,7 @@ function toAction(action: NotificationActionInput) {
         label: action.label,
         tone: action.tone ?? 'default',
         markAsReadOnInvoke: action.markAsReadOnInvoke ?? true,
+        deepLink: action.deepLink,
     } as const
 }
 
@@ -102,6 +104,7 @@ export function createNotificationService(now: () => number = Date.now): Notific
                 priority: notification.priority ?? 'normal',
                 createdAt,
                 isRead: false,
+                deepLink: notification.deepLink,
                 actions,
             }
 
@@ -142,6 +145,23 @@ export function createNotificationService(now: () => number = Date.now): Notific
             }
             setState(() => [])
         },
+        open: async (notificationId) => {
+            const item = state.items.find((candidate) => candidate.id === notificationId)
+            if (!item?.deepLink) {
+                return false
+            }
+
+            const handled = invokeRegisteredNotificationDeepLink(item.deepLink)
+            if (handled) {
+                setState((current) =>
+                    current.map((candidate) =>
+                        candidate.id === notificationId ? { ...candidate, isRead: true } : candidate,
+                    ),
+                )
+            }
+
+            return handled
+        },
         invokeAction: async (notificationId, actionId) => {
             const item = state.items.find((candidate) => candidate.id === notificationId)
             if (!item) {
@@ -156,6 +176,11 @@ export function createNotificationService(now: () => number = Date.now): Notific
             const handler = actionHandlers.get(`${notificationId}:${actionId}`)
             if (handler) {
                 await handler()
+            } else if (action.deepLink) {
+                const handled = invokeRegisteredNotificationDeepLink(action.deepLink)
+                if (!handled) {
+                    return false
+                }
             }
 
             if (action.markAsReadOnInvoke) {

@@ -94,6 +94,29 @@ export function createBrowserActions(
             activeTabId: id,
             session: markTabActivated(state.session, id),
         })),
+        openUrl: (url: string, opts: { reuseExistingTab?: boolean } = {}) => {
+            const state = get()
+            const reuseExistingTab = opts.reuseExistingTab ?? true
+            if (reuseExistingTab) {
+                const matchingTab = Object.values(state.tabsById).find((tab) => tab.url === url || tab.externalUrl === url)
+                if (matchingTab) {
+                    state.setActiveTab(matchingTab.id)
+                    if (matchingTab.mode === 'external') {
+                        state.openExternal(url, { reuseTabId: matchingTab.id })
+                    } else {
+                        state.navigateToUrl(matchingTab.id, url)
+                    }
+                    return
+                }
+            }
+
+            if (state.activeTabId) {
+                state.navigateToUrl(state.activeTabId, url)
+                return
+            }
+
+            state.newTab({ url, mode: 'embed' })
+        },
         navigate: (id: string, inputString: string) => {
             get().navigateToUrl(id, inputString);
         },
