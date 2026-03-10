@@ -32,6 +32,7 @@ export interface FsStoreActions {
     selectItem: (id: string, multi: boolean, range: boolean) => void;
     setSelection: (ids: string[], anchorId?: string | null) => void;
     clearSelection: () => void;
+    revealPath: (path: string) => boolean;
     createFolder: (name: string) => void;
     createFile: (name: string, content?: string) => void;
     renameItem: (id: string, newName: string) => void;

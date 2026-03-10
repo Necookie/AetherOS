@@ -84,7 +84,7 @@ Date: 2026-03-09
 ### P1 - OS Realism and HCI Quality
 
 - [x] Boot diagnostics screen (services starting, timing, failures)
-- [ ] Notification-to-action deep links across apps
+- [x] Notification-to-action deep links across apps
 - [ ] Download Manager simulation with queue/progress/fail/retry states
 - [ ] Browser downloads into VFS `Downloads` directory (simulated pipeline)
 - [ ] Clipboard simulation across apps and file manager operations
@@ -134,7 +134,7 @@ Keep these unchecked intentionally until functional objectives are complete.
 ## Today Focus (2026-03-10)
 
 - [x] Phase 1 - Boot diagnostics screen with staged startup feedback
-- [ ] Phase 2 - Notification action deep links into apps/windows
+- [x] Phase 2 - Notification action deep links into apps/windows
 - [ ] Phase 3 - Download Manager simulation with queue/progress/retry UX
 - [ ] Phase 4 - Browser download pipeline into VFS `Downloads`
 - [ ] Phase 5 - Shared clipboard simulation across apps and file workflows

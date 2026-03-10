@@ -73,7 +73,14 @@ export default function NotificationCenterFlyout() {
                             {group.items.map((item) => (
                                 <article
                                     key={item.id}
-                                    className={`rounded-lg border p-2 ${priorityStyle(item.priority)} ${item.isRead ? 'opacity-75' : ''}`}
+                                    className={`rounded-lg border p-2 ${priorityStyle(item.priority)} ${item.isRead ? 'opacity-75' : ''} ${item.deepLink ? 'cursor-pointer transition hover:shadow-sm' : ''}`}
+                                    onClick={() => {
+                                        if (!item.deepLink) {
+                                            return
+                                        }
+
+                                        void notificationService.open(item.id)
+                                    }}
                                 >
                                     <div className="mb-1 flex items-start justify-between gap-2">
                                         <div>
@@ -87,7 +94,8 @@ export default function NotificationCenterFlyout() {
                                         {item.actions.map((action) => (
                                             <button
                                                 key={action.id}
-                                                onClick={() => {
+                                                onClick={(event) => {
+                                                    event.stopPropagation()
                                                     void notificationService.invokeAction(item.id, action.id)
                                                 }}
                                                 className={`os-interactive rounded-md border px-2 py-1 text-[11px] font-medium ${actionToneClass[action.tone]}`}
@@ -97,21 +105,30 @@ export default function NotificationCenterFlyout() {
                                         ))}
                                         {!item.isRead ? (
                                             <button
-                                                onClick={() => notificationService.markRead(item.id)}
+                                                onClick={(event) => {
+                                                    event.stopPropagation()
+                                                    notificationService.markRead(item.id)
+                                                }}
                                                 className="os-interactive rounded-md border border-slate-300/90 bg-white/70 px-2 py-1 text-[11px] text-slate-700 hover:bg-white"
                                             >
                                                 Mark read
                                             </button>
                                         ) : (
                                             <button
-                                                onClick={() => notificationService.markUnread(item.id)}
+                                                onClick={(event) => {
+                                                    event.stopPropagation()
+                                                    notificationService.markUnread(item.id)
+                                                }}
                                                 className="os-interactive rounded-md border border-slate-300/90 bg-white/70 px-2 py-1 text-[11px] text-slate-700 hover:bg-white"
                                             >
                                                 Mark unread
                                             </button>
                                         )}
                                         <button
-                                            onClick={() => notificationService.remove(item.id)}
+                                            onClick={(event) => {
+                                                event.stopPropagation()
+                                                notificationService.remove(item.id)
+                                            }}
                                             className="os-interactive rounded-md border border-slate-300/90 bg-white/70 px-2 py-1 text-[11px] text-slate-700 hover:bg-white"
                                             aria-label="Delete notification"
                                         >

@@ -6,6 +6,7 @@ import { useWindowStore } from '../../../stores/windowStore'
 import { useKernelStore } from '../../../stores/useKernelStore'
 import { useSettingsStore } from '../../../stores/settingsStore'
 import { createBackgroundJobScheduler } from '../../background-jobs'
+import { productivityRepository } from '../../productivity'
 import NotificationCenterFlyout from '../../notifications/components/NotificationCenterFlyout'
 import { notificationService, useNotificationSnapshot } from '../../notifications'
 import { getWallpaperCss } from '../../settings/themeEngine'
@@ -162,52 +163,129 @@ export default function ShellFrame() {
         }
 
         seededNotificationsRef.current = true
+        const firstNote = productivityRepository.listRecords('notes')[0]
+            ?? productivityRepository.createRecord({
+                appId: 'notes',
+                title: 'Inbox',
+                body: 'Capture quick ideas and alerts here.',
+            })
+        const firstDoc = productivityRepository.listRecords('docs')[0]
+            ?? productivityRepository.createRecord({
+                appId: 'docs',
+                title: 'Release checklist',
+                body: '<p>Track rollout notes and follow-up actions.</p>',
+            })
+        const firstBoard = productivityRepository.listRecords('boards')[0]
+            ?? productivityRepository.createRecord({
+                appId: 'boards',
+                title: 'Sprint board',
+                body: JSON.stringify({
+                    columns: [
+                        { id: 'todo', title: 'To do', cards: [{ id: 'card-1', title: 'Review alerts', description: '' }] },
+                        { id: 'doing', title: 'Doing', cards: [] },
+                        { id: 'done', title: 'Done', cards: [] },
+                    ],
+                }, null, 2),
+            })
+
         notificationService.publish({
-            title: 'Welcome to Phase 7',
-            message: 'Notification Center, Widgets, and Background Jobs are now active.',
+            title: 'Workspace actions ready',
+            message: 'Notification actions now open the right app, window, and section.',
             source: 'AetherOS',
             groupKey: 'onboarding',
             priority: 'normal',
+            deepLink: {
+                kind: 'settings-section',
+                section: 'behavior',
+            },
             actions: [
                 {
-                    id: 'open-settings',
-                    label: 'Open Settings',
+                    id: 'open-settings-behavior',
+                    label: 'Open behavior',
                     tone: 'primary',
-                    onInvoke: () => {
-                        const app = appLookup.get('settings')
-                        if (!app) {
-                            return
-                        }
-
-                        const windowState = useWindowStore.getState()
-                        if (!windowState.windows.settings) {
-                            windowState.openWindow(app)
-                        } else {
-                            windowState.restoreWindow('settings')
-                        }
+                    deepLink: {
+                        kind: 'settings-section',
+                        section: 'behavior',
                     },
                 },
                 {
-                    id: 'open-taskmgr',
+                    id: 'open-taskmgr-performance',
                     label: 'Open Task Manager',
-                    tone: 'default',
-                    onInvoke: () => {
-                        const app = appLookup.get('taskmgr')
-                        if (!app) {
-                            return
-                        }
-
-                        const windowState = useWindowStore.getState()
-                        if (!windowState.windows.taskmgr) {
-                            windowState.openWindow(app)
-                        } else {
-                            windowState.restoreWindow('taskmgr')
-                        }
+                    deepLink: {
+                        kind: 'task-manager',
+                        tab: 'Performance',
                     },
                 },
             ],
         })
-    }, [appLookup])
+        notificationService.publish({
+            title: 'Productivity space primed',
+            message: 'Jump straight into your note, doc, or board from here.',
+            source: 'Workspace',
+            groupKey: 'onboarding',
+            priority: 'normal',
+            actions: [
+                {
+                    id: 'open-note',
+                    label: 'Open note',
+                    tone: 'primary',
+                    deepLink: {
+                        kind: 'productivity-record',
+                        appId: 'notes',
+                        recordId: firstNote.id,
+                        panel: 'editor',
+                    },
+                },
+                {
+                    id: 'open-doc',
+                    label: 'Open doc',
+                    deepLink: {
+                        kind: 'productivity-record',
+                        appId: 'docs',
+                        recordId: firstDoc.id,
+                        panel: 'editor',
+                    },
+                },
+                {
+                    id: 'open-board',
+                    label: 'Open board',
+                    deepLink: {
+                        kind: 'productivity-record',
+                        appId: 'boards',
+                        recordId: firstBoard.id,
+                        panel: 'editor',
+                    },
+                },
+            ],
+        })
+        notificationService.publish({
+            title: 'Quick destinations',
+            message: 'Browser and File Manager links now land in the right place.',
+            source: 'Workspace',
+            groupKey: 'onboarding',
+            priority: 'low',
+            actions: [
+                {
+                    id: 'open-browser-status',
+                    label: 'Open browser',
+                    tone: 'primary',
+                    deepLink: {
+                        kind: 'browser-url',
+                        url: 'https://example.com/aetheros/guide',
+                        reuseExistingTab: true,
+                    },
+                },
+                {
+                    id: 'reveal-documents',
+                    label: 'Reveal Documents',
+                    deepLink: {
+                        kind: 'file-manager-path',
+                        path: '/home/user/Documents/readme.txt',
+                    },
+                },
+            ],
+        })
+    }, [])
 
     useEffect(() => {
         if (!lastGuardError) {

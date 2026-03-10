@@ -24,6 +24,7 @@ export interface BrowserStoreActions {
     newTab: (args?: { url?: string; mode?: TabMode }) => void;
     closeTab: (id: string) => void;
     setActiveTab: (id: string) => void;
+    openUrl: (url: string, opts?: { reuseExistingTab?: boolean }) => void;
     navigate: (id: string, inputString: string) => void;
     navigateToUrl: (id: string, url: string) => void;
     openExternal: (url: string, opts?: { reuseTabId?: string }) => void;

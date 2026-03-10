@@ -4,17 +4,16 @@ import Window from '../../components/system/Window'
 import { WALLPAPER_OPTIONS } from '../../features/settings/defaults'
 import { runAccessibilityChecks } from '../../features/settings/accessibilityChecks'
 import { createThemeTokens, resolveWallpaper } from '../../features/settings/themeEngine'
+import { useDeepLinkIntentStore } from '../../features/deep-links'
 import { useSettingsStore } from '../../stores/settingsStore'
 import type { ThemePalette } from '../../features/settings/types'
+import type { SettingsSection } from '../../features/deep-links'
 import {
     REMAPPABLE_SHORTCUTS,
     resolveShortcutKeymap,
     SHORTCUT_ACTION_IDS,
     validateShortcutOverrides,
 } from '../../features/shortcuts/shortcutConfig'
-
-type SettingsSection = 'appearance' | 'desktop' | 'accessibility' | 'behavior' | 'shortcuts'
-
 const sectionMeta: Array<{ id: SettingsSection; label: string; icon: typeof Palette }> = [
     { id: 'appearance', label: 'Appearance', icon: Palette },
     { id: 'desktop', label: 'Desktop', icon: Monitor },
@@ -106,6 +105,7 @@ function ColorField({
 export default function SettingsApp({ id }: { id: string }) {
     const [section, setSection] = useState<SettingsSection>('appearance')
     const [shortcutDrafts, setShortcutDrafts] = useState<Record<string, string>>({})
+    const settingsIntent = useDeepLinkIntentStore((state) => state.settings)
     const {
         appearance,
         desktop,
@@ -147,6 +147,14 @@ export default function SettingsApp({ id }: { id: string }) {
         })
         setShortcutDrafts(drafts)
     }, [resolvedShortcutKeymap, shortcuts.overrides])
+
+    useEffect(() => {
+        if (!settingsIntent) {
+            return
+        }
+
+        setSection(settingsIntent.payload.section)
+    }, [settingsIntent])
 
     const applyShortcutDraft = (actionId: (typeof REMAPPABLE_SHORTCUTS)[number], value: string) => {
         const combo = value.trim()
