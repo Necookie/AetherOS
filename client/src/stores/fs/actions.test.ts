@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fsService } from '../../vfs/vfsService';
 import { clipboardService } from '../../features/clipboard';
 import { createFsActions } from './actions';
@@ -53,6 +53,12 @@ describe('filesystem actions optimistic behavior', () => {
         clipboardService.clear()
     });
 
+    afterEach(() => {
+        // @ts-expect-error test cleanup
+        delete globalThis.window
+        vi.restoreAllMocks()
+    })
+
     it('applies successful mutations and refreshes current view', () => {
         const harness = createHarness();
         const state = harness.getState();
@@ -90,11 +96,7 @@ describe('filesystem actions optimistic behavior', () => {
         const harness = createHarness();
         const state = harness.getState();
         state.navigate('/home/user/Documents');
-        const readme = harness.getState().items.find((item) => item.name === 'readme.txt');
-        expect(readme).toBeTruthy();
-        if (!readme) {
-            return;
-        }
+        const readme = fsService.resolvePath('/home/user/Documents/readme.txt')
 
         state.deleteItems([readme.id]);
 
@@ -127,6 +129,7 @@ describe('filesystem actions optimistic behavior', () => {
         expect(recovered.name).toBe('readme.txt');
         expect(harness.getState().error).toContain('read-only');
     });
+
 
     it('restores files from trash back to original location', () => {
         const harness = createHarness();

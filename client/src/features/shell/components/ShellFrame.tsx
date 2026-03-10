@@ -347,6 +347,17 @@ export default function ShellFrame() {
             source: 'Permissions',
             priority: 'high',
             groupKey: 'permissions',
+            actions: [
+                {
+                    id: 'open-permission-center',
+                    label: 'Open Permission Center',
+                    tone: 'primary',
+                    deepLink: {
+                        kind: 'settings-section',
+                        section: 'permissions',
+                    },
+                },
+            ],
         })
     }, [lastGuardError])
 

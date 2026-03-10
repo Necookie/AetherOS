@@ -5,6 +5,7 @@ import { getActiveAccount } from '../../features/accounts/services/sessionSelect
 import { clipboardService } from '../../features/clipboard';
 import { useSessionStore } from '../useSessionStore';
 import { checkFileMutationAccess, checkFilePathAccess } from '../../features/permissions/guards';
+import { formatPermissionDecisionMessage } from '../../features/permissions/messages';
 import { permissionService } from '../../features/permissions/permissionService';
 import { resolveClickSelection } from '../../features/selection/selectionDomain';
 import { reportKernelActivity } from '../../features/kernel/activityReporter';
@@ -139,7 +140,7 @@ function assertFilePermission(action: 'create' | 'rename' | 'delete' | 'move', p
         }
     }
 
-    throw new Error(access.reason ?? 'Permission denied.');
+    throw new Error(formatPermissionDecisionMessage(access));
 }
 
 function assertPathPermission(path: string) {
@@ -151,7 +152,7 @@ function assertPathPermission(path: string) {
 
     const access = checkFilePathAccess(account.role, path);
     if (!access.allowed) {
-        throw new Error(access.reason ?? 'Path access denied.');
+        throw new Error(formatPermissionDecisionMessage(access));
     }
 }
 

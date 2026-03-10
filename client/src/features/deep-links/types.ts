@@ -2,7 +2,7 @@ import type { ProductivityAppId } from '../productivity'
 
 export type ProductivityPanel = 'editor' | 'links' | 'attachments'
 
-export type SettingsSection = 'appearance' | 'desktop' | 'accessibility' | 'behavior' | 'shortcuts'
+export type SettingsSection = 'appearance' | 'desktop' | 'accessibility' | 'behavior' | 'shortcuts' | 'permissions'
 
 export type TaskManagerTab = 'Processes' | 'Performance' | 'Network'
 

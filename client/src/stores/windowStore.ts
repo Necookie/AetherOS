@@ -21,6 +21,7 @@ import { useSessionStore } from './useSessionStore'
 import { getActiveAccount } from '../features/accounts/services/sessionSelectors'
 import { checkAppLaunchAccess } from '../features/permissions/guards'
 import { permissionService } from '../features/permissions/permissionService'
+import { formatPermissionDecisionMessage } from '../features/permissions/messages'
 import { dirtyGuardService } from '../features/dirty-guard/dirtyGuardService'
 
 export interface WindowStore {
@@ -82,13 +83,13 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
                 if (!granted) {
                     return {
                         ...state,
-                        lastGuardError: access.reason ?? 'Permission denied.',
+                        lastGuardError: formatPermissionDecisionMessage(access),
                     }
                 }
             } else {
                 return {
                     ...state,
-                    lastGuardError: access.reason ?? 'You are not allowed to launch this app.',
+                    lastGuardError: formatPermissionDecisionMessage(access),
                 }
             }
         }
