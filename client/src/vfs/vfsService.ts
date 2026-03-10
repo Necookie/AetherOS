@@ -79,6 +79,12 @@ class VfsService {
         return node;
     }
 
+    public copy(sourcePath: string, destinationDirectoryPath: string, newName?: string, systemOverride = false) {
+        const node = this.vfs.copy(sourcePath, destinationDirectoryPath, newName, systemOverride);
+        this.persist();
+        return node;
+    }
+
     public delete(path: string, systemOverride = false) {
         this.vfs.delete(path, systemOverride);
         this.persist();
@@ -102,6 +108,10 @@ class VfsService {
 
     public listTrash(): VfsNode[] {
         return this.vfs.listTrash();
+    }
+
+    public allocateAvailableName(destinationDirectoryPath: string, preferredName: string, label: string = 'copy') {
+        return this.vfs.allocateAvailableName(destinationDirectoryPath, preferredName, label);
     }
 
     public getPath(nodeId: string): string {

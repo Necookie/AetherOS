@@ -1,15 +1,18 @@
 import { useMemo, useState } from 'react'
-import { Apple, BatteryCharging, Bell, ChevronDown, Search, UserCircle2, Volume2, Wifi } from 'lucide-react'
+import { Apple, BatteryCharging, Bell, ChevronDown, Download, Search, UserCircle2, Volume2, Wifi } from 'lucide-react'
 import type { AccountProfile } from '../../accounts/types'
 
 interface TopBarProps {
     now: Date
     showSeconds: boolean
+    activeDownloads: number
+    queuedDownloads: number
     unreadNotifications: number
     notificationsOpen: boolean
     activeAccount: AccountProfile
     accounts: AccountProfile[]
     onToggleLauncher: () => void
+    onOpenDownloads: () => void
     onToggleQuickSettings: () => void
     onToggleDateTime: () => void
     onToggleNotifications: () => void
@@ -21,11 +24,14 @@ interface TopBarProps {
 export default function TopBar({
     now,
     showSeconds,
+    activeDownloads,
+    queuedDownloads,
     unreadNotifications,
     notificationsOpen,
     activeAccount,
     accounts,
     onToggleLauncher,
+    onOpenDownloads,
     onToggleQuickSettings,
     onToggleDateTime,
     onToggleNotifications,
@@ -68,6 +74,14 @@ export default function TopBar({
                 </button>
                 <button className="rounded p-1 hover:bg-white/20" onClick={onToggleLauncher} aria-label="Spotlight">
                     <Search className="h-3.5 w-3.5" />
+                </button>
+                <button className="relative rounded p-1 hover:bg-white/20" onClick={onOpenDownloads} aria-label="Downloads">
+                    <Download className="h-3.5 w-3.5" />
+                    {activeDownloads + queuedDownloads > 0 ? (
+                        <span className="absolute -right-0.5 -top-0.5 min-w-4 rounded-full bg-sky-500 px-1 text-center text-[10px] leading-4 text-white">
+                            {activeDownloads + queuedDownloads > 9 ? '9+' : activeDownloads + queuedDownloads}
+                        </span>
+                    ) : null}
                 </button>
                 <button
                     className={`relative rounded p-1 ${notificationsOpen ? 'bg-white/25' : 'hover:bg-white/20'}`}

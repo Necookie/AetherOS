@@ -1,3 +1,5 @@
+import type { NotificationDeepLink } from '../deep-links'
+
 export type NotificationPriority = 'low' | 'normal' | 'high'
 
 export type NotificationActionTone = 'default' | 'primary' | 'danger'
@@ -7,6 +9,7 @@ export interface NotificationActionInput {
     label: string
     tone?: NotificationActionTone
     markAsReadOnInvoke?: boolean
+    deepLink?: NotificationDeepLink
     onInvoke?: () => void | Promise<void>
 }
 
@@ -17,6 +20,7 @@ export interface CreateNotificationInput {
     source: string
     groupKey?: string
     priority?: NotificationPriority
+    deepLink?: NotificationDeepLink
     actions?: NotificationActionInput[]
     autoCloseMs?: number
 }
@@ -26,6 +30,7 @@ export interface NotificationAction {
     label: string
     tone: NotificationActionTone
     markAsReadOnInvoke: boolean
+    deepLink?: NotificationDeepLink
 }
 
 export interface NotificationItem {
@@ -37,6 +42,7 @@ export interface NotificationItem {
     priority: NotificationPriority
     createdAt: number
     isRead: boolean
+    deepLink?: NotificationDeepLink
     actions: NotificationAction[]
 }
 
@@ -52,6 +58,7 @@ export interface NotificationService {
     markAllRead: () => void
     remove: (id: string) => void
     clear: () => void
+    open: (notificationId: string) => Promise<boolean>
     invokeAction: (notificationId: string, actionId: string) => Promise<boolean>
     getSnapshot: () => NotificationSnapshot
     subscribe: (listener: () => void) => () => void

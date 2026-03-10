@@ -6,8 +6,10 @@ import { useWindowStore } from '../../../stores/windowStore'
 import { useKernelStore } from '../../../stores/useKernelStore'
 import { useSettingsStore } from '../../../stores/settingsStore'
 import { createBackgroundJobScheduler } from '../../background-jobs'
+import { productivityRepository } from '../../productivity'
 import NotificationCenterFlyout from '../../notifications/components/NotificationCenterFlyout'
 import { notificationService, useNotificationSnapshot } from '../../notifications'
+import { downloadManagerService, useDownloadManagerSnapshot } from '../../downloads'
 import { getWallpaperCss } from '../../settings/themeEngine'
 import WidgetBoard from '../../widgets/components/WidgetBoard'
 import DesktopIcons from '../../../components/desktop/DesktopIcons'
@@ -88,9 +90,11 @@ export default function ShellFrame() {
     const [isNotificationCenterOpen, setNotificationCenterOpen] = useState(false)
     const now = useShellClock()
     const { unreadCount } = useNotificationSnapshot()
+    const downloadSnapshot = useDownloadManagerSnapshot()
     const [viewedMonth, setViewedMonth] = useState(() => new Date(now.getFullYear(), now.getMonth(), 1))
     const schedulerRef = useRef(createBackgroundJobScheduler({ tickMs: 400 }))
     const seededNotificationsRef = useRef(false)
+    const seededDownloadsRef = useRef(false)
 
     const dockRef = useRef<HTMLDivElement>(null)
     const launcherRef = useRef<HTMLDivElement>(null)
@@ -162,52 +166,175 @@ export default function ShellFrame() {
         }
 
         seededNotificationsRef.current = true
+        const firstNote = productivityRepository.listRecords('notes')[0]
+            ?? productivityRepository.createRecord({
+                appId: 'notes',
+                title: 'Inbox',
+                body: 'Capture quick ideas and alerts here.',
+            })
+        const firstDoc = productivityRepository.listRecords('docs')[0]
+            ?? productivityRepository.createRecord({
+                appId: 'docs',
+                title: 'Release checklist',
+                body: '<p>Track rollout notes and follow-up actions.</p>',
+            })
+        const firstBoard = productivityRepository.listRecords('boards')[0]
+            ?? productivityRepository.createRecord({
+                appId: 'boards',
+                title: 'Sprint board',
+                body: JSON.stringify({
+                    columns: [
+                        { id: 'todo', title: 'To do', cards: [{ id: 'card-1', title: 'Review alerts', description: '' }] },
+                        { id: 'doing', title: 'Doing', cards: [] },
+                        { id: 'done', title: 'Done', cards: [] },
+                    ],
+                }, null, 2),
+            })
+
         notificationService.publish({
-            title: 'Welcome to Phase 7',
-            message: 'Notification Center, Widgets, and Background Jobs are now active.',
+            title: 'Workspace actions ready',
+            message: 'Notification actions now open the right app, window, and section.',
             source: 'AetherOS',
             groupKey: 'onboarding',
             priority: 'normal',
+            deepLink: {
+                kind: 'settings-section',
+                section: 'behavior',
+            },
             actions: [
                 {
-                    id: 'open-settings',
-                    label: 'Open Settings',
+                    id: 'open-settings-behavior',
+                    label: 'Open behavior',
                     tone: 'primary',
-                    onInvoke: () => {
-                        const app = appLookup.get('settings')
-                        if (!app) {
-                            return
-                        }
-
-                        const windowState = useWindowStore.getState()
-                        if (!windowState.windows.settings) {
-                            windowState.openWindow(app)
-                        } else {
-                            windowState.restoreWindow('settings')
-                        }
+                    deepLink: {
+                        kind: 'settings-section',
+                        section: 'behavior',
                     },
                 },
                 {
-                    id: 'open-taskmgr',
+                    id: 'open-taskmgr-performance',
                     label: 'Open Task Manager',
-                    tone: 'default',
-                    onInvoke: () => {
-                        const app = appLookup.get('taskmgr')
-                        if (!app) {
-                            return
-                        }
-
-                        const windowState = useWindowStore.getState()
-                        if (!windowState.windows.taskmgr) {
-                            windowState.openWindow(app)
-                        } else {
-                            windowState.restoreWindow('taskmgr')
-                        }
+                    deepLink: {
+                        kind: 'task-manager',
+                        tab: 'Performance',
                     },
                 },
             ],
         })
-    }, [appLookup])
+        notificationService.publish({
+            title: 'Productivity space primed',
+            message: 'Jump straight into your note, doc, or board from here.',
+            source: 'Workspace',
+            groupKey: 'onboarding',
+            priority: 'normal',
+            actions: [
+                {
+                    id: 'open-note',
+                    label: 'Open note',
+                    tone: 'primary',
+                    deepLink: {
+                        kind: 'productivity-record',
+                        appId: 'notes',
+                        recordId: firstNote.id,
+                        panel: 'editor',
+                    },
+                },
+                {
+                    id: 'open-doc',
+                    label: 'Open doc',
+                    deepLink: {
+                        kind: 'productivity-record',
+                        appId: 'docs',
+                        recordId: firstDoc.id,
+                        panel: 'editor',
+                    },
+                },
+                {
+                    id: 'open-board',
+                    label: 'Open board',
+                    deepLink: {
+                        kind: 'productivity-record',
+                        appId: 'boards',
+                        recordId: firstBoard.id,
+                        panel: 'editor',
+                    },
+                },
+            ],
+        })
+        notificationService.publish({
+            title: 'Quick destinations',
+            message: 'Browser and File Manager links now land in the right place.',
+            source: 'Workspace',
+            groupKey: 'onboarding',
+            priority: 'low',
+            actions: [
+                {
+                    id: 'open-browser-status',
+                    label: 'Open browser',
+                    tone: 'primary',
+                    deepLink: {
+                        kind: 'browser-url',
+                        url: 'https://example.com/aetheros/guide',
+                        reuseExistingTab: true,
+                    },
+                },
+                {
+                    id: 'reveal-documents',
+                    label: 'Reveal Documents',
+                    deepLink: {
+                        kind: 'file-manager-path',
+                        path: '/home/user/Documents/readme.txt',
+                    },
+                },
+            ],
+        })
+    }, [])
+
+    useEffect(() => {
+        if (seededDownloadsRef.current || downloadManagerService.getSnapshot().items.length > 0) {
+            return
+        }
+
+        seededDownloadsRef.current = true
+        downloadManagerService.enqueue({
+            id: 'demo-browser-guide',
+            fileName: 'AetherOS_UI_kit.zip',
+            destinationPath: '/home/user/Downloads/AetherOS_UI_kit.zip',
+            totalBytes: 3_200_000,
+            source: 'browser',
+            sourceUrl: 'https://example.com/ui-kit.zip',
+            simulation: {
+                queueTicks: 0,
+                progressPattern: [220_000, 260_000, 240_000, 280_000, 300_000],
+            },
+        })
+        downloadManagerService.enqueue({
+            id: 'demo-failed-log-bundle',
+            fileName: 'perf-trace-bundle.tar',
+            destinationPath: '/home/user/Downloads/perf-trace-bundle.tar',
+            totalBytes: 2_100_000,
+            source: 'system',
+            maxRetries: 2,
+            simulation: {
+                queueTicks: 1,
+                progressPattern: [180_000, 210_000, 190_000],
+                failAtStepByAttempt: {
+                    1: 4,
+                },
+            },
+        })
+        downloadManagerService.enqueue({
+            id: 'demo-appstore-pack',
+            fileName: 'illustration-pack.dmg',
+            destinationPath: '/home/user/Downloads/illustration-pack.dmg',
+            totalBytes: 4_600_000,
+            source: 'app-store',
+            simulation: {
+                queueTicks: 2,
+                progressPattern: [260_000, 290_000, 320_000, 350_000],
+            },
+        })
+    }, [downloadSnapshot.items.length])
 
     useEffect(() => {
         if (!lastGuardError) {
@@ -220,6 +347,17 @@ export default function ShellFrame() {
             source: 'Permissions',
             priority: 'high',
             groupKey: 'permissions',
+            actions: [
+                {
+                    id: 'open-permission-center',
+                    label: 'Open Permission Center',
+                    tone: 'primary',
+                    deepLink: {
+                        kind: 'settings-section',
+                        section: 'permissions',
+                    },
+                },
+            ],
         })
     }, [lastGuardError])
 
@@ -265,6 +403,8 @@ export default function ShellFrame() {
             <TopBar
                 now={now}
                 showSeconds={showSecondsInClock}
+                activeDownloads={downloadSnapshot.activeCount}
+                queuedDownloads={downloadSnapshot.queuedCount}
                 unreadNotifications={unreadCount}
                 notificationsOpen={isNotificationCenterOpen}
                 activeAccount={activeAccount}
@@ -293,6 +433,18 @@ export default function ShellFrame() {
                     setQuickSettingsOpen(false)
                     setDateTimeOpen(false)
                     setNotificationCenterOpen((open) => !open)
+                }}
+                onOpenDownloads={() => {
+                    const downloadsApp = appLookup.get('downloads')
+                    if (!downloadsApp) {
+                        return
+                    }
+
+                    setLauncherOpen(false)
+                    setQuickSettingsOpen(false)
+                    setDateTimeOpen(false)
+                    setNotificationCenterOpen(false)
+                    handleLaunchOrToggle(downloadsApp.id)
                 }}
                 onLockSession={lockSession}
                 onLogout={logout}

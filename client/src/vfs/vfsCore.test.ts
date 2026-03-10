@@ -29,6 +29,17 @@ describe('AetherVFS core operations', () => {
         expect(() => vfs.move('/home/user/Documents', '/home/user/Documents')).toThrow();
     });
 
+    it('copies directories recursively into another directory', () => {
+        const vfs = new AetherVFS()
+        seedUserTree(vfs)
+
+        vfs.copy('/home/user/Documents', '/home/user/Downloads')
+
+        expect(vfs.resolvePath('/home/user/Downloads/Documents').name).toBe('Documents')
+        expect(vfs.readFile('/home/user/Downloads/Documents/notes.txt')).toBe('hello world')
+        expect(vfs.readFile('/home/user/Documents/notes.txt')).toBe('hello world')
+    })
+
     it('deletes directories recursively', () => {
         const vfs = new AetherVFS();
         seedUserTree(vfs);

@@ -11,7 +11,7 @@ This project currently focuses on functional OS simulation only.
 
 ## Implemented Features
 
-- Boot sequence: loading screen -> lock/login screen -> desktop shell
+- Boot sequence: staged diagnostics screen -> lock/login screen -> desktop shell
 - Local multi-profile session simulation (admin/member/guest with PIN)
 - Window manager:
   - open, close, focus, z-order
@@ -28,7 +28,8 @@ This project currently focuses on functional OS simulation only.
 - File Manager (VFS-backed):
   - directory navigation/tree
   - icon/details views
-  - rename, move, delete, hidden toggle
+  - copy, cut, paste, rename, move, delete, hidden toggle
+  - conflict-safe paste with pending-cut feedback and destination status
   - keyboard shortcuts
 - Terminal:
   - built-in commands (`help`, `pwd`, `ls`, `cd`, `cat`, `mkdir`, `touch`, `rm`, `mv`, `cp`, `clear`)
@@ -44,12 +45,23 @@ This project currently focuses on functional OS simulation only.
   - desktop controls (icon scale/taskbar position/accent strength)
   - accessibility controls + checks
   - behavior toggles (animations/translucency/clock seconds)
+  - permission center with per-profile grant review, source context, and revoke controls
 - Notifications + background jobs:
-  - grouped notification center with actions
-  - periodic system-health and latency alerts
+  - grouped notification center with typed actions and body deep links
+  - smart notification flows that reuse open windows, restore minimized apps, and route into app context
+  - periodic system-health and latency alerts with direct Task Manager/Browser destinations
+- Download Manager:
+  - dedicated window with grouped queue, progress bars, retry/cancel controls, and deterministic simulation ticks
+  - browser-triggered downloads now flow through the manager, materialize into the VFS `Downloads` directory with duplicate-name handling, and expose open-file/open-folder/copy-path follow-up actions
+  - shell entry point in the top bar plus notification milestones for complete/fail/retry events
+- Boot diagnostics:
+  - deterministic staged service startup with timing indicators
+  - occasional non-blocking advisory warnings for demo realism
+  - clean handoff into the existing login/session flow
 - Productivity apps:
   - Notes, Docs, Boards
   - autosave, draft recovery, linked records, attachment path validation
+  - shared internal clipboard for text copy/cut/paste across Notes and Docs
 - App Store simulation:
   - install/update/uninstall simulation
   - dependency and version validation
@@ -58,20 +70,22 @@ This project currently focuses on functional OS simulation only.
   - session snapshot
   - settings
   - VFS snapshot
-  - permission grants
+  - permission grants and revoke state
 
 ## Monorepo Layout
 
 ```text
 client/
   src/
-    apps/                  # app implementations (browser, file manager, notes, docs, boards, settings, app store)
+    apps/                  # app implementations (browser, file manager, downloads, notes, docs, boards, settings, app store)
     components/            # shared UI components (window, terminal, task manager, login)
     config/                # app/window manifest and desktop icon config
     features/
       accounts/            # local profile and session services
       app-registry/        # package catalog/version/dependency domain
       background-jobs/     # scheduler
+      downloads/           # download queue simulation + manager service
+      clipboard/           # shared typed clipboard state for text and file payloads
       notifications/       # notification domain and flyout
       permissions/         # role guards + local grants
       settings/            # settings defaults, normalization, storage, theming
@@ -149,3 +163,14 @@ npm run build
 - This repository intentionally uses local simulation over backend persistence for now.
 - The next major milestone is functional realism and interaction quality, not auth/database integration.
 - See `feature_plan.md` for the done-vs-needed checklist.
+
+## Roadmap Status
+
+The following items are already implemented and reflected in the updated checklist:
+
+- Window snapping with halves and quarter layouts
+- Desktop and File Manager multi-select with marquee/modifier support
+- Trash flow with restore and permanent delete
+- Task Manager causal impact reporting from simulated app activity
+
+Current work is now centered on the next 10 execution phases listed in `feature_plan.md` and mirrored as implementation prompts in `prompts/phase1.txt` through `prompts/phase10.txt`.

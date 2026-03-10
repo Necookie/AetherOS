@@ -11,8 +11,12 @@ import {
     Check,
     EyeOff,
     FolderInput,
+    ClipboardPaste,
 } from 'lucide-react';
+import { useClipboardSnapshot } from '../../../features/clipboard';
 import { useFsStore } from '../../../stores/fsStore';
+import { fsService } from '../../../vfs/vfsService';
+import { VfsNodeType } from '../../../vfs/types';
 
 interface Point {
     x: number;
@@ -67,9 +71,16 @@ export default function ContextMenu({ onClose, position, targetId }: ContextMenu
         permanentlyDeleteItems,
         emptyTrash,
         moveItems,
+        copyItemsToClipboard,
+        cutItemsToClipboard,
+        pasteClipboard,
         isMutating,
     } = useFsStore();
+    const clipboard = useClipboardSnapshot()
     const inTrash = currentPath === '/home/user/.Trash';
+    const targetNode = targetId ? fsService.getNodeById(targetId) : null
+    const pasteTargetPath = targetNode?.type === VfsNodeType.DIR ? fsService.getPath(targetNode.id) : currentPath
+    const hasFileClipboard = clipboard.payload?.kind === 'files' && clipboard.payload.entries.length > 0
 
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -177,6 +188,7 @@ export default function ContextMenu({ onClose, position, targetId }: ContextMenu
                 <>
                     <MenuItem icon={<FolderPlus size={14} />} label="New Folder" onClick={handleNewFolder} disabled={isMutating || inTrash} />
                     <MenuItem icon={<FilePlus size={14} />} label="New File" onClick={handleNewFile} disabled={isMutating || inTrash} />
+                    {!inTrash && <MenuItem icon={<ClipboardPaste size={14} />} label="Paste Here" onClick={() => { pasteClipboard(currentPath); onClose(); }} disabled={!hasFileClipboard || isMutating} />}
                     <Separator />
                     {inTrash && (
                         <>
@@ -200,8 +212,9 @@ export default function ContextMenu({ onClose, position, targetId }: ContextMenu
                 </>
             ) : (
                 <>
-                    <MenuItem icon={<Scissors size={14} />} label="Cut" disabled />
-                    <MenuItem icon={<Copy size={14} />} label="Copy" disabled />
+                    <MenuItem icon={<Scissors size={14} />} label="Cut" onClick={() => { cutItemsToClipboard(selectedIds); onClose(); }} disabled={!hasSelection || inTrash || isMutating} />
+                    <MenuItem icon={<Copy size={14} />} label="Copy" onClick={() => { copyItemsToClipboard(selectedIds); onClose(); }} disabled={!hasSelection || inTrash || isMutating} />
+                    {!inTrash && <MenuItem icon={<ClipboardPaste size={14} />} label={targetNode?.type === VfsNodeType.DIR ? 'Paste Into Folder' : 'Paste Here'} onClick={() => { pasteClipboard(pasteTargetPath); onClose(); }} disabled={!hasFileClipboard || isMutating} />}
                     <Separator />
                     {!inTrash && <MenuItem icon={<FolderInput size={14} />} label="Move To..." onClick={handleMove} disabled={!hasSelection || isMutating} />}
                     {!inTrash && <MenuItem icon={<Edit2 size={14} />} label="Rename" onClick={handleRename} disabled={!singleSelection || isMutating} />}

@@ -1,9 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createNotificationService } from './notificationService'
+import { registerNotificationDeepLinkExecutor } from './deepLinkRuntime'
 
 describe('notificationService lifecycle', () => {
     beforeEach(() => {
         vi.useFakeTimers()
+        registerNotificationDeepLinkExecutor(() => false)
     })
 
     afterEach(() => {
@@ -68,5 +70,36 @@ describe('notificationService lifecycle', () => {
         expect(service.getSnapshot().items).toHaveLength(1)
         await vi.advanceTimersByTimeAsync(550)
         expect(service.getSnapshot().items).toHaveLength(0)
+    })
+
+    it('delegates notification opens and action deep links through the registered executor', async () => {
+        const executor = vi.fn(() => true)
+        registerNotificationDeepLinkExecutor(executor)
+        const service = createNotificationService(() => 250)
+        const id = service.publish({
+            title: 'CPU spike detected',
+            message: 'Open Task Manager.',
+            source: 'System Monitor',
+            deepLink: {
+                kind: 'task-manager',
+                tab: 'Performance',
+            },
+            actions: [
+                {
+                    id: 'inspect',
+                    label: 'Inspect',
+                    deepLink: {
+                        kind: 'task-manager',
+                        tab: 'Processes',
+                    },
+                },
+            ],
+        })
+
+        await service.open(id)
+        await service.invokeAction(id, 'inspect')
+
+        expect(executor).toHaveBeenCalledTimes(2)
+        expect(service.getSnapshot().items[0].isRead).toBe(true)
     })
 })

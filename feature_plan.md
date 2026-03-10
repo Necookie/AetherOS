@@ -74,21 +74,21 @@ Date: 2026-03-09
 
 ### P0 - Demo-Critical Functional Upgrades
 
-- [ ] Window snapping and tiling layouts (left/right/quarters)
-- [ ] Multi-select desktop/file operations with marquee and modifier keys
-- [ ] Recycle Bin/Trash flow with restore and permanent delete
-- [ ] Real Task Manager impact from active app actions (more causal metrics)
+- [x] Window snapping and tiling layouts (left/right/quarters)
+- [x] Multi-select desktop/file operations with marquee and modifier keys
+- [x] Recycle Bin/Trash flow with restore and permanent delete
+- [x] Real Task Manager impact from active app actions (more causal metrics)
 - [x] Global browser-safe keyboard shortcut map (launcher/app switcher/task manager/terminal/window actions) with remapping support
 - [x] Consistent unsaved-change guards for Notes/Docs/Boards plus window close/minimize and session lock/logout flows
 
 ### P1 - OS Realism and HCI Quality
 
-- [ ] Boot diagnostics screen (services starting, timing, failures)
-- [ ] Notification-to-action deep links across apps
-- [ ] Download Manager simulation with queue/progress/fail/retry states
-- [ ] Browser downloads into VFS `Downloads` directory (simulated pipeline)
-- [ ] Clipboard simulation across apps and file manager operations
-- [ ] Better permission UX (central permission panel + revoke controls)
+- [x] Boot diagnostics screen (services starting, timing, failures)
+- [x] Notification-to-action deep links across apps
+- [x] Download Manager simulation with queue/progress/fail/retry states
+- [x] Browser downloads into VFS `Downloads` directory (simulated pipeline)
+- [x] Clipboard simulation across apps and file manager operations
+- [x] Better permission UX (central permission panel + revoke controls)
 - [ ] Robust command palette/launcher with fuzzy search and keyboard nav
 
 ### P2 - Productivity and Data Workflows
@@ -130,3 +130,16 @@ Date: 2026-03-09
 - [ ] Cloud user file storage
 
 Keep these unchecked intentionally until functional objectives are complete.
+
+## Today Focus (2026-03-10)
+
+- [x] Phase 1 - Boot diagnostics screen with staged startup feedback
+- [x] Phase 2 - Notification action deep links into apps/windows
+- [x] Phase 3 - Download Manager simulation with queue/progress/retry UX
+- [x] Phase 4 - Browser download pipeline into VFS `Downloads`
+- [x] Phase 5 - Shared clipboard simulation across apps and file workflows
+- [x] Phase 6 - Permission Center with grant review and revoke controls
+- [ ] Phase 7 - Launcher upgraded into a fuzzy command palette with keyboard navigation
+- [ ] Phase 8 - Docs editor blocks for headings, links, and checklists
+- [ ] Phase 9 - Boards drag-and-drop for cards and column ordering
+- [ ] Phase 10 - Productivity templates and quick-create entry points

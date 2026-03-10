@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fsService } from '../../vfs/vfsService';
+import { clipboardService } from '../../features/clipboard';
 import { createFsActions } from './actions';
 import { initialFsState, HOME_PATH } from './initialState';
 import type { FsStore } from './types';
@@ -49,7 +50,14 @@ describe('filesystem actions optimistic behavior', () => {
             isAuthenticating: false,
         }));
         fsService.resetToDefaults();
+        clipboardService.clear()
     });
+
+    afterEach(() => {
+        // @ts-expect-error test cleanup
+        delete globalThis.window
+        vi.restoreAllMocks()
+    })
 
     it('applies successful mutations and refreshes current view', () => {
         const harness = createHarness();
@@ -88,11 +96,7 @@ describe('filesystem actions optimistic behavior', () => {
         const harness = createHarness();
         const state = harness.getState();
         state.navigate('/home/user/Documents');
-        const readme = harness.getState().items.find((item) => item.name === 'readme.txt');
-        expect(readme).toBeTruthy();
-        if (!readme) {
-            return;
-        }
+        const readme = fsService.resolvePath('/home/user/Documents/readme.txt')
 
         state.deleteItems([readme.id]);
 
@@ -125,6 +129,7 @@ describe('filesystem actions optimistic behavior', () => {
         expect(recovered.name).toBe('readme.txt');
         expect(harness.getState().error).toContain('read-only');
     });
+
 
     it('restores files from trash back to original location', () => {
         const harness = createHarness();
@@ -206,4 +211,97 @@ describe('filesystem actions optimistic behavior', () => {
         expect(harness.getState().selectedIds).toEqual([]);
         expect(harness.getState().selectionAnchorId).toBeNull();
     });
+
+    it('reveals a file path by navigating to its parent and selecting it', () => {
+        const harness = createHarness();
+        const state = harness.getState();
+
+        const revealed = state.revealPath('/home/user/Documents/readme.txt');
+
+        expect(revealed).toBe(true);
+        expect(harness.getState().currentPath).toBe('/home/user/Documents');
+        expect(harness.getState().selectedIds).toHaveLength(1);
+        expect(fsService.getNodeById(harness.getState().selectedIds[0])?.name).toBe('readme.txt');
+    });
+
+    it('copies files through the shared clipboard and keeps the source intact', () => {
+        const harness = createHarness()
+        const state = harness.getState()
+
+        state.navigate('/home/user/Documents')
+        const readme = harness.getState().items.find((item) => item.name === 'readme.txt')
+        expect(readme).toBeTruthy()
+        if (!readme) {
+            return
+        }
+
+        state.copyItemsToClipboard([readme.id])
+        state.pasteClipboard('/home/user/Downloads')
+
+        expect(fsService.resolvePath('/home/user/Documents/readme.txt').name).toBe('readme.txt')
+        expect(fsService.resolvePath('/home/user/Downloads/readme.txt').name).toBe('readme.txt')
+        expect(clipboardService.getSnapshot().payload).toMatchObject({
+            kind: 'files',
+            operation: 'copy',
+        })
+    })
+
+    it('cuts files through the shared clipboard and clears the pending move after paste', () => {
+        const harness = createHarness()
+        const state = harness.getState()
+
+        state.navigate('/home/user/Documents')
+        const readme = harness.getState().items.find((item) => item.name === 'readme.txt')
+        expect(readme).toBeTruthy()
+        if (!readme) {
+            return
+        }
+
+        state.cutItemsToClipboard([readme.id])
+        state.pasteClipboard('/home/user/Downloads')
+
+        expect(() => fsService.resolvePath('/home/user/Documents/readme.txt')).toThrow()
+        expect(fsService.resolvePath('/home/user/Downloads/readme.txt').name).toBe('readme.txt')
+        expect(clipboardService.getSnapshot().payload).toBeNull()
+    })
+
+    it('renames pasted copies when the destination already contains the same name', () => {
+        const harness = createHarness()
+        const state = harness.getState()
+
+        state.navigate('/home/user/Documents')
+        const readme = harness.getState().items.find((item) => item.name === 'readme.txt')
+        expect(readme).toBeTruthy()
+        if (!readme) {
+            return
+        }
+
+        state.copyItemsToClipboard([readme.id])
+        state.pasteClipboard('/home/user/Documents')
+
+        expect(fsService.resolvePath('/home/user/Documents/readme (copy 1).txt').name).toBe('readme (copy 1).txt')
+        expect(harness.getState().statusMessage).toContain('Renamed 1 item')
+    })
+
+    it('blocks invalid cut destinations when pasting back into the same folder', () => {
+        const harness = createHarness()
+        const state = harness.getState()
+
+        state.navigate('/home/user/Documents')
+        const readme = harness.getState().items.find((item) => item.name === 'readme.txt')
+        expect(readme).toBeTruthy()
+        if (!readme) {
+            return
+        }
+
+        state.cutItemsToClipboard([readme.id])
+        state.pasteClipboard('/home/user/Documents')
+
+        expect(fsService.resolvePath('/home/user/Documents/readme.txt').name).toBe('readme.txt')
+        expect(harness.getState().error).toContain('already in this folder')
+        expect(clipboardService.getSnapshot().payload).toMatchObject({
+            kind: 'files',
+            operation: 'cut',
+        })
+    })
 });

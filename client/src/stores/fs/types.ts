@@ -17,6 +17,7 @@ export interface FsStoreState {
     items: VfsNode[];
     directoryTree: VfsNode[];
     isMutating: boolean;
+    statusMessage: string | null;
     error: string | null;
 }
 
@@ -32,6 +33,7 @@ export interface FsStoreActions {
     selectItem: (id: string, multi: boolean, range: boolean) => void;
     setSelection: (ids: string[], anchorId?: string | null) => void;
     clearSelection: () => void;
+    revealPath: (path: string) => boolean;
     createFolder: (name: string) => void;
     createFile: (name: string, content?: string) => void;
     renameItem: (id: string, newName: string) => void;
@@ -40,6 +42,10 @@ export interface FsStoreActions {
     permanentlyDeleteItems: (ids: string[]) => void;
     emptyTrash: () => void;
     moveItems: (ids: string[], destinationPath: string) => void;
+    copyItemsToClipboard: (ids: string[]) => void;
+    cutItemsToClipboard: (ids: string[]) => void;
+    pasteClipboard: (destinationPath?: string) => void;
+    setStatusMessage: (message: string | null) => void;
     clearError: () => void;
     refresh: () => void;
 }
