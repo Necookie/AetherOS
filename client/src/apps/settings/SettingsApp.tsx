@@ -1,11 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Palette, Monitor, Accessibility, SlidersHorizontal, RotateCcw, Keyboard } from 'lucide-react'
+import { Palette, Monitor, Accessibility, SlidersHorizontal, RotateCcw, Keyboard, Shield } from 'lucide-react'
 import Window from '../../components/system/Window'
+import { getActiveAccount } from '../../features/accounts/services/sessionSelectors'
 import { WALLPAPER_OPTIONS } from '../../features/settings/defaults'
 import { runAccessibilityChecks } from '../../features/settings/accessibilityChecks'
+import { notificationService } from '../../features/notifications/notificationStore'
+import { formatPermissionRevokedMessage } from '../../features/permissions/messages'
+import { permissionService } from '../../features/permissions/permissionService'
 import { createThemeTokens, resolveWallpaper } from '../../features/settings/themeEngine'
 import { useDeepLinkIntentStore } from '../../features/deep-links'
 import { useSettingsStore } from '../../stores/settingsStore'
+import { useSessionStore } from '../../stores/useSessionStore'
+import type { PermissionId } from '../../features/permissions/types'
 import type { ThemePalette } from '../../features/settings/types'
 import type { SettingsSection } from '../../features/deep-links'
 import {
@@ -20,6 +26,7 @@ const sectionMeta: Array<{ id: SettingsSection; label: string; icon: typeof Pale
     { id: 'accessibility', label: 'Accessibility', icon: Accessibility },
     { id: 'behavior', label: 'Behavior', icon: SlidersHorizontal },
     { id: 'shortcuts', label: 'Shortcuts', icon: Keyboard },
+    { id: 'permissions', label: 'Permissions', icon: Shield },
 ]
 
 const SHORTCUT_LABELS: Record<string, string> = {
@@ -105,7 +112,10 @@ function ColorField({
 export default function SettingsApp({ id }: { id: string }) {
     const [section, setSection] = useState<SettingsSection>('appearance')
     const [shortcutDrafts, setShortcutDrafts] = useState<Record<string, string>>({})
+    const [permissionsVersion, setPermissionsVersion] = useState(0)
     const settingsIntent = useDeepLinkIntentStore((state) => state.settings)
+    const activeUserId = useSessionStore((state) => state.activeUserId)
+    const accounts = useSessionStore((state) => state.accounts)
     const {
         appearance,
         desktop,
@@ -130,6 +140,10 @@ export default function SettingsApp({ id }: { id: string }) {
         clearShortcutOverride,
         resetSettings,
     } = useSettingsStore((state) => state)
+    const activeAccount = getActiveAccount({
+        activeUserId,
+        accounts,
+    })
 
     const tokens = useMemo(
         () => createThemeTokens({ appearance, desktop, accessibility, behavior, shortcuts }),
@@ -139,6 +153,13 @@ export default function SettingsApp({ id }: { id: string }) {
     const selectedWallpaper = resolveWallpaper(appearance.wallpaperId)
     const resolvedShortcutKeymap = useMemo(() => resolveShortcutKeymap(shortcuts.overrides), [shortcuts.overrides])
     const shortcutValidation = useMemo(() => validateShortcutOverrides(shortcuts.overrides), [shortcuts.overrides])
+    const permissionStatuses = useMemo(() => {
+        if (!activeUserId) {
+            return []
+        }
+
+        return permissionService.listPermissionStatuses(activeUserId)
+    }, [activeUserId, permissionsVersion])
 
     useEffect(() => {
         const drafts: Record<string, string> = {}
@@ -164,6 +185,22 @@ export default function SettingsApp({ id }: { id: string }) {
         }
 
         return setShortcutOverride(actionId, combo)
+    }
+
+    const revokePermission = (permission: PermissionId) => {
+        if (!activeUserId) {
+            return
+        }
+
+        permissionService.revoke(activeUserId, permission)
+        setPermissionsVersion((current) => current + 1)
+        notificationService.publish({
+            title: 'Permission revoked',
+            message: formatPermissionRevokedMessage(permission),
+            source: 'Permissions',
+            priority: 'normal',
+            groupKey: 'permissions',
+        })
     }
 
     return (
@@ -414,6 +451,61 @@ export default function SettingsApp({ id }: { id: string }) {
                                 {shortcutValidation.conflicts.length > 0 && (
                                     <p className="text-xs text-rose-700">Conflicting shortcuts detected. Reset one mapping to continue.</p>
                                 )}
+                            </div>
+                        </div>
+                    )}
+
+                    {section === 'permissions' && (
+                        <div className="space-y-4">
+                            <div>
+                                <h2 className="text-lg font-semibold text-slate-900">Permission Center</h2>
+                                <p className="text-sm text-slate-600">Review saved capabilities for the current profile and revoke them instantly.</p>
+                            </div>
+
+                            <div className="rounded-xl border border-white/70 bg-white/60 p-4 text-sm text-slate-700">
+                                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Active profile</p>
+                                <p className="mt-2 text-base font-semibold text-slate-900">
+                                    {activeAccount ? `${activeAccount.displayName} (${activeAccount.role})` : 'No active profile'}
+                                </p>
+                                <p className="mt-1 text-sm text-slate-600">Revoking a grant takes effect immediately. The next protected action will ask again.</p>
+                            </div>
+
+                            <div className="space-y-3">
+                                {permissionStatuses.map((status) => (
+                                    <article key={status.id} className="rounded-xl border border-white/70 bg-white/60 p-4">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <h3 className="text-sm font-semibold text-slate-900">{status.label}</h3>
+                                                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${status.granted ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'}`}>
+                                                        {status.granted ? 'Granted' : 'Not granted'}
+                                                    </span>
+                                                </div>
+                                                <p className="mt-1 text-sm text-slate-600">{status.description}</p>
+                                                <p className="mt-2 text-xs uppercase tracking-[0.12em] text-slate-500">{status.category}</p>
+                                            </div>
+                                            <button
+                                                onClick={() => revokePermission(status.id)}
+                                                disabled={!status.granted}
+                                                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                Revoke
+                                            </button>
+                                        </div>
+
+                                        <div className="mt-3 rounded-lg border border-white/70 bg-white/70 p-3 text-xs text-slate-600">
+                                            {status.grant ? (
+                                                <>
+                                                    <p className="text-slate-800">Granted because: {status.grant.source.reason}</p>
+                                                    <p className="mt-1">Saved at: {new Date(status.grant.grantedAt).toLocaleString()}</p>
+                                                </>
+                                            ) : (
+                                                <p className="text-slate-800">This capability is not currently saved for the active profile.</p>
+                                            )}
+                                            <p className="mt-2">{status.recovery}</p>
+                                        </div>
+                                    </article>
+                                ))}
                             </div>
                         </div>
                     )}

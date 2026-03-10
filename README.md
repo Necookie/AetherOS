@@ -45,6 +45,7 @@ This project currently focuses on functional OS simulation only.
   - desktop controls (icon scale/taskbar position/accent strength)
   - accessibility controls + checks
   - behavior toggles (animations/translucency/clock seconds)
+  - permission center with per-profile grant review, source context, and revoke controls
 - Notifications + background jobs:
   - grouped notification center with typed actions and body deep links
   - smart notification flows that reuse open windows, restore minimized apps, and route into app context
@@ -69,7 +70,7 @@ This project currently focuses on functional OS simulation only.
   - session snapshot
   - settings
   - VFS snapshot
-  - permission grants
+  - permission grants and revoke state
 
 ## Monorepo Layout
 

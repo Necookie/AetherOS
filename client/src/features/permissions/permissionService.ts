@@ -1,36 +1,63 @@
 import { getScopedStorageKey } from '../accounts/services/userScope'
-import type { PermissionId } from './types'
+import { KNOWN_PERMISSION_IDS, getPermissionDefinition } from './definitions'
+import type { PermissionGrantRecord, PermissionId, PermissionStatus } from './types'
 
 const PERMISSION_KEY = 'aether.permissions.v1'
 
 interface PermissionMap {
-    grants: PermissionId[]
+    grants: Partial<Record<PermissionId, PermissionGrantRecord>>
 }
 
 function canUseStorage() {
     return typeof window !== 'undefined' && Boolean(window.localStorage)
 }
 
-function readGrants(userId: string): Set<PermissionId> {
+function isPermissionId(value: string): value is PermissionId {
+    return KNOWN_PERMISSION_IDS.includes(value as PermissionId)
+}
+
+function migrateLegacyGrants(grants: PermissionId[]): Partial<Record<PermissionId, PermissionGrantRecord>> {
+    const requestedAt = new Date(0).toISOString()
+
+    return grants.reduce<Partial<Record<PermissionId, PermissionGrantRecord>>>((records, permission) => {
+        records[permission] = {
+            permission,
+            grantedAt: requestedAt,
+            source: {
+                reason: 'Migrated from remembered permission grant.',
+                requestedAt,
+            },
+        }
+        return records
+    }, {})
+}
+
+function readGrants(userId: string): Partial<Record<PermissionId, PermissionGrantRecord>> {
     if (!canUseStorage()) {
-        return new Set()
+        return {}
     }
 
     const key = getScopedStorageKey(PERMISSION_KEY, userId)
     const raw = window.localStorage.getItem(key)
     if (!raw) {
-        return new Set()
+        return {}
     }
 
     try {
-        const parsed = JSON.parse(raw) as PermissionMap
-        return new Set(parsed.grants ?? [])
+        const parsed = JSON.parse(raw) as PermissionMap | { grants?: PermissionId[] }
+        if (Array.isArray(parsed.grants)) {
+            return migrateLegacyGrants(parsed.grants.filter(isPermissionId))
+        }
+
+        return Object.fromEntries(
+            Object.entries(parsed.grants ?? {}).filter(([permission, grant]) => isPermissionId(permission) && Boolean(grant)),
+        ) as Partial<Record<PermissionId, PermissionGrantRecord>>
     } catch {
-        return new Set()
+        return {}
     }
 }
 
-function writeGrants(userId: string, grants: Set<PermissionId>) {
+function writeGrants(userId: string, grants: Partial<Record<PermissionId, PermissionGrantRecord>>) {
     if (!canUseStorage()) {
         return
     }
@@ -38,7 +65,7 @@ function writeGrants(userId: string, grants: Set<PermissionId>) {
     const key = getScopedStorageKey(PERMISSION_KEY, userId)
 
     try {
-        window.localStorage.setItem(key, JSON.stringify({ grants: [...grants] }))
+        window.localStorage.setItem(key, JSON.stringify({ grants }))
     } catch {
         // Keep runtime flow active even if persistence is unavailable.
     }
@@ -50,7 +77,25 @@ function canPrompt() {
 
 export const permissionService = {
     hasGrant(userId: string, permission: PermissionId) {
-        return readGrants(userId).has(permission)
+        return Boolean(readGrants(userId)[permission])
+    },
+
+    getGrant(userId: string, permission: PermissionId) {
+        return readGrants(userId)[permission] ?? null
+    },
+
+    listPermissionStatuses(userId: string): PermissionStatus[] {
+        const grants = readGrants(userId)
+
+        return KNOWN_PERMISSION_IDS.map((permission) => {
+            const definition = getPermissionDefinition(permission)
+            const grant = grants[permission] ?? null
+            return {
+                ...definition,
+                granted: Boolean(grant),
+                grant,
+            }
+        })
     },
 
     request(userId: string, permission: PermissionId, reason: string) {
@@ -62,7 +107,8 @@ export const permissionService = {
             return false
         }
 
-        const allowed = window.confirm(`Permission request: ${reason}`)
+        const definition = getPermissionDefinition(permission)
+        const allowed = window.confirm(`Permission request: ${definition.label}\n\n${reason}`)
         if (!allowed) {
             return false
         }
@@ -70,11 +116,29 @@ export const permissionService = {
         const remember = window.confirm('Remember this permission for this profile?')
         if (remember) {
             const grants = readGrants(userId)
-            grants.add(permission)
+            const requestedAt = new Date().toISOString()
+            grants[permission] = {
+                permission,
+                grantedAt: requestedAt,
+                source: {
+                    reason,
+                    requestedAt,
+                },
+            }
             writeGrants(userId, grants)
         }
 
         return true
+    },
+
+    revoke(userId: string, permission: PermissionId) {
+        const grants = readGrants(userId)
+        if (!grants[permission]) {
+            return
+        }
+
+        delete grants[permission]
+        writeGrants(userId, grants)
     },
 
     clearUserGrants(userId: string) {
