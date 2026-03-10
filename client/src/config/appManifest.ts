@@ -52,4 +52,9 @@ export const APP_MANIFEST: AppManifestEntry[] = [
         title: 'Boards',
         defaultBounds: { x: 230, y: 110, width: 1100, height: 720 },
     },
+    {
+        id: 'downloads',
+        title: 'Download Manager',
+        defaultBounds: { x: 260, y: 120, width: 980, height: 680 },
+    },
 ]

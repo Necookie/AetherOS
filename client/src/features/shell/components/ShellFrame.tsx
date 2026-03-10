@@ -9,6 +9,7 @@ import { createBackgroundJobScheduler } from '../../background-jobs'
 import { productivityRepository } from '../../productivity'
 import NotificationCenterFlyout from '../../notifications/components/NotificationCenterFlyout'
 import { notificationService, useNotificationSnapshot } from '../../notifications'
+import { downloadManagerService, useDownloadManagerSnapshot } from '../../downloads'
 import { getWallpaperCss } from '../../settings/themeEngine'
 import WidgetBoard from '../../widgets/components/WidgetBoard'
 import DesktopIcons from '../../../components/desktop/DesktopIcons'
@@ -89,9 +90,11 @@ export default function ShellFrame() {
     const [isNotificationCenterOpen, setNotificationCenterOpen] = useState(false)
     const now = useShellClock()
     const { unreadCount } = useNotificationSnapshot()
+    const downloadSnapshot = useDownloadManagerSnapshot()
     const [viewedMonth, setViewedMonth] = useState(() => new Date(now.getFullYear(), now.getMonth(), 1))
     const schedulerRef = useRef(createBackgroundJobScheduler({ tickMs: 400 }))
     const seededNotificationsRef = useRef(false)
+    const seededDownloadsRef = useRef(false)
 
     const dockRef = useRef<HTMLDivElement>(null)
     const launcherRef = useRef<HTMLDivElement>(null)
@@ -288,6 +291,52 @@ export default function ShellFrame() {
     }, [])
 
     useEffect(() => {
+        if (seededDownloadsRef.current || downloadManagerService.getSnapshot().items.length > 0) {
+            return
+        }
+
+        seededDownloadsRef.current = true
+        downloadManagerService.enqueue({
+            id: 'demo-browser-guide',
+            fileName: 'AetherOS_UI_kit.zip',
+            destinationPath: '/home/user/Downloads/AetherOS_UI_kit.zip',
+            totalBytes: 3_200_000,
+            source: 'browser',
+            sourceUrl: 'https://example.com/ui-kit.zip',
+            simulation: {
+                queueTicks: 0,
+                progressPattern: [220_000, 260_000, 240_000, 280_000, 300_000],
+            },
+        })
+        downloadManagerService.enqueue({
+            id: 'demo-failed-log-bundle',
+            fileName: 'perf-trace-bundle.tar',
+            destinationPath: '/home/user/Downloads/perf-trace-bundle.tar',
+            totalBytes: 2_100_000,
+            source: 'system',
+            maxRetries: 2,
+            simulation: {
+                queueTicks: 1,
+                progressPattern: [180_000, 210_000, 190_000],
+                failAtStepByAttempt: {
+                    1: 4,
+                },
+            },
+        })
+        downloadManagerService.enqueue({
+            id: 'demo-appstore-pack',
+            fileName: 'illustration-pack.dmg',
+            destinationPath: '/home/user/Downloads/illustration-pack.dmg',
+            totalBytes: 4_600_000,
+            source: 'app-store',
+            simulation: {
+                queueTicks: 2,
+                progressPattern: [260_000, 290_000, 320_000, 350_000],
+            },
+        })
+    }, [downloadSnapshot.items.length])
+
+    useEffect(() => {
         if (!lastGuardError) {
             return
         }
@@ -343,6 +392,8 @@ export default function ShellFrame() {
             <TopBar
                 now={now}
                 showSeconds={showSecondsInClock}
+                activeDownloads={downloadSnapshot.activeCount}
+                queuedDownloads={downloadSnapshot.queuedCount}
                 unreadNotifications={unreadCount}
                 notificationsOpen={isNotificationCenterOpen}
                 activeAccount={activeAccount}
@@ -371,6 +422,18 @@ export default function ShellFrame() {
                     setQuickSettingsOpen(false)
                     setDateTimeOpen(false)
                     setNotificationCenterOpen((open) => !open)
+                }}
+                onOpenDownloads={() => {
+                    const downloadsApp = appLookup.get('downloads')
+                    if (!downloadsApp) {
+                        return
+                    }
+
+                    setLauncherOpen(false)
+                    setQuickSettingsOpen(false)
+                    setDateTimeOpen(false)
+                    setNotificationCenterOpen(false)
+                    handleLaunchOrToggle(downloadsApp.id)
                 }}
                 onLockSession={lockSession}
                 onLogout={logout}
