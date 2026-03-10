@@ -1,4 +1,5 @@
 import { Folder, File as FileIcon } from 'lucide-react';
+import { useClipboardSnapshot } from '../../../features/clipboard';
 import { VfsNodeType, type VfsNode } from '../../../vfs/types';
 import { useFsStore } from '../../../stores/fsStore';
 
@@ -12,6 +13,12 @@ export default function FileDetails({ items }: { items: VfsNode[] }) {
         sortDirection,
         setSort,
     } = useFsStore();
+    const clipboard = useClipboardSnapshot()
+    const pendingCutIds = new Set(
+        clipboard.payload?.kind === 'files' && clipboard.payload.operation === 'cut'
+            ? clipboard.payload.entries.map((entry) => entry.nodeId)
+            : [],
+    )
 
     const formatSize = (bytes: number, type: VfsNodeType) => {
         if (type === VfsNodeType.DIR) {
@@ -58,12 +65,13 @@ export default function FileDetails({ items }: { items: VfsNode[] }) {
             <div className="flex-1 pb-4">
                 {items.map((item) => {
                     const isSelected = selectedIds.includes(item.id);
+                    const isPendingCut = pendingCutIds.has(item.id)
                     return (
                         <div
                             key={item.id}
                             data-id={item.id}
                             data-selectable-id={item.id}
-                            className={`group flex cursor-pointer items-center border-b border-transparent pl-4 ${isSelected ? 'border-indigo-500/35 bg-indigo-500/20' : 'hover:bg-slate-800/45'}`}
+                            className={`group flex cursor-pointer items-center border-b border-transparent pl-4 ${isSelected ? 'border-indigo-500/35 bg-indigo-500/20' : 'hover:bg-slate-800/45'} ${isPendingCut ? 'opacity-50' : ''}`}
                             onClick={(event) => {
                                 event.stopPropagation();
                                 selectItem(item.id, event.ctrlKey || event.metaKey, event.shiftKey);
@@ -78,7 +86,7 @@ export default function FileDetails({ items }: { items: VfsNode[] }) {
                                     ? <Folder size={14} fill="currentColor" fillOpacity={0.2} className="text-indigo-300" />
                                     : <FileIcon size={14} className="text-slate-500" />}
                             </div>
-                            <div className={`pointer-events-none min-w-[200px] flex-1 truncate px-2 py-1.5 ${isSelected ? 'font-medium text-indigo-100' : 'text-slate-200'}`}>
+                            <div className={`pointer-events-none min-w-[200px] flex-1 truncate px-2 py-1.5 ${isSelected ? 'font-medium text-indigo-100' : 'text-slate-200'} ${isPendingCut ? 'text-amber-100' : ''}`}>
                                 {item.name}
                             </div>
                             <div className={`pointer-events-none w-32 truncate px-2 py-1.5 text-xs ${isSelected ? 'text-indigo-200' : 'text-slate-500'}`}>

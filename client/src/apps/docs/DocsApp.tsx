@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type KeyboardEvent } from 'react'
 import { Bold, Italic, List, Underline } from 'lucide-react'
 import Window from '../../components/system/Window'
+import { clipboardService } from '../../features/clipboard'
 import AttachmentPanel from '../productivity/components/AttachmentPanel'
 import LinkedRecordsPanel from '../productivity/components/LinkedRecordsPanel'
 import RecordListPane from '../productivity/components/RecordListPane'
@@ -49,6 +50,58 @@ export default function DocsApp({ id }: { id: string }) {
         editor.setBody(editorRef.current?.innerHTML ?? '')
     }
 
+    const handleClipboardShortcut = (event: KeyboardEvent<HTMLDivElement>) => {
+        const modifier = event.ctrlKey || event.metaKey
+        if (!modifier || event.altKey) {
+            return
+        }
+
+        const element = editorRef.current
+        const selection = window.getSelection()
+        const key = event.key.toLowerCase()
+        if (!element || !selection || selection.rangeCount === 0 || !element.contains(selection.anchorNode)) {
+            return
+        }
+
+        const selectedText = selection.toString()
+
+        if (key === 'c' && selectedText.length > 0) {
+            event.preventDefault()
+            clipboardService.setText(selectedText, 'docs')
+            editor.setStatusLabel(`Copied ${selectedText.length} character${selectedText.length === 1 ? '' : 's'}`)
+            return
+        }
+
+        if (key === 'x' && selectedText.length > 0) {
+            event.preventDefault()
+            clipboardService.setText(selectedText, 'docs')
+            selection.deleteFromDocument()
+            editor.setBody(element.innerHTML)
+            editor.setStatusLabel(`Cut ${selectedText.length} character${selectedText.length === 1 ? '' : 's'}`)
+            return
+        }
+
+        if (key === 'v') {
+            const payload = clipboardService.getSnapshot().payload
+            if (!payload || payload.kind !== 'text') {
+                return
+            }
+
+            event.preventDefault()
+            const inserted = document.execCommand('insertText', false, payload.text)
+            if (!inserted) {
+                const range = selection.getRangeAt(0)
+                range.deleteContents()
+                range.insertNode(document.createTextNode(payload.text))
+                range.collapse(false)
+                selection.removeAllRanges()
+                selection.addRange(range)
+            }
+            editor.setBody(element.innerHTML)
+            editor.setStatusLabel(`Pasted ${payload.text.length} character${payload.text.length === 1 ? '' : 's'}`)
+        }
+    }
+
     return (
         <Window id={id} title="Docs">
             <div className="flex h-full flex-col bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950/45 text-slate-100 md:flex-row">
@@ -93,6 +146,7 @@ export default function DocsApp({ id }: { id: string }) {
                                 suppressContentEditableWarning
                                 className="h-full min-h-[220px] w-full overflow-auto text-sm leading-7 text-slate-100 outline-none"
                                 onInput={() => editor.setBody(editorRef.current?.innerHTML ?? '')}
+                                onKeyDown={handleClipboardShortcut}
                             />
                         </article>
                         <div className="space-y-3">

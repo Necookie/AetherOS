@@ -1,5 +1,6 @@
-import { useRef } from 'react'
+import { useRef, type KeyboardEvent } from 'react'
 import Window from '../../components/system/Window'
+import { clipboardService } from '../../features/clipboard'
 import AttachmentPanel from '../productivity/components/AttachmentPanel'
 import LinkedRecordsPanel from '../productivity/components/LinkedRecordsPanel'
 import RecordListPane from '../productivity/components/RecordListPane'
@@ -27,6 +28,56 @@ export default function NotesApp({ id }: { id: string }) {
         },
     })
 
+    const handleClipboardShortcut = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+        const modifier = event.ctrlKey || event.metaKey
+        if (!modifier || event.altKey) {
+            return
+        }
+
+        const target = event.currentTarget
+        const selectionStart = target.selectionStart ?? 0
+        const selectionEnd = target.selectionEnd ?? 0
+        const selection = editor.body.slice(selectionStart, selectionEnd)
+        const key = event.key.toLowerCase()
+
+        if (key === 'c' && selection.length > 0) {
+            event.preventDefault()
+            clipboardService.setText(selection, 'notes')
+            editor.setStatusLabel(`Copied ${selection.length} character${selection.length === 1 ? '' : 's'}`)
+            return
+        }
+
+        if (key === 'x' && selection.length > 0) {
+            event.preventDefault()
+            clipboardService.setText(selection, 'notes')
+            const nextBody = `${editor.body.slice(0, selectionStart)}${editor.body.slice(selectionEnd)}`
+            editor.setBody(nextBody)
+            editor.setStatusLabel(`Cut ${selection.length} character${selection.length === 1 ? '' : 's'}`)
+            window.requestAnimationFrame(() => {
+                target.selectionStart = selectionStart
+                target.selectionEnd = selectionStart
+            })
+            return
+        }
+
+        if (key === 'v') {
+            const payload = clipboardService.getSnapshot().payload
+            if (!payload || payload.kind !== 'text') {
+                return
+            }
+
+            event.preventDefault()
+            const nextBody = `${editor.body.slice(0, selectionStart)}${payload.text}${editor.body.slice(selectionEnd)}`
+            const nextCaret = selectionStart + payload.text.length
+            editor.setBody(nextBody)
+            editor.setStatusLabel(`Pasted ${payload.text.length} character${payload.text.length === 1 ? '' : 's'}`)
+            window.requestAnimationFrame(() => {
+                target.selectionStart = nextCaret
+                target.selectionEnd = nextCaret
+            })
+        }
+    }
+
     return (
         <Window id={id} title="Notes">
             <div className="flex h-full flex-col bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/50 text-slate-100 md:flex-row">
@@ -52,6 +103,7 @@ export default function NotesApp({ id }: { id: string }) {
                             ref={editorRef}
                             value={editor.body}
                             onChange={(event) => editor.setBody(event.target.value)}
+                            onKeyDown={handleClipboardShortcut}
                             placeholder="Write notes here. Cross-link with [[docs:abc123]] or [[boards:def456]]."
                             className="h-full min-h-[220px] rounded-lg border border-slate-700 bg-slate-950/80 p-3 text-sm leading-6 text-slate-100 outline-none focus:border-[var(--os-accent)]"
                         />
