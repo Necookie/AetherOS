@@ -28,7 +28,8 @@ This project currently focuses on functional OS simulation only.
 - File Manager (VFS-backed):
   - directory navigation/tree
   - icon/details views
-  - rename, move, delete, hidden toggle
+  - copy, cut, paste, rename, move, delete, hidden toggle
+  - conflict-safe paste with pending-cut feedback and destination status
   - keyboard shortcuts
 - Terminal:
   - built-in commands (`help`, `pwd`, `ls`, `cd`, `cat`, `mkdir`, `touch`, `rm`, `mv`, `cp`, `clear`)
@@ -59,6 +60,7 @@ This project currently focuses on functional OS simulation only.
 - Productivity apps:
   - Notes, Docs, Boards
   - autosave, draft recovery, linked records, attachment path validation
+  - shared internal clipboard for text copy/cut/paste across Notes and Docs
 - App Store simulation:
   - install/update/uninstall simulation
   - dependency and version validation
@@ -82,6 +84,7 @@ client/
       app-registry/        # package catalog/version/dependency domain
       background-jobs/     # scheduler
       downloads/           # download queue simulation + manager service
+      clipboard/           # shared typed clipboard state for text and file payloads
       notifications/       # notification domain and flyout
       permissions/         # role guards + local grants
       settings/            # settings defaults, normalization, storage, theming

@@ -87,7 +87,7 @@ Date: 2026-03-09
 - [x] Notification-to-action deep links across apps
 - [x] Download Manager simulation with queue/progress/fail/retry states
 - [x] Browser downloads into VFS `Downloads` directory (simulated pipeline)
-- [ ] Clipboard simulation across apps and file manager operations
+- [x] Clipboard simulation across apps and file manager operations
 - [ ] Better permission UX (central permission panel + revoke controls)
 - [ ] Robust command palette/launcher with fuzzy search and keyboard nav
 
@@ -137,7 +137,7 @@ Keep these unchecked intentionally until functional objectives are complete.
 - [x] Phase 2 - Notification action deep links into apps/windows
 - [x] Phase 3 - Download Manager simulation with queue/progress/retry UX
 - [x] Phase 4 - Browser download pipeline into VFS `Downloads`
-- [ ] Phase 5 - Shared clipboard simulation across apps and file workflows
+- [x] Phase 5 - Shared clipboard simulation across apps and file workflows
 - [ ] Phase 6 - Permission Center with grant review and revoke controls
 - [ ] Phase 7 - Launcher upgraded into a fuzzy command palette with keyboard navigation
 - [ ] Phase 8 - Docs editor blocks for headings, links, and checklists

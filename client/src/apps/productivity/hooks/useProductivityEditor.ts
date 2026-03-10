@@ -234,5 +234,6 @@ export function useProductivityEditor(options: UseProductivityEditorOptions) {
         saveNow,
         discardChanges,
         dirty,
+        setStatusLabel,
     }
 }

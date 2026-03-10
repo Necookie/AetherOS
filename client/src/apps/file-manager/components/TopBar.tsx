@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, ArrowUp, Search, FolderPlus, FilePlus, ArrowUpDown, RotateCcw, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowUp, Search, FolderPlus, FilePlus, ArrowUpDown, RotateCcw, Trash2, Copy, ClipboardPaste, Scissors } from 'lucide-react';
+import { useClipboardSnapshot } from '../../../features/clipboard';
 import { useFsStore } from '../../../stores/fsStore';
 import AddressBar from './AddressBar';
 
@@ -23,8 +24,13 @@ export default function TopBar() {
         restoreItems,
         permanentlyDeleteItems,
         emptyTrash,
+        copyItemsToClipboard,
+        cutItemsToClipboard,
+        pasteClipboard,
     } = useFsStore();
+    const clipboard = useClipboardSnapshot()
     const inTrash = currentPath === '/home/user/.Trash';
+    const hasFileClipboard = clipboard.payload?.kind === 'files' && clipboard.payload.entries.length > 0
 
     const canGoBack = historyIndex > 0;
     const canGoForward = historyIndex < history.length - 1;
@@ -91,6 +97,30 @@ export default function TopBar() {
                     </button>
                 </div>
 
+                <button
+                    onClick={() => copyItemsToClipboard(selectedIds)}
+                    disabled={isMutating || inTrash || selectedIds.length === 0}
+                    className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+                    title="Copy"
+                >
+                    <Copy size={14} />
+                </button>
+                <button
+                    onClick={() => cutItemsToClipboard(selectedIds)}
+                    disabled={isMutating || inTrash || selectedIds.length === 0}
+                    className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+                    title="Cut"
+                >
+                    <Scissors size={14} />
+                </button>
+                <button
+                    onClick={() => pasteClipboard()}
+                    disabled={isMutating || inTrash || !hasFileClipboard}
+                    className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+                    title="Paste into current folder"
+                >
+                    <ClipboardPaste size={14} />
+                </button>
                 <button
                     onClick={() => createFolder('New Folder')}
                     disabled={isMutating || inTrash}

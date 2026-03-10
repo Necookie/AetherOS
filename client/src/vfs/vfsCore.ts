@@ -324,6 +324,36 @@ export class AetherVFS {
         return node;
     }
 
+    public copy(sourcePath: string, destinationDirectoryPath: string, newName?: string, systemOverride: boolean = false): VfsNode {
+        const node = this.resolvePath(sourcePath);
+        if (node.id === this.rootId) {
+            throw new VfsError(ErrorCodes.EPERM, 'Cannot copy root');
+        }
+
+        const destination = this.resolvePath(destinationDirectoryPath);
+        if (destination.type !== VfsNodeType.DIR) {
+            throw new VfsError(ErrorCodes.ENOTDIR, `Not a directory: ${destinationDirectoryPath}`);
+        }
+
+        const nextName = this.validateName(newName ?? node.name);
+        if (!systemOverride) {
+            this.checkWritePermission(this.normalizePath(`${destinationDirectoryPath}/${nextName}`));
+        }
+
+        if (destination.id === node.id || this.isDescendant(destination.id, node.id)) {
+            throw new VfsError(ErrorCodes.EINVAL, 'Cannot copy a directory into itself');
+        }
+
+        if (this.childExists(destination.id, nextName)) {
+            throw new VfsError(ErrorCodes.EEXIST, `File exists: ${nextName}`);
+        }
+
+        const copy = this.cloneNodeRecursive(node, destination.id, nextName);
+        this.invalidatePathCacheSubtree(copy.id);
+        this.invalidatePathCacheSubtree(destination.id);
+        return copy;
+    }
+
     public delete(path: string, systemOverride: boolean = false) {
         this.softDelete(path, systemOverride);
     }
@@ -447,6 +477,15 @@ export class AetherVFS {
     public listTrash(): VfsNode[] {
         this.ensureTrashDirectory();
         return this.readDir(AetherVFS.TRASH_PATH);
+    }
+
+    public allocateAvailableName(destinationDirectoryPath: string, preferredName: string, label: string = 'copy'): string {
+        const destination = this.resolvePath(destinationDirectoryPath);
+        if (destination.type !== VfsNodeType.DIR) {
+            throw new VfsError(ErrorCodes.ENOTDIR, `Not a directory: ${destinationDirectoryPath}`);
+        }
+
+        return this.getAvailableName(destination.id, preferredName, label);
     }
 
     public readDir(path: string): VfsNode[] {
@@ -634,7 +673,49 @@ export class AetherVFS {
         return this.resolvePath(AetherVFS.TRASH_PATH);
     }
 
-    private getAvailableName(parentId: string, preferredName: string, suffix: 'copy' | 'restored' = 'copy'): string {
+    private cloneNodeRecursive(source: VfsNode, destinationParentId: string, name: string): VfsNode {
+        const destinationParent = this.nodes.get(destinationParentId);
+        if (!destinationParent) {
+            throw new VfsError(ErrorCodes.ENOENT, 'Destination parent missing');
+        }
+
+        const destinationIndex = this.childrenByName.get(destinationParentId);
+        if (!destinationIndex) {
+            throw new VfsError(ErrorCodes.EINVAL, 'Destination directory index missing');
+        }
+
+        const now = kernelClock.now();
+        const clone: VfsNode = {
+            ...source,
+            id: this.generateId(),
+            name,
+            parentId: destinationParentId,
+            createdAt: now,
+            modifiedAt: now,
+            childrenIds: [],
+            trash: null,
+        };
+
+        this.nodes.set(clone.id, clone);
+        this.childrenByName.set(clone.id, new Map());
+        destinationIndex.set(clone.name, clone.id);
+        destinationParent.childrenIds.push(clone.id);
+        destinationParent.modifiedAt = now;
+        this.addToSearchIndex(clone);
+
+        for (const childId of source.childrenIds) {
+            const child = this.nodes.get(childId);
+            if (!child) {
+                continue;
+            }
+
+            this.cloneNodeRecursive(child, clone.id, child.name);
+        }
+
+        return clone;
+    }
+
+    private getAvailableName(parentId: string, preferredName: string, label: string = 'copy'): string {
         if (!this.childExists(parentId, preferredName)) {
             return preferredName;
         }
@@ -643,8 +724,6 @@ export class AetherVFS {
         const hasExtension = lastDot > 0 && lastDot < preferredName.length - 1;
         const baseName = hasExtension ? preferredName.slice(0, lastDot) : preferredName;
         const extension = hasExtension ? preferredName.slice(lastDot) : '';
-        const label = suffix === 'restored' ? 'restored' : 'copy';
-
         let counter = 1;
         while (counter < 10000) {
             const candidate = `${baseName} (${label} ${counter})${extension}`;
