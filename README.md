@@ -11,7 +11,7 @@ This project currently focuses on functional OS simulation only.
 
 ## Implemented Features
 
-- Boot sequence: loading screen -> lock/login screen -> desktop shell
+- Boot sequence: staged diagnostics screen -> lock/login screen -> desktop shell
 - Local multi-profile session simulation (admin/member/guest with PIN)
 - Window manager:
   - open, close, focus, z-order
@@ -47,6 +47,10 @@ This project currently focuses on functional OS simulation only.
 - Notifications + background jobs:
   - grouped notification center with actions
   - periodic system-health and latency alerts
+- Boot diagnostics:
+  - deterministic staged service startup with timing indicators
+  - occasional non-blocking advisory warnings for demo realism
+  - clean handoff into the existing login/session flow
 - Productivity apps:
   - Notes, Docs, Boards
   - autosave, draft recovery, linked records, attachment path validation
@@ -149,3 +153,14 @@ npm run build
 - This repository intentionally uses local simulation over backend persistence for now.
 - The next major milestone is functional realism and interaction quality, not auth/database integration.
 - See `feature_plan.md` for the done-vs-needed checklist.
+
+## Roadmap Status
+
+The following items are already implemented and reflected in the updated checklist:
+
+- Window snapping with halves and quarter layouts
+- Desktop and File Manager multi-select with marquee/modifier support
+- Trash flow with restore and permanent delete
+- Task Manager causal impact reporting from simulated app activity
+
+Current work is now centered on the next 10 execution phases listed in `feature_plan.md` and mirrored as implementation prompts in `prompts/phase1.txt` through `prompts/phase10.txt`.
