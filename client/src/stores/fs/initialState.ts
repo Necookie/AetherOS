@@ -21,5 +21,6 @@ export const initialFsState: FsStoreState = {
     }),
     directoryTree: getDirectoryTree('/', false),
     isMutating: false,
+    statusMessage: null,
     error: null,
 };

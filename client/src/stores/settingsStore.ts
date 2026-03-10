@@ -8,6 +8,8 @@ import { validateShortcutOverrides } from '../features/shortcuts/shortcutConfig'
 import { useSessionStore } from './useSessionStore'
 import { getActiveAccount } from '../features/accounts/services/sessionSelectors'
 import { checkSettingsAccess } from '../features/permissions/guards'
+import { formatPermissionDecisionMessage } from '../features/permissions/messages'
+import { notificationService } from '../features/notifications/notificationStore'
 import { permissionService } from '../features/permissions/permissionService'
 
 interface SettingsActions {
@@ -61,13 +63,52 @@ function canMutateSettings() {
     }
 
     if (access.needsPrompt && access.permission) {
-        return permissionService.request(
+        const granted = permissionService.request(
             sessionState.activeUserId,
             access.permission,
             access.reason ?? 'Allow settings changes for this profile.',
         )
+        if (!granted) {
+            notificationService.publish({
+                title: 'Settings change blocked',
+                message: formatPermissionDecisionMessage(access),
+                source: 'Permissions',
+                priority: 'high',
+                groupKey: 'permissions',
+                actions: [
+                    {
+                        id: 'open-permission-center',
+                        label: 'Open Permission Center',
+                        tone: 'primary',
+                        deepLink: {
+                            kind: 'settings-section',
+                            section: 'permissions',
+                        },
+                    },
+                ],
+            })
+        }
+        return granted
     }
 
+    notificationService.publish({
+        title: 'Settings change blocked',
+        message: formatPermissionDecisionMessage(access),
+        source: 'Permissions',
+        priority: 'high',
+        groupKey: 'permissions',
+        actions: [
+            {
+                id: 'open-permission-center',
+                label: 'Open Permission Center',
+                tone: 'primary',
+                deepLink: {
+                    kind: 'settings-section',
+                    section: 'permissions',
+                },
+            },
+        ],
+    })
     return false
 }
 

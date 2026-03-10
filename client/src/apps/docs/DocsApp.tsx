@@ -1,9 +1,11 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type KeyboardEvent } from 'react'
 import { Bold, Italic, List, Underline } from 'lucide-react'
 import Window from '../../components/system/Window'
+import { clipboardService } from '../../features/clipboard'
 import AttachmentPanel from '../productivity/components/AttachmentPanel'
 import LinkedRecordsPanel from '../productivity/components/LinkedRecordsPanel'
 import RecordListPane from '../productivity/components/RecordListPane'
+import { useProductivityDeepLink } from '../productivity/hooks/useProductivityDeepLink'
 import { useProductivityEditor } from '../productivity/hooks/useProductivityEditor'
 
 const TOOLBAR_ACTIONS: Array<{ id: string; label: string; icon: typeof Bold; command: string }> = [
@@ -15,12 +17,23 @@ const TOOLBAR_ACTIONS: Array<{ id: string; label: string; icon: typeof Bold; com
 
 export default function DocsApp({ id }: { id: string }) {
     const editorRef = useRef<HTMLDivElement>(null)
+    const linksRef = useRef<HTMLDivElement>(null)
+    const attachmentsRef = useRef<HTMLDivElement>(null)
     const editor = useProductivityEditor({
         appId: 'docs',
         createDefaults: () => ({
             title: `Document ${new Date().toLocaleDateString()}`,
             body: '<p>Start writing your document...</p>',
         }),
+    })
+    useProductivityDeepLink({
+        appId: 'docs',
+        selectRecord: editor.selectRecord,
+        refs: {
+            editor: editorRef,
+            links: linksRef,
+            attachments: attachmentsRef,
+        },
     })
 
     useEffect(() => {
@@ -35,6 +48,58 @@ export default function DocsApp({ id }: { id: string }) {
     const runCommand = (command: string) => {
         document.execCommand(command)
         editor.setBody(editorRef.current?.innerHTML ?? '')
+    }
+
+    const handleClipboardShortcut = (event: KeyboardEvent<HTMLDivElement>) => {
+        const modifier = event.ctrlKey || event.metaKey
+        if (!modifier || event.altKey) {
+            return
+        }
+
+        const element = editorRef.current
+        const selection = window.getSelection()
+        const key = event.key.toLowerCase()
+        if (!element || !selection || selection.rangeCount === 0 || !element.contains(selection.anchorNode)) {
+            return
+        }
+
+        const selectedText = selection.toString()
+
+        if (key === 'c' && selectedText.length > 0) {
+            event.preventDefault()
+            clipboardService.setText(selectedText, 'docs')
+            editor.setStatusLabel(`Copied ${selectedText.length} character${selectedText.length === 1 ? '' : 's'}`)
+            return
+        }
+
+        if (key === 'x' && selectedText.length > 0) {
+            event.preventDefault()
+            clipboardService.setText(selectedText, 'docs')
+            selection.deleteFromDocument()
+            editor.setBody(element.innerHTML)
+            editor.setStatusLabel(`Cut ${selectedText.length} character${selectedText.length === 1 ? '' : 's'}`)
+            return
+        }
+
+        if (key === 'v') {
+            const payload = clipboardService.getSnapshot().payload
+            if (!payload || payload.kind !== 'text') {
+                return
+            }
+
+            event.preventDefault()
+            const inserted = document.execCommand('insertText', false, payload.text)
+            if (!inserted) {
+                const range = selection.getRangeAt(0)
+                range.deleteContents()
+                range.insertNode(document.createTextNode(payload.text))
+                range.collapse(false)
+                selection.removeAllRanges()
+                selection.addRange(range)
+            }
+            editor.setBody(element.innerHTML)
+            editor.setStatusLabel(`Pasted ${payload.text.length} character${payload.text.length === 1 ? '' : 's'}`)
+        }
     }
 
     return (
@@ -76,21 +141,27 @@ export default function DocsApp({ id }: { id: string }) {
                         <article className="flex min-h-[240px] flex-1 rounded-lg border border-slate-700 bg-slate-950/70 p-4">
                             <div
                                 ref={editorRef}
+                                tabIndex={-1}
                                 contentEditable
                                 suppressContentEditableWarning
                                 className="h-full min-h-[220px] w-full overflow-auto text-sm leading-7 text-slate-100 outline-none"
                                 onInput={() => editor.setBody(editorRef.current?.innerHTML ?? '')}
+                                onKeyDown={handleClipboardShortcut}
                             />
                         </article>
                         <div className="space-y-3">
-                            <LinkedRecordsPanel records={editor.linkedRecords} />
-                            <AttachmentPanel
-                                attachments={editor.attachments}
-                                attachmentInput={editor.attachmentInput}
-                                onAttachmentInputChange={editor.setAttachmentInput}
-                                onAddAttachment={editor.addAttachment}
-                                onRemoveAttachment={editor.removeAttachment}
-                            />
+                            <div ref={linksRef} tabIndex={-1} className="rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--os-accent)]">
+                                <LinkedRecordsPanel records={editor.linkedRecords} />
+                            </div>
+                            <div ref={attachmentsRef} tabIndex={-1} className="rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--os-accent)]">
+                                <AttachmentPanel
+                                    attachments={editor.attachments}
+                                    attachmentInput={editor.attachmentInput}
+                                    onAttachmentInputChange={editor.setAttachmentInput}
+                                    onAddAttachment={editor.addAttachment}
+                                    onRemoveAttachment={editor.removeAttachment}
+                                />
+                            </div>
                         </div>
                     </div>
                 </main>

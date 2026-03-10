@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { Search } from 'lucide-react';
 import type { BookmarkEntry } from '../../../types/browser';
+import type { BrowserDownloadPreset } from '../services/browserDownloadService';
 
 interface NewTabPageProps {
     onSearch: (query: string) => void;
     bookmarks: BookmarkEntry[];
+    downloads: BrowserDownloadPreset[]
+    onStartDownload: (download: BrowserDownloadPreset) => void
 }
 
-export default function NewTabPage({ onSearch, bookmarks }: NewTabPageProps) {
+export default function NewTabPage({ onSearch, bookmarks, downloads, onStartDownload }: NewTabPageProps) {
     const [query, setQuery] = useState('');
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -59,6 +62,34 @@ export default function NewTabPage({ onSearch, bookmarks }: NewTabPageProps) {
                             {bookmark.title}
                         </button>
                     ))}
+                </div>
+            )}
+
+            {downloads.length > 0 && (
+                <div className="mt-8 w-full max-w-3xl rounded-3xl border border-white/60 bg-white/40 p-4 shadow-[0_24px_80px_rgb(15_23_42_/_0.12)] backdrop-blur">
+                    <div className="flex items-center justify-between gap-3">
+                        <div>
+                            <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Quick exports</p>
+                            <h2 className="mt-1 text-sm font-semibold text-slate-800">Simulated browser downloads</h2>
+                        </div>
+                        <span className="rounded-full bg-sky-500/10 px-3 py-1 text-[11px] font-medium text-sky-700">
+                            Saves to Downloads
+                        </span>
+                    </div>
+
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        {downloads.map((download) => (
+                            <button
+                                key={download.id}
+                                onClick={() => onStartDownload(download)}
+                                className="rounded-2xl border border-white/70 bg-white/65 p-4 text-left transition-transform duration-200 hover:-translate-y-0.5 hover:bg-white"
+                            >
+                                <p className="text-sm font-semibold text-slate-800">{download.label}</p>
+                                <p className="mt-1 text-xs text-slate-600">{download.description}</p>
+                                <p className="mt-3 text-[11px] uppercase tracking-[0.18em] text-slate-500">{download.fileName}</p>
+                            </button>
+                        ))}
+                    </div>
                 </div>
             )}
         </div>

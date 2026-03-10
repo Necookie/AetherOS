@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Window from '../../components/system/Window'
 import AttachmentPanel from '../productivity/components/AttachmentPanel'
 import LinkedRecordsPanel from '../productivity/components/LinkedRecordsPanel'
 import RecordListPane from '../productivity/components/RecordListPane'
+import { useProductivityDeepLink } from '../productivity/hooks/useProductivityDeepLink'
 import { useProductivityEditor } from '../productivity/hooks/useProductivityEditor'
 import { createBoardTemplate, parseBoardState, type BoardState } from './boardModel'
 
@@ -11,6 +12,9 @@ function nextId() {
 }
 
 export default function BoardsApp({ id }: { id: string }) {
+    const boardRef = useRef<HTMLElement>(null)
+    const linksRef = useRef<HTMLDivElement>(null)
+    const attachmentsRef = useRef<HTMLDivElement>(null)
     const editor = useProductivityEditor({
         appId: 'boards',
         createDefaults: () => ({
@@ -19,6 +23,15 @@ export default function BoardsApp({ id }: { id: string }) {
         }),
     })
     const [board, setBoard] = useState<BoardState>(createBoardTemplate())
+    useProductivityDeepLink({
+        appId: 'boards',
+        selectRecord: editor.selectRecord,
+        refs: {
+            editor: boardRef,
+            links: linksRef,
+            attachments: attachmentsRef,
+        },
+    })
 
     useEffect(() => {
         setBoard(parseBoardState(editor.body))
@@ -125,7 +138,7 @@ export default function BoardsApp({ id }: { id: string }) {
                         <p className="mt-2 text-xs text-slate-400">{editor.statusLabel}</p>
                     </header>
                     <div className="grid min-h-0 flex-1 gap-3 p-3 xl:grid-cols-[minmax(0,1fr),18rem]">
-                        <section className="grid min-h-[260px] grid-cols-1 gap-3 overflow-auto rounded-lg border border-slate-700 bg-slate-950/60 p-3 md:grid-cols-3">
+                        <section ref={boardRef} tabIndex={-1} className="grid min-h-[260px] grid-cols-1 gap-3 overflow-auto rounded-lg border border-slate-700 bg-slate-950/60 p-3 outline-none focus:ring-2 focus:ring-[var(--os-accent)] md:grid-cols-3">
                             {board.columns.map((column, columnIndex) => (
                                 <div key={column.id} className="rounded-lg border border-slate-700 bg-slate-900/70 p-2">
                                     <div className="mb-2 flex items-center justify-between">
@@ -170,14 +183,18 @@ export default function BoardsApp({ id }: { id: string }) {
                             ))}
                         </section>
                         <div className="space-y-3">
-                            <LinkedRecordsPanel records={editor.linkedRecords} />
-                            <AttachmentPanel
-                                attachments={editor.attachments}
-                                attachmentInput={editor.attachmentInput}
-                                onAttachmentInputChange={editor.setAttachmentInput}
-                                onAddAttachment={editor.addAttachment}
-                                onRemoveAttachment={editor.removeAttachment}
-                            />
+                            <div ref={linksRef} tabIndex={-1} className="rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--os-accent)]">
+                                <LinkedRecordsPanel records={editor.linkedRecords} />
+                            </div>
+                            <div ref={attachmentsRef} tabIndex={-1} className="rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--os-accent)]">
+                                <AttachmentPanel
+                                    attachments={editor.attachments}
+                                    attachmentInput={editor.attachmentInput}
+                                    onAttachmentInputChange={editor.setAttachmentInput}
+                                    onAddAttachment={editor.addAttachment}
+                                    onRemoveAttachment={editor.removeAttachment}
+                                />
+                            </div>
                         </div>
                     </div>
                 </main>

@@ -1,5 +1,6 @@
 import { Folder, FileText, Shield, Clock3 } from 'lucide-react';
 import { useMemo } from 'react';
+import { useClipboardSnapshot } from '../../../features/clipboard';
 import { useFsStore } from '../../../stores/fsStore';
 import { VfsNodeType } from '../../../vfs/types';
 
@@ -12,6 +13,7 @@ export default function SelectionDetails() {
         selectedIds: state.selectedIds,
         items: state.items,
     }));
+    const clipboard = useClipboardSnapshot()
 
     const selectedNode = useMemo(() => {
         if (selectedIds.length !== 1) {
@@ -19,6 +21,11 @@ export default function SelectionDetails() {
         }
         return items.find((item) => item.id === selectedIds[0]) ?? null;
     }, [items, selectedIds]);
+    const pendingCut = clipboard.payload?.kind === 'files'
+        && clipboard.payload.operation === 'cut'
+        && selectedNode
+        ? clipboard.payload.entries.some((entry) => entry.nodeId === selectedNode.id)
+        : false
 
     if (!selectedNode) {
         return (
@@ -37,6 +44,11 @@ export default function SelectionDetails() {
             </div>
 
             <div className="space-y-2 text-xs text-slate-300">
+                {pendingCut && (
+                    <div className="rounded border border-amber-500/40 bg-amber-950/40 px-2 py-1 text-amber-100">
+                        Pending move: this item will be moved on paste.
+                    </div>
+                )}
                 <div className="flex items-center justify-between">
                     <span className="text-slate-500">Type</span>
                     <span>{selectedNode.type === VfsNodeType.DIR ? 'Folder' : 'File'}</span>

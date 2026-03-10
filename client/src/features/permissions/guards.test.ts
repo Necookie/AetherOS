@@ -11,6 +11,7 @@ describe('permission guards', () => {
         expect(memberSettings.allowed).toBe(false)
         expect(memberSettings.needsPrompt).toBe(true)
         expect(memberSettings.permission).toBe('app.launch.settings')
+        expect(memberSettings.recovery).toContain('Permission Center')
     })
 
     it('gates sensitive file actions and protected paths', () => {
@@ -20,9 +21,11 @@ describe('permission guards', () => {
         const memberDelete = checkFileMutationAccess('member', 'delete', '/home/user/Documents/a.txt')
         expect(memberDelete.needsPrompt).toBe(true)
         expect(memberDelete.permission).toBe('files.delete')
+        expect(memberDelete.recovery).toContain('Permission Center')
 
         const guestSystemPath = checkFilePathAccess('guest', '/etc')
         expect(guestSystemPath.allowed).toBe(false)
+        expect(guestSystemPath.recovery).toContain('Switch')
     })
 
     it('blocks unauthorized settings mutations', () => {
@@ -34,5 +37,6 @@ describe('permission guards', () => {
         expect(member.allowed).toBe(false)
         expect(member.needsPrompt).toBe(true)
         expect(member.permission).toBe('settings.modify')
+        expect(member.recovery).toContain('Permission Center')
     })
 })

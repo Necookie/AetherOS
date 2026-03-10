@@ -1,3 +1,4 @@
+import { getPermissionDefinition } from './definitions'
 import type { AccountRole } from '../accounts/types'
 import type { FilePermissionAction, PermissionDecision } from './types'
 
@@ -15,7 +16,12 @@ export function checkAppLaunchAccess(role: AccountRole, appId: string): Permissi
     if (role === 'guest') {
         const allowed = new Set(['browser'])
         if (!allowed.has(appId)) {
-            return { allowed: false, reason: 'Guest profile cannot launch this app.', needsPrompt: false }
+            return {
+                allowed: false,
+                reason: 'Guest profile cannot launch this app.',
+                recovery: 'Switch to a member or admin profile to open this app.',
+                needsPrompt: false,
+            }
         }
         return { allowed: true, reason: null, needsPrompt: false }
     }
@@ -24,6 +30,7 @@ export function checkAppLaunchAccess(role: AccountRole, appId: string): Permissi
         return {
             allowed: false,
             reason: 'Member profile is blocked from launching Task Manager.',
+            recovery: getPermissionDefinition('app.launch.taskmgr').recovery,
             needsPrompt: false,
         }
     }
@@ -32,6 +39,7 @@ export function checkAppLaunchAccess(role: AccountRole, appId: string): Permissi
         return {
             allowed: false,
             reason: 'Settings access requires explicit consent.',
+            recovery: getPermissionDefinition('app.launch.settings').recovery,
             needsPrompt: true,
             permission: 'app.launch.settings',
         }
@@ -46,13 +54,19 @@ export function checkFileMutationAccess(role: AccountRole, action: FilePermissio
     }
 
     if (role === 'guest') {
-        return { allowed: false, reason: 'Guest profile is read-only for files.', needsPrompt: false }
+        return {
+            allowed: false,
+            reason: 'Guest profile is read-only for files.',
+            recovery: 'Switch to a member or admin profile to change files.',
+            needsPrompt: false,
+        }
     }
 
     if (action === 'delete') {
         return {
             allowed: false,
             reason: 'Deleting files requires explicit consent.',
+            recovery: getPermissionDefinition('files.delete').recovery,
             needsPrompt: true,
             permission: 'files.delete',
         }
@@ -62,6 +76,7 @@ export function checkFileMutationAccess(role: AccountRole, action: FilePermissio
         return {
             allowed: false,
             reason: 'Moving files into system paths requires explicit consent.',
+            recovery: getPermissionDefinition('files.move.system').recovery,
             needsPrompt: true,
             permission: 'files.move.system',
         }
@@ -79,6 +94,7 @@ export function checkFilePathAccess(role: AccountRole, path: string): Permission
         return {
             allowed: false,
             reason: 'Guest profile cannot open protected system paths.',
+            recovery: 'Switch to a member or admin profile to open protected paths.',
             needsPrompt: false,
         }
     }
@@ -95,6 +111,7 @@ export function checkSettingsAccess(role: AccountRole): PermissionDecision {
         return {
             allowed: false,
             reason: 'Guest profile cannot modify settings.',
+            recovery: 'Switch to a member or admin profile to change system settings.',
             needsPrompt: false,
         }
     }
@@ -102,6 +119,7 @@ export function checkSettingsAccess(role: AccountRole): PermissionDecision {
     return {
         allowed: false,
         reason: 'Changing settings requires explicit consent.',
+        recovery: getPermissionDefinition('settings.modify').recovery,
         needsPrompt: true,
         permission: 'settings.modify',
     }
