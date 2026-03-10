@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Settings } from 'lucide-react'
+import { Download, Settings } from 'lucide-react'
 
 const ICON_MAP: Record<string, string> = {
     appstore: '/assets/candy-icons/appstore.svg',
@@ -20,6 +20,10 @@ export function ShellAppIcon({ appId, className }: { appId: string; className?: 
     useEffect(() => {
         setHasError(false)
     }, [appId])
+
+    if (appId === 'downloads') {
+        return <Download className={className} />
+    }
 
     if (!iconSrc || hasError) {
         return <Settings className={className} />

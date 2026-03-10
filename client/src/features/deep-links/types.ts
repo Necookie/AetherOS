@@ -9,7 +9,7 @@ export type TaskManagerTab = 'Processes' | 'Performance' | 'Network'
 export type NotificationDeepLink =
     | {
         kind: 'app'
-        appId: 'browser' | 'explorer' | 'settings' | 'taskmgr' | ProductivityAppId
+        appId: 'browser' | 'explorer' | 'settings' | 'taskmgr' | 'downloads' | ProductivityAppId
     }
     | {
         kind: 'productivity-record'
@@ -36,4 +36,6 @@ export type NotificationDeepLink =
         processId?: number
         processName?: string
     }
-
+    | {
+        kind: 'downloads'
+    }

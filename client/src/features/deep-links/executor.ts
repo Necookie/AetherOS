@@ -123,6 +123,14 @@ export function executeNotificationDeepLink(
             )
             return true
         }
+        case 'downloads': {
+            if (!openOrFocusWindow('downloads')) {
+                publishFallback(publishNotification, 'Download Manager unavailable', 'Download Manager could not be opened.')
+                return false
+            }
+
+            return true
+        }
         default:
             return false
     }

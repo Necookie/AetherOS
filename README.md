@@ -48,6 +48,10 @@ This project currently focuses on functional OS simulation only.
   - grouped notification center with typed actions and body deep links
   - smart notification flows that reuse open windows, restore minimized apps, and route into app context
   - periodic system-health and latency alerts with direct Task Manager/Browser destinations
+- Download Manager:
+  - dedicated window with grouped queue, progress bars, retry/cancel controls, and deterministic simulation ticks
+  - completion writes downloaded files into the VFS `Downloads` path and exposes manager/file follow-up actions
+  - shell entry point in the top bar plus notification milestones for complete/fail/retry events
 - Boot diagnostics:
   - deterministic staged service startup with timing indicators
   - occasional non-blocking advisory warnings for demo realism
@@ -70,13 +74,14 @@ This project currently focuses on functional OS simulation only.
 ```text
 client/
   src/
-    apps/                  # app implementations (browser, file manager, notes, docs, boards, settings, app store)
+    apps/                  # app implementations (browser, file manager, downloads, notes, docs, boards, settings, app store)
     components/            # shared UI components (window, terminal, task manager, login)
     config/                # app/window manifest and desktop icon config
     features/
       accounts/            # local profile and session services
       app-registry/        # package catalog/version/dependency domain
       background-jobs/     # scheduler
+      downloads/           # download queue simulation + manager service
       notifications/       # notification domain and flyout
       permissions/         # role guards + local grants
       settings/            # settings defaults, normalization, storage, theming
