@@ -26,6 +26,7 @@ import { getActiveAccount } from '../../accounts/services/sessionSelectors'
 import { SHORTCUT_EVENT_LAUNCHER_TOGGLE } from '../../shortcuts/shortcutEvents'
 import DirtyGuardModal from '../../dirty-guard/components/DirtyGuardModal'
 import { executeNotificationDeepLink } from '../../deep-links/executor'
+import { useDeepLinkIntentStore } from '../../deep-links/store'
 import { registerNotificationDeepLinkExecutor } from '../../notifications/deepLinkRuntime'
 
 function useClickOutside(
@@ -85,6 +86,7 @@ export default function ShellFrame() {
     const lockSession = useSessionStore((state) => state.lockSession)
     const logout = useSessionStore((state) => state.logout)
     const selectLoginUser = useSessionStore((state) => state.selectLoginUser)
+    const openProductivityQuickCreate = useDeepLinkIntentStore((state) => state.openProductivityQuickCreate)
     const [isLauncherOpen, setLauncherOpen] = useState(false)
     const [launcherQuery, setLauncherQuery] = useState('')
     const [isQuickSettingsOpen, setQuickSettingsOpen] = useState(false)
@@ -503,6 +505,10 @@ export default function ShellFrame() {
                             launchApp: launchFromMenu,
                             openDeepLink: (link) => executeNotificationDeepLink(link, notificationService.publish),
                             lockSession,
+                            quickCreateProductivity: (appId, templateId) => {
+                                launchFromMenu(appId)
+                                openProductivityQuickCreate(appId, templateId)
+                            },
                         }}
                     />
                 </div>

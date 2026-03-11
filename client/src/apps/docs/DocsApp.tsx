@@ -4,6 +4,7 @@ import { clipboardService } from '../../features/clipboard'
 import AttachmentPanel from '../productivity/components/AttachmentPanel'
 import LinkedRecordsPanel from '../productivity/components/LinkedRecordsPanel'
 import RecordListPane from '../productivity/components/RecordListPane'
+import TemplatePicker from '../productivity/components/TemplatePicker'
 import { useProductivityDeepLink } from '../productivity/hooks/useProductivityDeepLink'
 import { useProductivityEditor } from '../productivity/hooks/useProductivityEditor'
 import {
@@ -78,19 +79,15 @@ export default function DocsApp({ id }: { id: string }) {
     const blockRefs = useRef<Record<string, HTMLTextAreaElement | null>>({})
     const selectionRef = useRef<SelectionState | null>(null)
     const syncedBodyRef = useRef('')
+    const [isTemplatePickerOpen, setTemplatePickerOpen] = useState(false)
 
-    const editor = useProductivityEditor({
-        appId: 'docs',
-        createDefaults: () => ({
-            title: `Document ${new Date().toLocaleDateString()}`,
-            body: 'Start writing your document...',
-        }),
-    })
+    const editor = useProductivityEditor({ appId: 'docs' })
     const [blocks, setBlocks] = useState<DocsBlock[]>(() => parseDocsDocument(editor.body))
     const [activeBlockId, setActiveBlockId] = useState<string | null>(blocks[0]?.id ?? null)
 
     useProductivityDeepLink({
         appId: 'docs',
+        createRecord: editor.createRecord,
         selectRecord: editor.selectRecord,
         refs: {
             editor: editorRef,
@@ -357,6 +354,7 @@ export default function DocsApp({ id }: { id: string }) {
                     records={editor.records}
                     activeId={editor.activeId}
                     onCreate={editor.createRecord}
+                    onOpenTemplates={() => setTemplatePickerOpen((open) => !open)}
                     onSelect={editor.selectRecord}
                 />
                 <main className="flex min-h-0 flex-1 flex-col">
@@ -412,111 +410,131 @@ export default function DocsApp({ id }: { id: string }) {
                             </button>
                             <button
                                 className="rounded-full border border-cyan-500/40 bg-cyan-500/10 px-3 py-1.5 text-xs text-cyan-100 transition hover:bg-cyan-500/20"
+                                onClick={() => setTemplatePickerOpen((open) => !open)}
+                                type="button"
+                            >
+                                Templates
+                            </button>
+                            <button
+                                className="rounded-full border border-cyan-500/40 bg-cyan-500/10 px-3 py-1.5 text-xs text-cyan-100 transition hover:bg-cyan-500/20"
                                 onClick={() => insertBlockAfterActive('paragraph')}
                                 type="button"
                             >
                                 Add block
                             </button>
                             <p className="ml-auto text-xs text-slate-400">
-                                {editor.statusLabel} · `Ctrl/Cmd+Enter` adds a block
+                                {editor.statusLabel} | `Ctrl/Cmd+Enter` adds a block
                             </p>
                         </div>
                     </header>
                     <div className="grid min-h-0 flex-1 gap-3 p-3 xl:grid-cols-[minmax(0,1fr),19rem]">
-                        <article
-                            ref={editorRef}
-                            tabIndex={-1}
-                            className="min-h-[240px] overflow-auto rounded-lg border border-slate-700 bg-slate-950/70 p-4"
-                        >
-                            <div className="mx-auto flex max-w-3xl flex-col gap-3">
-                                {blocks.map((block) => {
-                                    const styles = getBlockClasses(block)
-                                    const links = extractMarkdownLinks(block.text)
+                        <div className="min-h-0 space-y-3">
+                            {isTemplatePickerOpen ? (
+                                <TemplatePicker
+                                    appLabel="Docs"
+                                    templates={editor.templates}
+                                    onClose={() => setTemplatePickerOpen(false)}
+                                    onSelect={(templateId) => {
+                                        editor.createRecord(templateId)
+                                        setTemplatePickerOpen(false)
+                                    }}
+                                />
+                            ) : null}
+                            <article
+                                ref={editorRef}
+                                tabIndex={-1}
+                                className="min-h-[240px] overflow-auto rounded-lg border border-slate-700 bg-slate-950/70 p-4"
+                            >
+                                <div className="mx-auto flex max-w-3xl flex-col gap-3">
+                                    {blocks.map((block) => {
+                                        const styles = getBlockClasses(block)
+                                        const links = extractMarkdownLinks(block.text)
 
-                                    return (
-                                        <section
-                                            key={block.id}
-                                            className={`rounded-2xl border p-3 shadow-[0_18px_45px_rgba(15,23,42,0.22)] transition ${styles.shell} ${activeBlockId === block.id ? 'ring-1 ring-cyan-400/35' : ''}`}
-                                            onMouseDown={() => setActiveBlockId(block.id)}
-                                        >
-                                            <div className="flex items-start gap-3">
-                                                <div className="mt-1 min-w-[3rem] text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-                                                    {styles.label}
-                                                </div>
-                                                <div className="flex-1">
-                                                    <div className="flex items-start gap-3">
-                                                        {block.type === 'checklist' && (
-                                                            <input
-                                                                checked={Boolean(block.checked)}
-                                                                className="mt-2 h-4 w-4 rounded border-slate-600 bg-slate-900 text-emerald-400 focus:ring-emerald-400"
-                                                                onChange={() => toggleChecklist(block.id)}
-                                                                type="checkbox"
-                                                            />
-                                                        )}
-                                                        <textarea
-                                                            ref={(element) => {
-                                                                blockRefs.current[block.id] = element
-                                                            }}
-                                                            value={block.text}
-                                                            rows={Math.max(1, block.text.split('\n').length)}
-                                                            placeholder={getPlaceholder(block)}
-                                                            className={`w-full resize-none overflow-hidden bg-transparent outline-none placeholder:text-slate-500 ${styles.textarea} ${block.type === 'checklist' && block.checked ? 'text-slate-400 line-through' : ''}`}
-                                                            onChange={(event) => {
-                                                                const nextText = event.target.value
-                                                                resizeTextarea(event.target)
-                                                                replaceBlock(block.id, (current) => ({
-                                                                    ...current,
-                                                                    text: nextText,
-                                                                }), event.target.selectionStart ?? nextText.length)
-                                                            }}
-                                                            onFocus={(event) => {
-                                                                setActiveBlockId(block.id)
-                                                                selectionRef.current = {
-                                                                    blockId: block.id,
-                                                                    start: event.target.selectionStart ?? 0,
-                                                                    end: event.target.selectionEnd ?? 0,
-                                                                }
-                                                                resizeTextarea(event.target)
-                                                            }}
-                                                            onClick={(event) => {
-                                                                selectionRef.current = {
-                                                                    blockId: block.id,
-                                                                    start: event.currentTarget.selectionStart ?? 0,
-                                                                    end: event.currentTarget.selectionEnd ?? 0,
-                                                                }
-                                                            }}
-                                                            onKeyDown={(event) => handleBlockKeyDown(event, block)}
-                                                            onSelect={(event) => {
-                                                                selectionRef.current = {
-                                                                    blockId: block.id,
-                                                                    start: event.currentTarget.selectionStart ?? 0,
-                                                                    end: event.currentTarget.selectionEnd ?? 0,
-                                                                }
-                                                            }}
-                                                        />
+                                        return (
+                                            <section
+                                                key={block.id}
+                                                className={`rounded-2xl border p-3 shadow-[0_18px_45px_rgba(15,23,42,0.22)] transition ${styles.shell} ${activeBlockId === block.id ? 'ring-1 ring-cyan-400/35' : ''}`}
+                                                onMouseDown={() => setActiveBlockId(block.id)}
+                                            >
+                                                <div className="flex items-start gap-3">
+                                                    <div className="mt-1 min-w-[3rem] text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                                                        {styles.label}
                                                     </div>
-                                                    {links.length > 0 && (
-                                                        <div className="mt-3 flex flex-wrap gap-2">
-                                                            {links.map((link) => (
-                                                                <a
-                                                                    key={`${block.id}-${link.href}-${link.label}`}
-                                                                    href={link.href}
-                                                                    className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-[11px] text-cyan-100 transition hover:bg-cyan-400/20"
-                                                                    rel="noreferrer"
-                                                                    target="_blank"
-                                                                >
-                                                                    {link.label}
-                                                                </a>
-                                                            ))}
+                                                    <div className="flex-1">
+                                                        <div className="flex items-start gap-3">
+                                                            {block.type === 'checklist' && (
+                                                                <input
+                                                                    checked={Boolean(block.checked)}
+                                                                    className="mt-2 h-4 w-4 rounded border-slate-600 bg-slate-900 text-emerald-400 focus:ring-emerald-400"
+                                                                    onChange={() => toggleChecklist(block.id)}
+                                                                    type="checkbox"
+                                                                />
+                                                            )}
+                                                            <textarea
+                                                                ref={(element) => {
+                                                                    blockRefs.current[block.id] = element
+                                                                }}
+                                                                value={block.text}
+                                                                rows={Math.max(1, block.text.split('\n').length)}
+                                                                placeholder={getPlaceholder(block)}
+                                                                className={`w-full resize-none overflow-hidden bg-transparent outline-none placeholder:text-slate-500 ${styles.textarea} ${block.type === 'checklist' && block.checked ? 'text-slate-400 line-through' : ''}`}
+                                                                onChange={(event) => {
+                                                                    const nextText = event.target.value
+                                                                    resizeTextarea(event.target)
+                                                                    replaceBlock(block.id, (current) => ({
+                                                                        ...current,
+                                                                        text: nextText,
+                                                                    }), event.target.selectionStart ?? nextText.length)
+                                                                }}
+                                                                onFocus={(event) => {
+                                                                    setActiveBlockId(block.id)
+                                                                    selectionRef.current = {
+                                                                        blockId: block.id,
+                                                                        start: event.target.selectionStart ?? 0,
+                                                                        end: event.target.selectionEnd ?? 0,
+                                                                    }
+                                                                    resizeTextarea(event.target)
+                                                                }}
+                                                                onClick={(event) => {
+                                                                    selectionRef.current = {
+                                                                        blockId: block.id,
+                                                                        start: event.currentTarget.selectionStart ?? 0,
+                                                                        end: event.currentTarget.selectionEnd ?? 0,
+                                                                    }
+                                                                }}
+                                                                onKeyDown={(event) => handleBlockKeyDown(event, block)}
+                                                                onSelect={(event) => {
+                                                                    selectionRef.current = {
+                                                                        blockId: block.id,
+                                                                        start: event.currentTarget.selectionStart ?? 0,
+                                                                        end: event.currentTarget.selectionEnd ?? 0,
+                                                                    }
+                                                                }}
+                                                            />
                                                         </div>
-                                                    )}
+                                                        {links.length > 0 && (
+                                                            <div className="mt-3 flex flex-wrap gap-2">
+                                                                {links.map((link) => (
+                                                                    <a
+                                                                        key={`${block.id}-${link.href}-${link.label}`}
+                                                                        href={link.href}
+                                                                        className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-[11px] text-cyan-100 transition hover:bg-cyan-400/20"
+                                                                        rel="noreferrer"
+                                                                        target="_blank"
+                                                                    >
+                                                                        {link.label}
+                                                                    </a>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </section>
-                                    )
-                                })}
-                            </div>
-                        </article>
+                                            </section>
+                                        )
+                                    })}
+                                </div>
+                            </article>
+                        </div>
                         <div className="space-y-3">
                             <div ref={linksRef} tabIndex={-1} className="rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--os-accent)]">
                                 <LinkedRecordsPanel records={editor.linkedRecords} />

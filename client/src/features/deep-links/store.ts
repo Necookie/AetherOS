@@ -9,9 +9,12 @@ interface IntentEnvelope<T> {
 
 interface DeepLinkIntentStore {
     productivity: Partial<Record<ProductivityAppId, IntentEnvelope<{ recordId: string; panel?: ProductivityPanel }>>>
+    productivityQuickCreate: Partial<Record<ProductivityAppId, IntentEnvelope<{ templateId?: string }>>>
     settings: IntentEnvelope<{ section: SettingsSection }> | null
     taskManager: IntentEnvelope<{ tab: TaskManagerTab; processId?: number; processName?: string }> | null
     openProductivityRecord: (appId: ProductivityAppId, recordId: string, panel?: ProductivityPanel) => void
+    openProductivityQuickCreate: (appId: ProductivityAppId, templateId?: string) => void
+    clearProductivityQuickCreate: (appId: ProductivityAppId) => void
     openSettingsSection: (section: SettingsSection) => void
     openTaskManagerView: (tab: TaskManagerTab, processId?: number, processName?: string) => void
 }
@@ -25,6 +28,7 @@ function nextNonce() {
 
 export const useDeepLinkIntentStore = create<DeepLinkIntentStore>((set) => ({
     productivity: {},
+    productivityQuickCreate: {},
     settings: null,
     taskManager: null,
     openProductivityRecord: (appId, recordId, panel) => set((state) => ({
@@ -37,6 +41,21 @@ export const useDeepLinkIntentStore = create<DeepLinkIntentStore>((set) => ({
                     panel,
                 },
             },
+        },
+    })),
+    openProductivityQuickCreate: (appId, templateId) => set((state) => ({
+        productivityQuickCreate: {
+            ...state.productivityQuickCreate,
+            [appId]: {
+                nonce: nextNonce(),
+                payload: { templateId },
+            },
+        },
+    })),
+    clearProductivityQuickCreate: (appId) => set((state) => ({
+        productivityQuickCreate: {
+            ...state.productivityQuickCreate,
+            [appId]: undefined,
         },
     })),
     openSettingsSection: (section) => set({
@@ -52,4 +71,3 @@ export const useDeepLinkIntentStore = create<DeepLinkIntentStore>((set) => ({
         },
     }),
 }))
-
