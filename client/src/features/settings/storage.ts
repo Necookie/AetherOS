@@ -11,7 +11,15 @@ export interface SettingsStorage {
 }
 
 function canUseStorage() {
-    return typeof window !== 'undefined' && Boolean(window.localStorage)
+    if (typeof window === 'undefined') {
+        return false
+    }
+
+    try {
+        return Boolean(window.localStorage)
+    } catch {
+        return false
+    }
 }
 
 export function createSettingsStorage(): SettingsStorage {

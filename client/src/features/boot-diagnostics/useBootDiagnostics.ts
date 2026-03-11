@@ -11,6 +11,7 @@ export function useBootDiagnostics({ onComplete }: UseBootDiagnosticsOptions): B
     const [runId] = useState(() => getBootRunId(getStorage()))
     const [elapsedMs, setElapsedMs] = useState(0)
     const onCompleteCalledRef = useRef(false)
+    const handoffTimeoutRef = useRef<number | null>(null)
     const services = useMemo(() => createBootRun(runId), [runId])
     const totalDurationMs = useMemo(() => getBootTotalDuration(services), [services])
     const snapshot = useMemo(() => getBootSnapshot(services, elapsedMs), [elapsedMs, services])
@@ -37,13 +38,21 @@ export function useBootDiagnostics({ onComplete }: UseBootDiagnosticsOptions): B
             return
         }
 
-        onCompleteCalledRef.current = true
-        const timeoutId = window.setTimeout(() => {
+        if (handoffTimeoutRef.current !== null) {
+            window.clearTimeout(handoffTimeoutRef.current)
+        }
+
+        handoffTimeoutRef.current = window.setTimeout(() => {
+            onCompleteCalledRef.current = true
+            handoffTimeoutRef.current = null
             onComplete()
         }, BOOT_HANDOFF_MS)
 
         return () => {
-            window.clearTimeout(timeoutId)
+            if (handoffTimeoutRef.current !== null) {
+                window.clearTimeout(handoffTimeoutRef.current)
+                handoffTimeoutRef.current = null
+            }
         }
     }, [onComplete, snapshot.readinessState])
 
