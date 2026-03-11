@@ -46,6 +46,10 @@ This project currently focuses on functional OS simulation only.
   - accessibility controls + checks
   - behavior toggles (animations/translucency/clock seconds)
   - permission center with per-profile grant review, source context, and revoke controls
+- Shell command palette:
+  - fuzzy ranked results across apps, settings destinations, task manager views, downloads, and session actions
+  - full keyboard navigation with default focus, arrow selection, Enter execution, and Escape close
+  - highlighted match fragments plus per-result metadata for status and action context
 - Notifications + background jobs:
   - grouped notification center with typed actions and body deep links
   - smart notification flows that reuse open windows, restore minimized apps, and route into app context

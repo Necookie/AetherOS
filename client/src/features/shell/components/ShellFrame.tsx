@@ -25,6 +25,8 @@ import { useSessionStore } from '../../../stores/useSessionStore'
 import { getActiveAccount } from '../../accounts/services/sessionSelectors'
 import { SHORTCUT_EVENT_LAUNCHER_TOGGLE } from '../../shortcuts/shortcutEvents'
 import DirtyGuardModal from '../../dirty-guard/components/DirtyGuardModal'
+import { executeNotificationDeepLink } from '../../deep-links/executor'
+import { registerNotificationDeepLinkExecutor } from '../../notifications/deepLinkRuntime'
 
 function useClickOutside(
     refs: Array<RefObject<HTMLElement | null>>,
@@ -135,6 +137,10 @@ export default function ShellFrame() {
 
         window.addEventListener(SHORTCUT_EVENT_LAUNCHER_TOGGLE, onToggleLauncher)
         return () => window.removeEventListener(SHORTCUT_EVENT_LAUNCHER_TOGGLE, onToggleLauncher)
+    }, [])
+
+    useEffect(() => {
+        registerNotificationDeepLinkExecutor((link) => executeNotificationDeepLink(link, notificationService.publish))
     }, [])
 
     useEffect(() => {
@@ -490,7 +496,12 @@ export default function ShellFrame() {
                         taskbarPosition={taskbarPosition}
                         query={launcherQuery}
                         onQueryChange={setLauncherQuery}
-                        onLaunch={launchFromMenu}
+                        onClose={() => setLauncherOpen(false)}
+                        executor={{
+                            launchApp: launchFromMenu,
+                            openDeepLink: (link) => executeNotificationDeepLink(link, notificationService.publish),
+                            lockSession,
+                        }}
                     />
                 </div>
             )}

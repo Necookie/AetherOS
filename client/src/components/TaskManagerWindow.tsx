@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { shallow } from 'zustand/shallow'
-import { useDeepLinkIntentStore } from '../features/deep-links'
-import type { TaskManagerTab } from '../features/deep-links'
+import { useDeepLinkIntentStore } from '../features/deep-links/store'
+import type { TaskManagerTab } from '../features/deep-links/types'
 import { useKernelStore } from '../stores/useKernelStore'
 import Window from './system/Window'
 
