@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import type { RefObject } from 'react'
-import { useDeepLinkIntentStore } from '../../../features/deep-links'
+import { useDeepLinkIntentStore } from '../../../features/deep-links/store'
 import type { ProductivityAppId } from '../../../features/productivity'
 
 interface FocusRefs {

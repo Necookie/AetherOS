@@ -1,4 +1,4 @@
-import type { NotificationDeepLink } from '../deep-links'
+import type { NotificationDeepLink } from '../deep-links/types'
 
 export type NotificationPriority = 'low' | 'normal' | 'high'
 
