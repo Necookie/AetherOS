@@ -8,12 +8,14 @@ import {
     PRODUCTIVITY_ROOT_PATH,
 } from './paths'
 import { buildRecordReference, extractLinkTargets, parseRecordReference } from './links'
+import { createTemplateRecord, getDefaultProductivityTemplate, getProductivityTemplate } from './templates'
 import type {
     CommitDraftResult,
     ProductivityAppId,
     ProductivityDraft,
     ProductivityRecord,
     SaveRecordResult,
+    ProductivityTemplate,
 } from './types'
 
 interface ProductivityRepositoryOptions {
@@ -100,6 +102,29 @@ export class ProductivityRepository {
 
         this.upsertFile(getRecordFilePath(input.appId, id), JSON.stringify(record, null, 2))
         return record
+    }
+
+    public createRecordFromTemplate(appId: ProductivityAppId, templateId?: string): ProductivityRecord {
+        const template = templateId
+            ? getProductivityTemplate(appId, templateId)
+            : getDefaultProductivityTemplate(appId)
+
+        if (!template) {
+            throw new Error(`Template not found for ${appId}:${templateId ?? 'default'}`)
+        }
+
+        return this.createRecordFromTemplateDefinition(template)
+    }
+
+    public createRecordFromTemplateDefinition(template: ProductivityTemplate): ProductivityRecord {
+        const record = createTemplateRecord(template)
+
+        return this.createRecord({
+            appId: template.appId,
+            title: record.title,
+            body: record.body,
+            attachments: record.attachments,
+        })
     }
 
     public updateRecord(input: UpdateRecordInput): SaveRecordResult {

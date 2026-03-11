@@ -1,9 +1,10 @@
-import { useRef, type KeyboardEvent } from 'react'
+import { useRef, useState, type KeyboardEvent } from 'react'
 import Window from '../../components/system/Window'
 import { clipboardService } from '../../features/clipboard'
 import AttachmentPanel from '../productivity/components/AttachmentPanel'
 import LinkedRecordsPanel from '../productivity/components/LinkedRecordsPanel'
 import RecordListPane from '../productivity/components/RecordListPane'
+import TemplatePicker from '../productivity/components/TemplatePicker'
 import { useProductivityDeepLink } from '../productivity/hooks/useProductivityDeepLink'
 import { useProductivityEditor } from '../productivity/hooks/useProductivityEditor'
 
@@ -11,15 +12,11 @@ export default function NotesApp({ id }: { id: string }) {
     const editorRef = useRef<HTMLTextAreaElement>(null)
     const linksRef = useRef<HTMLDivElement>(null)
     const attachmentsRef = useRef<HTMLDivElement>(null)
-    const editor = useProductivityEditor({
-        appId: 'notes',
-        createDefaults: () => ({
-            title: `Note ${new Date().toLocaleTimeString()}`,
-            body: '',
-        }),
-    })
+    const [isTemplatePickerOpen, setTemplatePickerOpen] = useState(false)
+    const editor = useProductivityEditor({ appId: 'notes' })
     useProductivityDeepLink({
         appId: 'notes',
+        createRecord: editor.createRecord,
         selectRecord: editor.selectRecord,
         refs: {
             editor: editorRef,
@@ -86,6 +83,7 @@ export default function NotesApp({ id }: { id: string }) {
                     records={editor.records}
                     activeId={editor.activeId}
                     onCreate={editor.createRecord}
+                    onOpenTemplates={() => setTemplatePickerOpen((open) => !open)}
                     onSelect={editor.selectRecord}
                 />
                 <main className="flex min-h-0 flex-1 flex-col">
@@ -96,17 +94,39 @@ export default function NotesApp({ id }: { id: string }) {
                             placeholder="Note title"
                             className="w-full rounded-md border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none focus:border-[var(--os-accent)]"
                         />
-                        <p className="mt-2 text-xs text-slate-400">{editor.statusLabel}</p>
+                        <div className="mt-2 flex items-center justify-between gap-3">
+                            <p className="text-xs text-slate-400">{editor.statusLabel}</p>
+                            <button
+                                type="button"
+                                onClick={() => setTemplatePickerOpen((open) => !open)}
+                                className="rounded-full border border-emerald-500/35 bg-emerald-500/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-emerald-100 transition hover:bg-emerald-500/20"
+                            >
+                                Templates
+                            </button>
+                        </div>
                     </header>
                     <div className="grid min-h-0 flex-1 gap-3 p-3 lg:grid-cols-[minmax(0,1fr),19rem]">
-                        <textarea
-                            ref={editorRef}
-                            value={editor.body}
-                            onChange={(event) => editor.setBody(event.target.value)}
-                            onKeyDown={handleClipboardShortcut}
-                            placeholder="Write notes here. Cross-link with [[docs:abc123]] or [[boards:def456]]."
-                            className="h-full min-h-[220px] rounded-lg border border-slate-700 bg-slate-950/80 p-3 text-sm leading-6 text-slate-100 outline-none focus:border-[var(--os-accent)]"
-                        />
+                        <div className="min-h-0 space-y-3">
+                            {isTemplatePickerOpen ? (
+                                <TemplatePicker
+                                    appLabel="Notes"
+                                    templates={editor.templates}
+                                    onClose={() => setTemplatePickerOpen(false)}
+                                    onSelect={(templateId) => {
+                                        editor.createRecord(templateId)
+                                        setTemplatePickerOpen(false)
+                                    }}
+                                />
+                            ) : null}
+                            <textarea
+                                ref={editorRef}
+                                value={editor.body}
+                                onChange={(event) => editor.setBody(event.target.value)}
+                                onKeyDown={handleClipboardShortcut}
+                                placeholder="Write notes here. Cross-link with [[docs:abc123]] or [[boards:def456]]."
+                                className="h-full min-h-[220px] rounded-lg border border-slate-700 bg-slate-950/80 p-3 text-sm leading-6 text-slate-100 outline-none focus:border-[var(--os-accent)]"
+                            />
+                        </div>
                         <div className="space-y-3">
                             <div ref={linksRef} tabIndex={-1} className="rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--os-accent)]">
                                 <LinkedRecordsPanel records={editor.linkedRecords} />

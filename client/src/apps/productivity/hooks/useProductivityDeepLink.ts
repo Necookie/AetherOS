@@ -11,12 +11,15 @@ interface FocusRefs {
 
 interface Options {
     appId: ProductivityAppId
+    createRecord: (templateId?: string) => void
     selectRecord: (recordId: string) => void
     refs?: FocusRefs
 }
 
-export function useProductivityDeepLink({ appId, selectRecord, refs }: Options) {
+export function useProductivityDeepLink({ appId, createRecord, selectRecord, refs }: Options) {
     const intent = useDeepLinkIntentStore((state) => state.productivity[appId])
+    const quickCreateIntent = useDeepLinkIntentStore((state) => state.productivityQuickCreate[appId])
+    const clearQuickCreateIntent = useDeepLinkIntentStore((state) => state.clearProductivityQuickCreate)
     const editorRef = refs?.editor
     const linksRef = refs?.links
     const attachmentsRef = refs?.attachments
@@ -39,4 +42,19 @@ export function useProductivityDeepLink({ appId, selectRecord, refs }: Options) 
 
         return () => window.clearTimeout(timerId)
     }, [attachmentsRef, editorRef, intent, linksRef, selectRecord])
+
+    useEffect(() => {
+        if (!quickCreateIntent) {
+            return
+        }
+
+        createRecord(quickCreateIntent.payload.templateId)
+        clearQuickCreateIntent(appId)
+
+        const timerId = window.setTimeout(() => {
+            editorRef?.current?.focus()
+        }, 40)
+
+        return () => window.clearTimeout(timerId)
+    }, [appId, clearQuickCreateIntent, createRecord, editorRef, quickCreateIntent])
 }
