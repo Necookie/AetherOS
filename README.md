@@ -66,6 +66,7 @@ This project currently focuses on functional OS simulation only.
   - Notes, Docs, Boards
   - autosave, draft recovery, linked records, attachment path validation
   - Docs now supports structured blocks for headings, inline links, and checklist items with migration from legacy rich-text records
+  - Boards now supports drag-and-drop card moves, in-column reordering, column reordering, and keyboard move fallbacks from focused drag handles
   - shared internal clipboard for text copy/cut/paste across Notes and Docs
 - App Store simulation:
   - install/update/uninstall simulation
