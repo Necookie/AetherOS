@@ -393,7 +393,9 @@ export default function ShellFrame() {
     }
 
     if (!activeAccount) {
-        return null
+        return (
+            <div className="os-desktop-bg relative h-full w-full" aria-hidden="true" />
+        )
     }
 
     return (
