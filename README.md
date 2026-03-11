@@ -65,6 +65,7 @@ This project currently focuses on functional OS simulation only.
 - Productivity apps:
   - Notes, Docs, Boards
   - autosave, draft recovery, linked records, attachment path validation
+  - Docs now supports structured blocks for headings, inline links, and checklist items with migration from legacy rich-text records
   - shared internal clipboard for text copy/cut/paste across Notes and Docs
 - App Store simulation:
   - install/update/uninstall simulation

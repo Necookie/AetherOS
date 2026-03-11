@@ -40,4 +40,23 @@ describe('ProductivityRepository', () => {
         expect(repository.removeRecord('notes', created.id)).toBe(true)
         expect(repository.getRecord('notes', created.id)).toBeNull()
     })
+
+    it('keeps docs links discoverable after structured body saves', () => {
+        const repository = new ProductivityRepository({
+            now: () => 1000,
+            generateId: () => 'doc-1',
+        })
+
+        const created = repository.createRecord({
+            appId: 'docs',
+            title: 'Spec',
+            body: '## Launch\n\nRead [status](https://example.com) and ping [[notes:abc123]].\n\n- [ ] Review checklist',
+        })
+
+        expect(created.links).toEqual(['notes:abc123'])
+
+        const loaded = repository.getRecord('docs', created.id)
+        expect(loaded?.body).toContain('- [ ] Review checklist')
+        expect(loaded?.links).toEqual(['notes:abc123'])
+    })
 })
