@@ -89,7 +89,7 @@ Date: 2026-03-09
 - [x] Browser downloads into VFS `Downloads` directory (simulated pipeline)
 - [x] Clipboard simulation across apps and file manager operations
 - [x] Better permission UX (central permission panel + revoke controls)
-- [ ] Robust command palette/launcher with fuzzy search and keyboard nav
+- [x] Robust command palette/launcher with fuzzy search and keyboard nav
 
 ### P2 - Productivity and Data Workflows
 
@@ -139,7 +139,7 @@ Keep these unchecked intentionally until functional objectives are complete.
 - [x] Phase 4 - Browser download pipeline into VFS `Downloads`
 - [x] Phase 5 - Shared clipboard simulation across apps and file workflows
 - [x] Phase 6 - Permission Center with grant review and revoke controls
-- [ ] Phase 7 - Launcher upgraded into a fuzzy command palette with keyboard navigation
+- [x] Phase 7 - Launcher upgraded into a fuzzy command palette with keyboard navigation
 - [ ] Phase 8 - Docs editor blocks for headings, links, and checklists
 - [ ] Phase 9 - Boards drag-and-drop for cards and column ordering
 - [ ] Phase 10 - Productivity templates and quick-create entry points
