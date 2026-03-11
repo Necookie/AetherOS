@@ -23,6 +23,17 @@ describe('command palette model', () => {
         expect(results.find((item) => item.id === 'command-downloads-open')?.kind).toBe('command')
     })
 
+    it('surfaces productivity quick-create templates through launcher search', () => {
+        const results = getCommandPaletteResults('lecture', {})
+
+        expect(results[0]?.id).toBe('command-template-notes-lecture-notes')
+        expect(results[0]?.action).toEqual({
+            kind: 'productivity-template',
+            appId: 'notes',
+            templateId: 'lecture-notes',
+        })
+    })
+
     it('wraps keyboard navigation across the result set', () => {
         expect(getNextCommandPaletteIndex(-1, 1, 4)).toBe(0)
         expect(getNextCommandPaletteIndex(0, -1, 4)).toBe(3)
@@ -34,16 +45,23 @@ describe('command palette model', () => {
         const launchApp = vi.fn()
         const openDeepLink = vi.fn(() => true)
         const lockSession = vi.fn()
+        const quickCreateProductivity = vi.fn()
 
-        expect(executeCommandPaletteAction({ kind: 'app', appId: 'notes' }, { launchApp, openDeepLink, lockSession })).toBe(true)
+        expect(executeCommandPaletteAction({ kind: 'app', appId: 'notes' }, { launchApp, openDeepLink, lockSession, quickCreateProductivity })).toBe(true)
         expect(executeCommandPaletteAction({
             kind: 'deep-link',
             link: { kind: 'downloads' },
-        }, { launchApp, openDeepLink, lockSession })).toBe(true)
-        expect(executeCommandPaletteAction({ kind: 'lock-session' }, { launchApp, openDeepLink, lockSession })).toBe(true)
+        }, { launchApp, openDeepLink, lockSession, quickCreateProductivity })).toBe(true)
+        expect(executeCommandPaletteAction({
+            kind: 'productivity-template',
+            appId: 'docs',
+            templateId: 'project-brief',
+        }, { launchApp, openDeepLink, lockSession, quickCreateProductivity })).toBe(true)
+        expect(executeCommandPaletteAction({ kind: 'lock-session' }, { launchApp, openDeepLink, lockSession, quickCreateProductivity })).toBe(true)
 
         expect(launchApp).toHaveBeenCalledWith('notes')
         expect(openDeepLink).toHaveBeenCalledWith({ kind: 'downloads' })
+        expect(quickCreateProductivity).toHaveBeenCalledWith('docs', 'project-brief')
         expect(lockSession).toHaveBeenCalledTimes(1)
     })
 })

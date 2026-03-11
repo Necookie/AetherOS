@@ -48,6 +48,7 @@ This project currently focuses on functional OS simulation only.
   - permission center with per-profile grant review, source context, and revoke controls
 - Shell command palette:
   - fuzzy ranked results across apps, settings destinations, task manager views, downloads, and session actions
+  - quick-create commands for Notes, Docs, and Boards templates
   - full keyboard navigation with default focus, arrow selection, Enter execution, and Escape close
   - highlighted match fragments plus per-result metadata for status and action context
 - Notifications + background jobs:
@@ -65,8 +66,10 @@ This project currently focuses on functional OS simulation only.
 - Productivity apps:
   - Notes, Docs, Boards
   - autosave, draft recovery, linked records, attachment path validation
+  - shared template system with quick-create from app chrome and the shell command palette
   - Docs now supports structured blocks for headings, inline links, and checklist items with migration from legacy rich-text records
   - Boards now supports drag-and-drop card moves, in-column reordering, column reordering, and keyboard move fallbacks from focused drag handles
+  - template starters include lecture notes, project briefs, sprint boards, and personal planning flows
   - shared internal clipboard for text copy/cut/paste across Notes and Docs
 - App Store simulation:
   - install/update/uninstall simulation

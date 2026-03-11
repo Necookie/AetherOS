@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
-import { Download, FolderSearch, Lock, Search, SearchX, Settings2, Sparkles, Workflow } from 'lucide-react'
+import { Lock, Search, SearchX, Sparkles } from 'lucide-react'
 import { ShellAppIcon } from '../model/appIcons'
 import { useWindowStore } from '../../../stores/windowStore'
 import {
@@ -108,27 +108,14 @@ export default function AppLauncher({
     }
 
     const renderResultIcon = (item: CommandPaletteMatch) => {
-        if (item.kind === 'app') {
+        if (item.iconAppId) {
             return <ShellAppIcon appId={item.iconAppId ?? item.id} className="h-8 w-8" />
         }
 
         if (item.action.kind === 'lock-session') {
             return <Lock className="h-5 w-5 text-slate-700" />
         }
-
-        if (item.action.kind === 'deep-link' && item.action.link.kind === 'downloads') {
-            return <Download className="h-5 w-5 text-slate-700" />
-        }
-
-        if (item.action.kind === 'deep-link' && item.action.link.kind === 'file-manager-path') {
-            return <FolderSearch className="h-5 w-5 text-slate-700" />
-        }
-
-        if (item.action.kind === 'deep-link' && item.action.link.kind === 'task-manager') {
-            return <Workflow className="h-5 w-5 text-slate-700" />
-        }
-
-        return <Settings2 className="h-5 w-5 text-slate-700" />
+        return <Search className="h-5 w-5 text-slate-700" />
     }
 
     return (
