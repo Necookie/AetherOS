@@ -93,7 +93,7 @@ Date: 2026-03-09
 
 ### P2 - Productivity and Data Workflows
 
-- [ ] Richer Docs editor (headings, links, checklist blocks)
+- [x] Richer Docs editor (headings, links, checklist blocks)
 - [ ] Boards drag-and-drop cards and reorder columns
 - [ ] Notes/Docs/Boards templates and quick-create flows
 - [ ] Cross-app "open linked record" jumps with split-view option
@@ -140,6 +140,6 @@ Keep these unchecked intentionally until functional objectives are complete.
 - [x] Phase 5 - Shared clipboard simulation across apps and file workflows
 - [x] Phase 6 - Permission Center with grant review and revoke controls
 - [x] Phase 7 - Launcher upgraded into a fuzzy command palette with keyboard navigation
-- [ ] Phase 8 - Docs editor blocks for headings, links, and checklists
+- [x] Phase 8 - Docs editor blocks for headings, links, and checklists
 - [ ] Phase 9 - Boards drag-and-drop for cards and column ordering
 - [ ] Phase 10 - Productivity templates and quick-create entry points
