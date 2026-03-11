@@ -60,6 +60,8 @@ function App() {
         resetWindows()
     }, [activeUserId, fsNavigate, fsRefresh, hydrateSettings, resetWindows])
 
+    const shouldShowLogin = isBootComplete && (isLocked || !activeUserId)
+
     return (
         <AppErrorBoundary
             onResetDesktop={() => {
@@ -69,8 +71,8 @@ function App() {
         >
             <div className="h-screen w-screen overflow-hidden text-[var(--os-text-0)]">
                 {!isBootComplete && <LoadingScreen onComplete={() => setBootComplete(true)} />}
-                {isBootComplete && isLocked && <LoginScreen />}
-                {isBootComplete && !isLocked && <DesktopShell />}
+                {shouldShowLogin && <LoginScreen />}
+                {isBootComplete && !shouldShowLogin && <DesktopShell />}
             </div>
         </AppErrorBoundary>
     )
