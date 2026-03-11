@@ -8,12 +8,12 @@ import { notificationService } from '../../features/notifications/notificationSt
 import { formatPermissionRevokedMessage } from '../../features/permissions/messages'
 import { permissionService } from '../../features/permissions/permissionService'
 import { createThemeTokens, resolveWallpaper } from '../../features/settings/themeEngine'
-import { useDeepLinkIntentStore } from '../../features/deep-links'
+import { useDeepLinkIntentStore } from '../../features/deep-links/store'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { useSessionStore } from '../../stores/useSessionStore'
 import type { PermissionId } from '../../features/permissions/types'
 import type { ThemePalette } from '../../features/settings/types'
-import type { SettingsSection } from '../../features/deep-links'
+import type { SettingsSection } from '../../features/deep-links/types'
 import {
     REMAPPABLE_SHORTCUTS,
     resolveShortcutKeymap,
