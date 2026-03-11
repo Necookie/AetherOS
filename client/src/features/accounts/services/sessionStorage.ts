@@ -16,11 +16,12 @@ function canUseStorage() {
 function normalize(raw: Partial<SessionSnapshot>): SessionSnapshot {
     const selectedUser = accountService.getProfile(raw.selectedLoginUserId ?? '')
     const activeUser = accountService.getProfile(raw.activeUserId ?? '')
+    const hasActiveUser = Boolean(activeUser?.id)
 
     return {
         activeUserId: activeUser?.id ?? null,
-        selectedLoginUserId: selectedUser?.id ?? accountService.getDefaultLoginUserId(),
-        isLocked: raw.isLocked ?? true,
+        selectedLoginUserId: selectedUser?.id ?? activeUser?.id ?? accountService.getDefaultLoginUserId(),
+        isLocked: hasActiveUser ? (raw.isLocked ?? true) : true,
     }
 }
 
