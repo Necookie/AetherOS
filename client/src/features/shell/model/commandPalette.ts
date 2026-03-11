@@ -1,4 +1,5 @@
 import type { NotificationDeepLink, SettingsSection, TaskManagerTab } from '../../deep-links/types'
+import { getProductivityTemplates, type ProductivityAppId } from '../../productivity'
 import { SHELL_APPS } from './appCatalog'
 import { getLauncherStatusLabel, resolveLauncherStatus, type LauncherStatus } from './launcher'
 
@@ -19,6 +20,11 @@ export type CommandPaletteAction =
     }
     | {
         kind: 'lock-session'
+    }
+    | {
+        kind: 'productivity-template'
+        appId: ProductivityAppId
+        templateId?: string
     }
 
 export interface CommandPaletteEntry {
@@ -42,6 +48,7 @@ export interface CommandPaletteExecutor {
     launchApp: (appId: string) => void
     openDeepLink: (link: NotificationDeepLink) => boolean
     lockSession: () => void
+    quickCreateProductivity: (appId: ProductivityAppId, templateId?: string) => void
 }
 
 type InternalEntry = CommandPaletteEntry & {
@@ -77,6 +84,35 @@ const TASK_MANAGER_COMMANDS: Array<{ tab: TaskManagerTab; label: string; subtitl
 ]
 
 function buildCommandEntries(): InternalEntry[] {
+    const quickCreateEntries = (['notes', 'docs', 'boards'] as ProductivityAppId[]).flatMap((appId, appIndex) => {
+        const appTitle = SHELL_APPS.find((app) => app.id === appId)?.title ?? appId
+        const templateEntries = getProductivityTemplates(appId).map((template, templateIndex) => ({
+            id: `command-template-${appId}-${template.id}`,
+            kind: 'command' as const,
+            title: `Quick create ${template.title}`,
+            subtitle: template.summary,
+            metadata: `Quick create / ${appTitle}`,
+            iconAppId: appId,
+            action: {
+                kind: 'productivity-template' as const,
+                appId,
+                templateId: template.id,
+            },
+            priority: 48 - appIndex * 4 - templateIndex,
+            aliases: [
+                'quick create',
+                `new ${appTitle}`,
+                `${appTitle} template`,
+                template.title,
+                template.summary,
+                template.category,
+                ...template.highlights,
+            ],
+        }))
+
+        return templateEntries
+    })
+
     const settingsEntries = SETTINGS_COMMANDS.map((item, index) => ({
         id: `command-settings-${item.section}`,
         kind: 'command' as const,
@@ -114,6 +150,7 @@ function buildCommandEntries(): InternalEntry[] {
     }))
 
     return [
+        ...quickCreateEntries,
         ...settingsEntries,
         ...taskManagerEntries,
         {
@@ -367,6 +404,11 @@ export function executeCommandPaletteAction(
 
     if (action.kind === 'deep-link') {
         return executor.openDeepLink(action.link)
+    }
+
+    if (action.kind === 'productivity-template') {
+        executor.quickCreateProductivity(action.appId, action.templateId)
+        return true
     }
 
     executor.lockSession()

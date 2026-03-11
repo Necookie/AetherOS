@@ -3,6 +3,7 @@ import Window from '../../components/system/Window'
 import AttachmentPanel from '../productivity/components/AttachmentPanel'
 import LinkedRecordsPanel from '../productivity/components/LinkedRecordsPanel'
 import RecordListPane from '../productivity/components/RecordListPane'
+import TemplatePicker from '../productivity/components/TemplatePicker'
 import { useProductivityDeepLink } from '../productivity/hooks/useProductivityDeepLink'
 import { useProductivityEditor } from '../productivity/hooks/useProductivityEditor'
 import { createBoardTemplate, parseBoardState, type BoardState } from './boardModel'
@@ -20,13 +21,8 @@ export default function BoardsApp({ id }: { id: string }) {
     const boardRef = useRef<HTMLElement>(null)
     const linksRef = useRef<HTMLDivElement>(null)
     const attachmentsRef = useRef<HTMLDivElement>(null)
-    const editor = useProductivityEditor({
-        appId: 'boards',
-        createDefaults: () => ({
-            title: `Board ${new Date().toLocaleDateString()}`,
-            body: JSON.stringify(createBoardTemplate(), null, 2),
-        }),
-    })
+    const [isTemplatePickerOpen, setTemplatePickerOpen] = useState(false)
+    const editor = useProductivityEditor({ appId: 'boards' })
     const [board, setBoard] = useState<BoardState>(createBoardTemplate())
     const [dragState, setDragState] = useState<DragState | null>(null)
     const [cardDropTarget, setCardDropTarget] = useState<{ columnId: string; index: number } | null>(null)
@@ -34,6 +30,7 @@ export default function BoardsApp({ id }: { id: string }) {
 
     useProductivityDeepLink({
         appId: 'boards',
+        createRecord: editor.createRecord,
         selectRecord: editor.selectRecord,
         refs: {
             editor: boardRef,
@@ -199,6 +196,7 @@ export default function BoardsApp({ id }: { id: string }) {
                     records={editor.records}
                     activeId={editor.activeId}
                     onCreate={editor.createRecord}
+                    onOpenTemplates={() => setTemplatePickerOpen((open) => !open)}
                     onSelect={editor.selectRecord}
                 />
                 <main className="flex min-h-0 flex-1 flex-col">
@@ -209,14 +207,37 @@ export default function BoardsApp({ id }: { id: string }) {
                             placeholder="Board title"
                             className="w-full rounded-md border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none focus:border-[var(--os-accent)]"
                         />
-                        <p className="mt-2 text-xs text-slate-400">{editor.statusLabel}</p>
-                        <p className="mt-1 text-[11px] uppercase tracking-[0.24em] text-slate-500">
-                            Drag handles to move cards and columns. Keyboard fallback: card handle `Alt` + arrows, column handle `Alt` + `Shift` + arrows.
-                        </p>
+                        <div className="mt-2 flex items-start justify-between gap-3">
+                            <div>
+                                <p className="text-xs text-slate-400">{editor.statusLabel}</p>
+                                <p className="mt-1 text-[11px] uppercase tracking-[0.24em] text-slate-500">
+                                    Drag handles to move cards and columns. Keyboard fallback: card handle `Alt` + arrows, column handle `Alt` + `Shift` + arrows.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setTemplatePickerOpen((open) => !open)}
+                                className="rounded-full border border-cyan-500/35 bg-cyan-500/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-cyan-100 transition hover:bg-cyan-500/20"
+                            >
+                                Templates
+                            </button>
+                        </div>
                     </header>
                     <div className="grid min-h-0 flex-1 gap-3 p-3 xl:grid-cols-[minmax(0,1fr),18rem]">
-                        <section ref={boardRef} tabIndex={-1} className="overflow-auto rounded-xl border border-slate-700/80 bg-slate-950/55 p-3 outline-none focus:ring-2 focus:ring-[var(--os-accent)]">
-                            <div className="flex min-h-full items-start gap-3">
+                        <div className="min-h-0 space-y-3">
+                            {isTemplatePickerOpen ? (
+                                <TemplatePicker
+                                    appLabel="Boards"
+                                    templates={editor.templates}
+                                    onClose={() => setTemplatePickerOpen(false)}
+                                    onSelect={(templateId) => {
+                                        editor.createRecord(templateId)
+                                        setTemplatePickerOpen(false)
+                                    }}
+                                />
+                            ) : null}
+                            <section ref={boardRef} tabIndex={-1} className="overflow-auto rounded-xl border border-slate-700/80 bg-slate-950/55 p-3 outline-none focus:ring-2 focus:ring-[var(--os-accent)]">
+                                <div className="flex min-h-full items-start gap-3">
                                 <div
                                     onDragOver={(event) => {
                                         if (dragState?.type !== 'column') {
@@ -365,8 +386,9 @@ export default function BoardsApp({ id }: { id: string }) {
                                         />
                                     </Fragment>
                                 ))}
-                            </div>
-                        </section>
+                                </div>
+                            </section>
+                        </div>
                         <div className="space-y-3">
                             <div ref={linksRef} tabIndex={-1} className="rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--os-accent)]">
                                 <LinkedRecordsPanel records={editor.linkedRecords} />

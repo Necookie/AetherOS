@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { fsService } from '../../vfs/vfsService'
 import { ProductivityRepository } from './repository'
+import type { ProductivityTemplate } from './types'
 
 describe('ProductivityRepository', () => {
     beforeEach(() => {
@@ -58,5 +59,35 @@ describe('ProductivityRepository', () => {
         const loaded = repository.getRecord('docs', created.id)
         expect(loaded?.body).toContain('- [ ] Review checklist')
         expect(loaded?.links).toEqual(['notes:abc123'])
+    })
+
+    it('creates records from templates with starter body, links, and attachments', () => {
+        const repository = new ProductivityRepository({
+            now: () => 1000,
+            generateId: () => 'board-1',
+        })
+        const template: ProductivityTemplate = {
+            id: 'linked-board',
+            appId: 'boards',
+            title: 'Linked board',
+            summary: 'Tracks execution from a starter board.',
+            category: 'Delivery',
+            highlights: ['Linked work', 'Attachments'],
+            record: {
+                title: 'Sprint board',
+                body: JSON.stringify({
+                    summary: 'Coordinate with [[docs:doc-42]] before review.',
+                    columns: [],
+                }),
+                attachments: ['/home/user/Documents/readme.txt'],
+            },
+        }
+
+        const created = repository.createRecordFromTemplateDefinition(template)
+
+        expect(created.title).toBe('Sprint board')
+        expect(created.attachments).toEqual(['/home/user/Documents/readme.txt'])
+        expect(created.links).toEqual(['docs:doc-42'])
+        expect(repository.getRecord('boards', created.id)?.body).toContain('[[docs:doc-42]]')
     })
 })

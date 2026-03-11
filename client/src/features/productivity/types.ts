@@ -1,5 +1,21 @@
 export type ProductivityAppId = 'notes' | 'docs' | 'boards'
 
+export interface ProductivityTemplateRecord {
+    title: string
+    body: string
+    attachments?: string[]
+}
+
+export interface ProductivityTemplate {
+    id: string
+    appId: ProductivityAppId
+    title: string
+    summary: string
+    category: string
+    highlights: string[]
+    record: ProductivityTemplateRecord
+}
+
 export interface ProductivityRecord {
     id: string
     appId: ProductivityAppId

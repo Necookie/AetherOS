@@ -1,17 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { autosaveDraft, productivityRepository } from '../../../features/productivity'
+import { autosaveDraft, getDefaultProductivityTemplate, getProductivityTemplates, productivityRepository } from '../../../features/productivity'
 import { reportKernelActivity } from '../../../features/kernel/activityReporter'
 import { dirtyGuardService } from '../../../features/dirty-guard/dirtyGuardService'
 import type { ProductivityAppId, ProductivityRecord, ProductivityRepository } from '../../../features/productivity'
 
-interface Defaults {
-    title: string
-    body: string
-}
-
 interface UseProductivityEditorOptions {
     appId: ProductivityAppId
-    createDefaults: () => Defaults
     repository?: ProductivityRepository
 }
 
@@ -37,6 +31,8 @@ function isEqualSnapshot(left: Snapshot, right: Snapshot) {
 
 export function useProductivityEditor(options: UseProductivityEditorOptions) {
     const repository = options.repository ?? productivityRepository
+    const templates = useMemo(() => getProductivityTemplates(options.appId), [options.appId])
+    const defaultTemplate = useMemo(() => getDefaultProductivityTemplate(options.appId), [options.appId])
     const [records, setRecords] = useState<ProductivityRecord[]>(() => repository.listRecords(options.appId))
     const [activeId, setActiveId] = useState<string | null>(records[0]?.id ?? null)
     const [title, setTitle] = useState('')
@@ -69,36 +65,6 @@ export function useProductivityEditor(options: UseProductivityEditorOptions) {
         loadedSnapshotRef.current = snapshotFromState(nextTitle, nextBody, nextAttachments)
         setStatusLabel(existingDraft ? 'Recovered unsaved draft' : 'Ready')
     }, [options.appId, repository])
-
-    const createRecord = useCallback(() => {
-        const defaults = options.createDefaults()
-        const created = repository.createRecord({
-            appId: options.appId,
-            title: defaults.title,
-            body: defaults.body,
-        })
-
-        setRecords((current) => [created, ...current])
-        loadRecord(created.id)
-        setStatusLabel('Created')
-    }, [loadRecord, options.appId, options.createDefaults, repository])
-
-    useEffect(() => {
-        if (records.length === 0) {
-            createRecord()
-            return
-        }
-
-        if (activeId) {
-            loadRecord(activeId)
-            return
-        }
-
-        if (records[0]) {
-            loadRecord(records[0].id)
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
 
     const dirty = useMemo(() => (
         !isEqualSnapshot(loadedSnapshotRef.current, snapshotFromState(title, body, attachments))
@@ -157,6 +123,33 @@ export function useProductivityEditor(options: UseProductivityEditorOptions) {
 
         return true
     }, [activeId, attachments, body, options.appId, repository, title])
+
+    const createRecord = useCallback((templateId?: string) => {
+        void saveNow()
+
+        const created = repository.createRecordFromTemplate(options.appId, templateId ?? defaultTemplate?.id)
+
+        setRecords((current) => [created, ...current])
+        loadRecord(created.id)
+        setStatusLabel(templateId ? 'Created from template' : 'Created')
+    }, [defaultTemplate?.id, loadRecord, options.appId, repository, saveNow])
+
+    useEffect(() => {
+        if (records.length === 0) {
+            createRecord()
+            return
+        }
+
+        if (activeId) {
+            loadRecord(activeId)
+            return
+        }
+
+        if (records[0]) {
+            loadRecord(records[0].id)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     const discardChanges = useCallback(() => {
         if (!activeId) {
@@ -224,6 +217,8 @@ export function useProductivityEditor(options: UseProductivityEditorOptions) {
         linkedRecords,
         statusLabel,
         attachmentInput,
+        templates,
+        defaultTemplate,
         setTitle,
         setBody,
         createRecord,

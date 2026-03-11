@@ -95,7 +95,7 @@ Date: 2026-03-09
 
 - [x] Richer Docs editor (headings, links, checklist blocks)
 - [x] Boards drag-and-drop cards and reorder columns
-- [ ] Notes/Docs/Boards templates and quick-create flows
+- [x] Notes/Docs/Boards templates and quick-create flows
 - [ ] Cross-app "open linked record" jumps with split-view option
 - [ ] Export/import for productivity records (JSON/Markdown)
 
@@ -142,4 +142,4 @@ Keep these unchecked intentionally until functional objectives are complete.
 - [x] Phase 7 - Launcher upgraded into a fuzzy command palette with keyboard navigation
 - [x] Phase 8 - Docs editor blocks for headings, links, and checklists
 - [x] Phase 9 - Boards drag-and-drop for cards and column ordering
-- [ ] Phase 10 - Productivity templates and quick-create entry points
+- [x] Phase 10 - Productivity templates and quick-create entry points
