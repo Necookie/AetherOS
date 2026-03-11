@@ -44,9 +44,15 @@ export const useKernelStore = create<KernelState>((set, get) => ({
             return
         }
 
-        const worker = new Worker(new URL('../worker/kernel.worker.ts', import.meta.url), {
-            type: 'module',
-        })
+        let worker: Worker
+        try {
+            worker = new Worker(new URL('../worker/kernel.worker.ts', import.meta.url), {
+                type: 'module',
+            })
+        } catch (error) {
+            console.error('AetherOS kernel worker failed to start:', error)
+            return
+        }
 
         worker.onmessage = (e) => {
             if (!isKernelEventMessage(e.data)) {

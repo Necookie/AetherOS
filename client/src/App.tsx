@@ -11,6 +11,7 @@ import { useSessionStore } from './stores/useSessionStore'
 import { useSettingsStore } from './stores/settingsStore'
 import { useFsStore } from './stores/fsStore'
 import { HOME_PATH } from './stores/fs/initialState'
+import { getActiveAccount } from './features/accounts/services/sessionSelectors'
 
 function App() {
     useApplySettings()
@@ -22,12 +23,17 @@ function App() {
     const isLocked = useSessionStore((state) => state.isLocked)
     const lockSession = useSessionStore((state) => state.lockSession)
     const activeUserId = useSessionStore((state) => state.activeUserId)
+    const sessionAccounts = useSessionStore((state) => state.accounts)
     const hydrateSettings = useSettingsStore((state) => state.hydrateForActiveUser)
     const fsRefresh = useFsStore((state) => state.refresh)
     const fsNavigate = useFsStore((state) => state.navigate)
     const [isBootComplete, setBootComplete] = useState(false)
     const managedAppIds = useMemo(() => new Set(DEFAULT_APPS.map((app) => app.id)), [])
     const previousRunningAppIdsRef = useRef<Set<string>>(new Set())
+    const activeAccount = useMemo(
+        () => getActiveAccount({ activeUserId, accounts: sessionAccounts }),
+        [activeUserId, sessionAccounts],
+    )
 
     useEffect(() => {
         initKernel()
@@ -60,7 +66,7 @@ function App() {
         resetWindows()
     }, [activeUserId, fsNavigate, fsRefresh, hydrateSettings, resetWindows])
 
-    const shouldShowLogin = isBootComplete && (isLocked || !activeUserId)
+    const shouldShowLogin = isBootComplete && (isLocked || !activeAccount)
 
     return (
         <AppErrorBoundary
@@ -70,6 +76,15 @@ function App() {
             }}
         >
             <div className="h-screen w-screen overflow-hidden text-[var(--os-text-0)]">
+                <div className="pointer-events-none fixed left-3 top-3 z-[10000] max-w-[22rem] rounded-lg border border-black/20 bg-black/75 px-3 py-2 font-term text-[11px] leading-5 text-white shadow-lg">
+                    <div>debug.bootComplete: {String(isBootComplete)}</div>
+                    <div>debug.isLocked: {String(isLocked)}</div>
+                    <div>debug.activeUserId: {activeUserId ?? 'null'}</div>
+                    <div>debug.activeAccount: {activeAccount?.id ?? 'null'}</div>
+                    <div>debug.showLogin: {String(shouldShowLogin)}</div>
+                    <div>debug.showDesktop: {String(isBootComplete && !shouldShowLogin)}</div>
+                    <div>debug.processes: {processes.length}</div>
+                </div>
                 {!isBootComplete && <LoadingScreen onComplete={() => setBootComplete(true)} />}
                 {shouldShowLogin && <LoginScreen />}
                 {isBootComplete && !shouldShowLogin && <DesktopShell />}

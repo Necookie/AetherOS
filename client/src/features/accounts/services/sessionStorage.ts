@@ -10,7 +10,15 @@ const DEFAULT_SNAPSHOT: SessionSnapshot = {
 }
 
 function canUseStorage() {
-    return typeof window !== 'undefined' && Boolean(window.localStorage)
+    if (typeof window === 'undefined') {
+        return false
+    }
+
+    try {
+        return Boolean(window.localStorage)
+    } catch {
+        return false
+    }
 }
 
 function normalize(raw: Partial<SessionSnapshot>): SessionSnapshot {
