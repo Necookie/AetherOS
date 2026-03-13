@@ -198,9 +198,6 @@ export default function DesktopIcons({ iconScale = 1 }: { iconScale?: number }) 
                     data-selectable-id={icon.id}
                     onClick={(event) => {
                         selectIcon(event, icon.id)
-                        if (!event.ctrlKey && !event.metaKey && !event.shiftKey) {
-                            launchFromIcon(icon.id)
-                        }
                     }}
                     onDoubleClick={(event) => {
                         event.stopPropagation()
