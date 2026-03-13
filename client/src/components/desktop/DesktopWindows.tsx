@@ -18,7 +18,7 @@ export default function DesktopWindows() {
     useWindowShortcuts()
 
     return (
-        <div className="relative z-20 h-full w-full pointer-events-auto">
+        <div className="pointer-events-none relative z-20 h-full w-full">
             {windowOrder.map((windowId) => (
                 <WindowRenderer key={windowId} id={windowId} />
             ))}

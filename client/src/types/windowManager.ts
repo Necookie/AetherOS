@@ -13,6 +13,7 @@ export interface WindowState {
     isMinimized: boolean
     isMaximized: boolean
     isFocused: boolean
+    isEntering?: boolean
     previousBounds?: WindowBounds
     snapMode?: SnapMode
 }

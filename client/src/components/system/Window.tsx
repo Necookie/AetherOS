@@ -13,6 +13,7 @@ export default function Window({ id, title, children }: WindowProps) {
     const windowState = useWindowStore(selectWindowById(id))
     const zIndex = useWindowStore(selectWindowZIndex(id))
     const closeWindow = useWindowStore((state) => state.closeWindow)
+    const completeWindowEnter = useWindowStore((state) => state.completeWindowEnter)
     const focusWindow = useWindowStore((state) => state.focusWindow)
     const toggleMinimize = useWindowStore((state) => state.toggleMinimize)
     const toggleMaximize = useWindowStore((state) => state.toggleMaximize)
@@ -39,12 +40,31 @@ export default function Window({ id, title, children }: WindowProps) {
         windowRef.current?.focus({ preventScroll: true })
     }, [windowState])
 
+    useEffect(() => {
+        if (!windowState?.state.isEntering) {
+            return
+        }
+
+        let frameA = 0
+        let frameB = 0
+        frameA = requestAnimationFrame(() => {
+            frameB = requestAnimationFrame(() => {
+                completeWindowEnter(id)
+            })
+        })
+
+        return () => {
+            cancelAnimationFrame(frameA)
+            cancelAnimationFrame(frameB)
+        }
+    }, [completeWindowEnter, id, windowState?.state.isEntering])
+
     if (!windowState) {
         return null
     }
 
     const { bounds, state } = windowState
-    const { isFocused, isMaximized, isMinimized } = state
+    const { isEntering, isFocused, isMaximized, isMinimized } = state
 
     const startResize = (event: React.PointerEvent<HTMLDivElement>, axis: 'x' | 'y' | 'xy') => {
         event.stopPropagation()
@@ -83,9 +103,9 @@ export default function Window({ id, title, children }: WindowProps) {
             aria-modal={false}
             aria-label={title}
             tabIndex={0}
-            className={`animate-os-window-in os-window-motion absolute flex flex-col overflow-hidden border transition-[left,top,width,height,opacity,transform]
+            className={`pointer-events-auto os-window-motion absolute flex flex-col overflow-hidden border transition-[left,top,width,height,opacity,transform]
                 ${isMaximized ? 'rounded-none' : 'rounded-lg'}
-                ${isMinimized ? 'pointer-events-none opacity-0 scale-[0.98]' : isFocused ? 'brightness-100 opacity-100' : 'opacity-95'}
+                ${isMinimized ? 'pointer-events-none opacity-0 scale-[0.98]' : isEntering ? 'opacity-0 translate-y-2 scale-[0.985]' : isFocused ? 'brightness-100 opacity-100 translate-y-0 scale-100' : 'opacity-95 translate-y-0 scale-100'}
             `}
             style={{
                 left: bounds.x,

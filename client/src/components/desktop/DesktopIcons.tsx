@@ -1,6 +1,6 @@
 import { DESKTOP_ICONS } from '../../config/desktop'
-import { Folder, Monitor, Settings, Store } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState, type ComponentType, type MouseEvent } from 'react'
+import { Folder, Monitor, Settings } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType, type KeyboardEvent, type MouseEvent } from 'react'
 import { shallow } from 'zustand/shallow'
 import { DEFAULT_APPS } from '../../config/windows'
 import { useWindowStore } from '../../stores/windowStore'
@@ -9,13 +9,11 @@ import { createSelectionRect, rectFromDomRect, rectIntersects, resolveClickSelec
 const DESKTOP_ICON_ASSETS: Record<string, string> = {
     pc: '/assets/candy-icons/pc.svg',
     settings: '/assets/candy-icons/settings.svg',
-    appstore: '/assets/candy-icons/appstore.svg',
 }
 
 const ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
     pc: Monitor,
     settings: Settings,
-    appstore: Store,
 }
 
 export default function DesktopIcons({ iconScale = 1 }: { iconScale?: number }) {
@@ -36,10 +34,15 @@ export default function DesktopIcons({ iconScale = 1 }: { iconScale?: number }) 
     const [selectedIconIds, setSelectedIconIds] = useState<string[]>([])
     const [selectionAnchorId, setSelectionAnchorId] = useState<string | null>(null)
 
-    const appLookup = new Map(DEFAULT_APPS.map((app) => [app.id, app]))
+    const appLookup = useMemo(() => new Map(DEFAULT_APPS.map((app) => [app.id, app])), [])
 
-    const launchFromIcon = (iconId: string) => {
-        const appId = iconId === 'pc' ? 'explorer' : iconId
+    const launchFromIcon = useCallback((iconId: string) => {
+        const icon = DESKTOP_ICONS.find((entry) => entry.id === iconId)
+        const appId = icon?.appId
+        if (!appId) {
+            return
+        }
+
         const app = appLookup.get(appId)
         if (!app) {
             return
@@ -57,7 +60,34 @@ export default function DesktopIcons({ iconScale = 1 }: { iconScale?: number }) 
         }
 
         focusWindow(appId)
-    }
+    }, [appLookup, focusWindow, openWindow, restoreWindow, windows])
+
+    const selectIcon = useCallback((event: MouseEvent<HTMLButtonElement>, iconId: string) => {
+        event.stopPropagation()
+        const nextSelection = resolveClickSelection({
+            currentSelection: selectedIconIds,
+            orderedIds: DESKTOP_ICONS.map((desktopIcon) => desktopIcon.id),
+            clickedId: iconId,
+            anchorId: selectionAnchorId,
+            multi: event.ctrlKey || event.metaKey,
+            range: event.shiftKey,
+        })
+        setSelectedIconIds(nextSelection.selectedIds)
+        setSelectionAnchorId(nextSelection.anchorId)
+        return nextSelection.selectedIds
+    }, [selectedIconIds, selectionAnchorId])
+
+    const handleIconKeyDown = useCallback((event: KeyboardEvent<HTMLButtonElement>, iconId: string) => {
+        if (event.key !== 'Enter' && event.key !== ' ') {
+            return
+        }
+
+        event.preventDefault()
+        event.stopPropagation()
+        setSelectedIconIds([iconId])
+        setSelectionAnchorId(iconId)
+        launchFromIcon(iconId)
+    }, [launchFromIcon])
 
     const updateMarqueeSelection = useCallback((nextRect: SelectionRect) => {
         const container = containerRef.current
@@ -167,23 +197,17 @@ export default function DesktopIcons({ iconScale = 1 }: { iconScale?: number }) 
                     key={icon.id}
                     data-selectable-id={icon.id}
                     onClick={(event) => {
-                        event.stopPropagation()
-                        const nextSelection = resolveClickSelection({
-                            currentSelection: selectedIconIds,
-                            orderedIds: DESKTOP_ICONS.map((desktopIcon) => desktopIcon.id),
-                            clickedId: icon.id,
-                            anchorId: selectionAnchorId,
-                            multi: event.ctrlKey || event.metaKey,
-                            range: event.shiftKey,
-                        })
-                        setSelectedIconIds(nextSelection.selectedIds)
-                        setSelectionAnchorId(nextSelection.anchorId)
+                        selectIcon(event, icon.id)
                     }}
                     onDoubleClick={(event) => {
                         event.stopPropagation()
+                        setSelectedIconIds([icon.id])
+                        setSelectionAnchorId(icon.id)
                         launchFromIcon(icon.id)
                     }}
+                    onKeyDown={(event) => handleIconKeyDown(event, icon.id)}
                     className={`group flex w-20 flex-col items-center rounded-lg p-2 transition-colors sm:w-24 ${selectedIconIds.includes(icon.id) ? 'bg-white/45 outline outline-1 outline-white/80' : 'hover:bg-white/35'}`}
+                    aria-label={`Open ${icon.label}`}
                 >
                     {(() => {
                         const iconSrc = DESKTOP_ICON_ASSETS[icon.id]
