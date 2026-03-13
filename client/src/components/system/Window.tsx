@@ -83,7 +83,7 @@ export default function Window({ id, title, children }: WindowProps) {
             aria-modal={false}
             aria-label={title}
             tabIndex={0}
-            className={`animate-os-window-in os-window-motion absolute flex flex-col overflow-hidden border transition-[left,top,width,height,opacity,transform]
+            className={`pointer-events-auto animate-os-window-in os-window-motion absolute flex flex-col overflow-hidden border transition-[left,top,width,height,opacity,transform]
                 ${isMaximized ? 'rounded-none' : 'rounded-lg'}
                 ${isMinimized ? 'pointer-events-none opacity-0 scale-[0.98]' : isFocused ? 'brightness-100 opacity-100' : 'opacity-95'}
             `}
