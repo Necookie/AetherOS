@@ -76,15 +76,6 @@ function App() {
             }}
         >
             <div className="h-screen w-screen overflow-hidden text-[var(--os-text-0)]">
-                <div className="pointer-events-none fixed left-3 top-3 z-[10000] max-w-[22rem] rounded-lg border border-black/20 bg-black/75 px-3 py-2 font-term text-[11px] leading-5 text-white shadow-lg">
-                    <div>debug.bootComplete: {String(isBootComplete)}</div>
-                    <div>debug.isLocked: {String(isLocked)}</div>
-                    <div>debug.activeUserId: {activeUserId ?? 'null'}</div>
-                    <div>debug.activeAccount: {activeAccount?.id ?? 'null'}</div>
-                    <div>debug.showLogin: {String(shouldShowLogin)}</div>
-                    <div>debug.showDesktop: {String(isBootComplete && !shouldShowLogin)}</div>
-                    <div>debug.processes: {processes.length}</div>
-                </div>
                 {!isBootComplete && <LoadingScreen onComplete={() => setBootComplete(true)} />}
                 {shouldShowLogin && <LoginScreen />}
                 {isBootComplete && !shouldShowLogin && <DesktopShell />}
