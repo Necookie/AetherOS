@@ -3,6 +3,7 @@ export { getWindowZIndex, bringWindowToFront } from './focus'
 export {
     applyWindowSnapState,
     closeWindowState,
+    completeWindowEnterState,
     createWindowSnapshot,
     focusWindowState,
     openWindowState,

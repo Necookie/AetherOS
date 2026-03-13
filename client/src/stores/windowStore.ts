@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import {
     applyWindowSnapState,
     closeWindowState,
+    completeWindowEnterState,
     createWindowSnapshot,
     focusWindowState,
     getWindowZIndex,
@@ -33,6 +34,7 @@ export interface WindowStore {
     openWindow: (app: AppDefinition) => void
     closeWindow: (id: string) => void
     closeWindowImmediate: (id: string) => void
+    completeWindowEnter: (id: string) => void
     focusWindow: (id: string) => void
     toggleMinimize: (id: string) => void
     toggleMaximize: (id: string) => void
@@ -142,6 +144,7 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
 
         return nextState
     }),
+    completeWindowEnter: (id) => set((state) => completeWindowEnterState(state, id)),
     focusWindow: (id) => set((state) => focusWindowState(state, id)),
     toggleMinimize: (id) => {
         const windowData = get().windows[id]

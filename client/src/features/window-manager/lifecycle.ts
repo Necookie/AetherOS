@@ -31,6 +31,7 @@ export function openWindowState(state: WindowSnapshot, app: AppDefinition, viewp
         component: app.component,
         bounds: getCenteredBounds(defaultBounds, viewport),
         state: {
+            isEntering: true,
             isMinimized: false,
             isMaximized: false,
             isFocused: true,
@@ -147,6 +148,27 @@ export function toggleMaximizeState(state: WindowSnapshot, id: string, viewport:
                     isMaximized: isMaximizing,
                     snapMode: undefined,
                     previousBounds: isMaximizing ? focusedWindow.bounds : focusedWindow.state.previousBounds,
+                },
+            },
+        },
+    }
+}
+
+export function completeWindowEnterState(state: WindowSnapshot, id: string): WindowSnapshot {
+    const targetWindow = state.windows[id]
+    if (!targetWindow || !targetWindow.state.isEntering) {
+        return state
+    }
+
+    return {
+        ...state,
+        windows: {
+            ...state.windows,
+            [id]: {
+                ...targetWindow,
+                state: {
+                    ...targetWindow.state,
+                    isEntering: false,
                 },
             },
         },
