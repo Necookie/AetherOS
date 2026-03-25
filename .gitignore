@@ -4,5 +4,6 @@ dist/
 dist-tsc/
 build/
 .DS_Store
+# Local prompt-engineering workspace
 prompts/
 references/
