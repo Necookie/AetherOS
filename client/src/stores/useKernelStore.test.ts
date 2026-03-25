@@ -26,6 +26,7 @@ describe('kernel store worker integration', () => {
         WorkerMock.mockClear()
         useKernelStore.setState({
             processes: [],
+            tickCount: 0,
             cpuUsage: 0,
             memUsage: 0,
             diskUsage: 0,
@@ -49,7 +50,19 @@ describe('kernel store worker integration', () => {
             type: 'TICK',
             payload: {
                 protocolVersion: KERNEL_PROTOCOL_VERSION,
-                processes: [{ pid: 9, name: 'Aether Browser', appId: 'browser', cpu: 6, mem: 220, disk: 3, net: 8, status: 'running' }],
+                tickCount: 5,
+                processes: [{
+                    pid: 9,
+                    name: 'Aether Browser',
+                    appId: 'browser',
+                    cpu: 6,
+                    mem: 220,
+                    disk: 3,
+                    net: 8,
+                    status: 'running',
+                    lastTransition: 'Ready -> Running',
+                    lastTransitionTick: 5,
+                }],
                 cpuUsage: 26,
                 memUsage: 42,
                 diskUsage: 14,
@@ -62,6 +75,7 @@ describe('kernel store worker integration', () => {
 
         const state = useKernelStore.getState()
         expect(state.processes).toHaveLength(1)
+        expect(state.tickCount).toBe(5)
         expect(state.cpuUsage).toBe(26)
         expect(state.recentSpikes.net).toBe(12)
         expect(state.topContributors[0]?.source).toBe('Browser navigation')
@@ -79,6 +93,7 @@ describe('kernel store worker integration', () => {
             type: 'TICK',
             payload: {
                 protocolVersion: 1,
+                tickCount: 1,
                 processes: [],
                 cpuUsage: 99,
                 memUsage: 99,

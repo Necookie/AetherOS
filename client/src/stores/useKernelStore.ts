@@ -12,6 +12,7 @@ import type { Process } from '../features/kernel/types'
 export type { Process } from '../features/kernel/types'
 
 interface KernelState {
+    tickCount: number
     processes: Process[]
     cpuUsage: number
     memUsage: number
@@ -31,6 +32,7 @@ interface KernelState {
 
 export const useKernelStore = create<KernelState>((set, get) => ({
     processes: [],
+    tickCount: 0,
     cpuUsage: 0,
     memUsage: 0,
     diskUsage: 0,
@@ -62,6 +64,7 @@ export const useKernelStore = create<KernelState>((set, get) => ({
             const { payload } = e.data
             set({
                 processes: payload.processes,
+                tickCount: payload.tickCount,
                 cpuUsage: payload.cpuUsage,
                 memUsage: payload.memUsage,
                 diskUsage: payload.diskUsage,

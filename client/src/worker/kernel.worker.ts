@@ -3,7 +3,7 @@
 import { KERNEL_PROTOCOL_VERSION, createTickMessage, isKernelCommandMessage, type KernelActivityEventPayload, type KernelMetric, type KernelTopContributor } from '../features/kernel/protocol'
 import { addResourceVectors, clampResourceVector, sampleDecayedVector, ZERO_VECTOR, type ResourceVector } from '../features/kernel/impactDecay'
 import { MAX_EVENT_DELTA, resolveImpactProfile } from '../features/kernel/impactProfiles'
-import type { Process } from '../features/kernel/types'
+import { createProcessRecord, decayTerminatedProcess, isActiveProcess, stepRunningProcess, stepWaitingProcess, transitionProcess, type KernelProcessRecord } from '../features/kernel/processModel'
 
 type Range = [number, number]
 type ActivityLevel = 'idle' | 'active' | 'spike'
@@ -109,15 +109,47 @@ const EMPTY_SPIKES: Record<KernelMetric, number> = {
     net: 0,
 }
 
-let processes: Process[] = [
-    { pid: 1, name: 'init', cpu: 0.5, mem: 62, disk: 0.1, net: 0, status: 'running' },
-    { pid: 2, name: 'compositor', cpu: 1.4, mem: 128, disk: 0.2, net: 0.1, status: 'running' },
-]
-let nextPid = 3
+const processOrder: number[] = []
+const processTable = new Map<number, KernelProcessRecord>()
+
+seedProcess(createProcessRecord({
+    pid: 1,
+    name: 'init',
+    cpu: 0.5,
+    mem: 62,
+    disk: 0.1,
+    net: 0,
+    status: 'running',
+}))
+seedProcess(createProcessRecord({
+    pid: 2,
+    name: 'compositor',
+    cpu: 1.4,
+    mem: 128,
+    disk: 0.2,
+    net: 0.1,
+    status: 'ready',
+}))
+seedProcess(createProcessRecord({
+    pid: 3,
+    name: 'io-daemon',
+    cpu: 0.4,
+    mem: 96,
+    disk: 0.1,
+    net: 0.2,
+    status: 'waiting',
+}))
+
+let nextPid = 4
 let networkLatencyMs = 24
 let tickCount = 0
 let activeImpacts: ActiveImpact[] = []
 let recentDeltaHistory: ResourceVector[] = []
+
+function seedProcess(process: KernelProcessRecord) {
+    processOrder.push(process.pid)
+    processTable.set(process.pid, process)
+}
 
 function clamp(value: number, min: number, max: number) {
     return Math.max(min, Math.min(max, value))
@@ -140,7 +172,7 @@ function chooseActivity(profile: ProcessProfile): ActivityLevel {
     return 'active'
 }
 
-function resolveProfile(process: Process): ProcessProfile {
+function resolveProfile(process: KernelProcessRecord): ProcessProfile {
     if (process.appId) {
         return APP_PROFILES[process.appId] ?? DEFAULT_PROFILE
     }
@@ -154,16 +186,28 @@ function updateMetric(current: number, range: Range) {
     return Math.max(0, current + (target - current) * SMOOTHING_FACTOR + drift)
 }
 
-function updateProcessUsage(process: Process): Process {
+function updateProcessUsage(process: KernelProcessRecord): KernelProcessRecord {
+    if (process.status === 'terminated') {
+        return decayTerminatedProcess(process)
+    }
+
     const profile = resolveProfile(process)
-    const activity = chooseActivity(profile)
+    const activity = process.status === 'running'
+        ? chooseActivity(profile)
+        : process.status === 'ready'
+            ? Math.random() < 0.8 ? 'idle' : 'active'
+            : 'idle'
+
+    const cpuMax = process.status === 'running' ? 100 : process.status === 'ready' ? 18 : 8
+    const diskMax = process.status === 'running' ? 100 : process.status === 'ready' ? 30 : 15
+    const netMax = process.status === 'running' ? 100 : process.status === 'ready' ? 24 : 18
 
     return {
         ...process,
-        cpu: clamp(updateMetric(process.cpu, profile.cpu[activity]), 0, 100),
+        cpu: clamp(updateMetric(process.cpu, profile.cpu[activity]), 0, cpuMax),
         mem: clamp(updateMetric(process.mem, profile.mem[activity]), 16, 2_048),
-        disk: clamp(updateMetric(process.disk, profile.disk[activity]), 0, 100),
-        net: clamp(updateMetric(process.net, profile.net[activity]), 0, 100),
+        disk: clamp(updateMetric(process.disk, profile.disk[activity]), 0, diskMax),
+        net: clamp(updateMetric(process.net, profile.net[activity]), 0, netMax),
     }
 }
 
@@ -174,7 +218,7 @@ function queueImpactFromEvent(event: KernelActivityEventPayload) {
     })
 }
 
-function impactMatchesProcess(impact: ActiveImpact, process: Process) {
+function impactMatchesProcess(impact: ActiveImpact, process: KernelProcessRecord) {
     if (impact.target.appId) {
         return process.appId === impact.target.appId
     }
@@ -197,12 +241,22 @@ function emptyVector(): ResourceVector {
     return { cpu: 0, mem: 0, disk: 0, net: 0 }
 }
 
+function listProcesses(): KernelProcessRecord[] {
+    return processOrder
+        .map((pid) => processTable.get(pid))
+        .filter((process): process is KernelProcessRecord => Boolean(process))
+}
+
 function collectEventDeltas() {
     const topContributors: KernelTopContributor[] = []
     const deltaByPid = new Map<number, ResourceVector>()
     let systemDelta = emptyVector()
 
-    for (const process of processes) {
+    for (const process of listProcesses()) {
+        if (!isActiveProcess(process)) {
+            continue
+        }
+
         let processDelta = emptyVector()
 
         for (const impact of activeImpacts) {
@@ -263,11 +317,87 @@ function getRecentSpikes() {
     }), { ...EMPTY_SPIKES })
 }
 
+function mutateProcess(pid: number, updater: (process: KernelProcessRecord) => KernelProcessRecord) {
+    const current = processTable.get(pid)
+    if (!current) {
+        return
+    }
+
+    processTable.set(pid, updater(current))
+}
+
+function chooseNextRunningPid() {
+    const readyProcesses = listProcesses().filter((process) => process.status === 'ready')
+    if (readyProcesses.length === 0) {
+        return null
+    }
+
+    readyProcesses.sort((left, right) => left.lastTransitionTick - right.lastTransitionTick || left.pid - right.pid)
+    return readyProcesses[0].pid
+}
+
+function advanceLifecycle() {
+    let hasRunningProcess = false
+
+    for (const process of listProcesses()) {
+        if (process.status === 'terminated') {
+            if (process.terminatedTicksRemaining === 0) {
+                processTable.delete(process.pid)
+                const index = processOrder.indexOf(process.pid)
+                if (index >= 0) {
+                    processOrder.splice(index, 1)
+                }
+                continue
+            }
+            continue
+        }
+
+        if (process.status === 'waiting') {
+            const stepped = stepWaitingProcess(process)
+            if (stepped.waitTicksRemaining === 0) {
+                processTable.set(process.pid, transitionProcess(stepped, 'ready', tickCount, 'I/O complete'))
+            } else {
+                processTable.set(process.pid, stepped)
+            }
+            continue
+        }
+
+        if (process.status === 'running') {
+            hasRunningProcess = true
+            const stepped = stepRunningProcess(process)
+            if (stepped.runTicksRemaining > 0) {
+                processTable.set(process.pid, stepped)
+                continue
+            }
+
+            const roll = Math.random()
+            if (roll < 0.22) {
+                processTable.set(process.pid, transitionProcess(stepped, 'waiting', tickCount, 'I/O request'))
+            } else if (roll < 0.36) {
+                processTable.set(process.pid, transitionProcess(stepped, 'terminated', tickCount, 'Execution complete'))
+            } else {
+                processTable.set(process.pid, transitionProcess(stepped, 'ready', tickCount, 'Time slice expired'))
+            }
+        }
+    }
+
+    if (hasRunningProcess) {
+        const stillRunning = listProcesses().some((process) => process.status === 'running')
+        if (stillRunning) {
+            return
+        }
+    }
+
+    const nextRunningPid = chooseNextRunningPid()
+    if (nextRunningPid !== null) {
+        mutateProcess(nextRunningPid, (process) => transitionProcess(process, 'running', tickCount, 'CPU dispatch'))
+    }
+}
+
 function emitTick() {
     pruneExpiredImpacts()
     const eventDeltas = collectEventDeltas()
-
-    const renderedProcesses = processes.map((process) => {
+    const renderedProcesses = listProcesses().map((process) => {
         const delta = eventDeltas.deltaByPid.get(process.pid) ?? ZERO_VECTOR
         return {
             ...process,
@@ -280,12 +410,13 @@ function emitTick() {
 
     recentDeltaHistory = [...recentDeltaHistory, eventDeltas.systemDelta].slice(-RECENT_SPIKE_WINDOW_TICKS)
     const recentSpikes = getRecentSpikes()
+    const activeProcesses = renderedProcesses.filter(isActiveProcess)
 
-    const cpuUsage = clamp(renderedProcesses.reduce((sum, process) => sum + process.cpu, 0), 0, 100)
-    const memUsageMb = renderedProcesses.reduce((sum, process) => sum + process.mem, 0)
+    const cpuUsage = clamp(activeProcesses.reduce((sum, process) => sum + process.cpu, 0), 0, 100)
+    const memUsageMb = activeProcesses.reduce((sum, process) => sum + process.mem, 0)
     const memUsage = clamp((memUsageMb / TOTAL_MEMORY_MB) * 100, 0, 100)
-    const diskUsage = clamp(renderedProcesses.reduce((sum, process) => sum + process.disk, 0), 0, 100)
-    const netUsage = clamp(renderedProcesses.reduce((sum, process) => sum + process.net, 0), 0, 100)
+    const diskUsage = clamp(activeProcesses.reduce((sum, process) => sum + process.disk, 0), 0, 100)
+    const netUsage = clamp(activeProcesses.reduce((sum, process) => sum + process.net, 0), 0, 100)
 
     const targetLatency = 16 + netUsage * 0.9 + recentSpikes.net * 0.3 + (Math.random() - 0.5) * 10
     networkLatencyMs = clamp(
@@ -295,6 +426,7 @@ function emitTick() {
     )
 
     postMessage(createTickMessage({
+        tickCount,
         processes: renderedProcesses,
         cpuUsage,
         memUsage,
@@ -313,32 +445,38 @@ function emitTick() {
 
 function tick() {
     tickCount += 1
-    processes = processes.map(updateProcessUsage)
+
+    for (const process of listProcesses()) {
+        processTable.set(process.pid, updateProcessUsage(process))
+    }
+
+    advanceLifecycle()
     emitTick()
 }
 
 function spawnProcess(name: string) {
     const profile = DEFAULT_PROFILE
     const activity = chooseActivity(profile)
-    processes.push({
+    seedProcess(createProcessRecord({
         pid: nextPid++,
         name,
         cpu: randomInRange(profile.cpu[activity]),
         mem: randomInRange(profile.mem[activity]),
         disk: randomInRange(profile.disk[activity]),
         net: randomInRange(profile.net[activity]),
-        status: 'running',
-    })
+        status: 'ready',
+        tickCount,
+    }))
 }
 
 function spawnAppProcess(appId: string, name: string) {
-    if (processes.some((process) => process.appId === appId)) {
+    if (listProcesses().some((process) => process.appId === appId && isActiveProcess(process))) {
         return
     }
 
     const profile = APP_PROFILES[appId] ?? DEFAULT_PROFILE
     const activity = chooseActivity(profile)
-    processes.push({
+    seedProcess(createProcessRecord({
         pid: nextPid++,
         appId,
         name: profile.label || name,
@@ -346,8 +484,9 @@ function spawnAppProcess(appId: string, name: string) {
         mem: randomInRange(profile.mem[activity]),
         disk: randomInRange(profile.disk[activity]),
         net: randomInRange(profile.net[activity]),
-        status: 'running',
-    })
+        status: 'ready',
+        tickCount,
+    }))
 
     queueImpactFromEvent({
         protocolVersion: KERNEL_PROTOCOL_VERSION,
@@ -355,6 +494,10 @@ function spawnAppProcess(appId: string, name: string) {
         sourceAppId: appId,
         targetAppId: appId,
     })
+}
+
+function markProcessTerminated(pid: number, reason: string) {
+    mutateProcess(pid, (process) => transitionProcess(process, 'terminated', tickCount, reason))
 }
 
 setInterval(tick, STEP_INTERVAL_MS)
@@ -368,7 +511,7 @@ self.onmessage = (e) => {
     const { type, payload } = e.data
 
     if (type === 'KILL_PROCESS') {
-        const process = processes.find((entry) => entry.pid === payload.pid)
+        const process = processTable.get(payload.pid)
         if (process?.appId) {
             queueImpactFromEvent({
                 protocolVersion: KERNEL_PROTOCOL_VERSION,
@@ -377,19 +520,30 @@ self.onmessage = (e) => {
                 targetAppId: process.appId,
             })
         }
-        processes = processes.filter((processEntry) => processEntry.pid !== payload.pid)
+
+        if (process) {
+            markProcessTerminated(payload.pid, 'Process killed')
+        }
+
         emitTick()
         return
     }
 
     if (type === 'KILL_APP_PROCESS') {
+        for (const process of listProcesses()) {
+            if (process.appId !== payload.appId || !isActiveProcess(process)) {
+                continue
+            }
+
+            markProcessTerminated(process.pid, 'Application closed')
+        }
+
         queueImpactFromEvent({
             protocolVersion: KERNEL_PROTOCOL_VERSION,
             type: 'app-close',
             sourceAppId: payload.appId,
             targetAppId: payload.appId,
         })
-        processes = processes.filter((process) => process.appId !== payload.appId)
         emitTick()
         return
     }
