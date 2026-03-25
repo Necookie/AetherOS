@@ -1,0 +1,55 @@
+Final Project
+Simple Operating System Simulator
+Project Description
+Students will create a simple operating system simulator that demonstrates basic operating system
+functions using a command-line program. The project focuses on understanding concepts, not building
+a full operating system.
+The simulator will model how an operating system:
+ Manages processes
+ Schedules the CPU
+ Handles memory
+ Manages files and basic I/O
+Project Objectives
+By completing this project, students will be able to:
+1. Demonstrate understanding of core operating system concepts.
+2. Apply basic scheduling and memory management techniques.
+3. Simulate file and I/O operations in a controlled environment.
+4. Explain how operating system components interact.
+Project Requirements
+1. Process Management
+ Create at least 3 simulated processes
+ Display process states: Ready, Running, Waiting, Terminated
+Example: A table showing current process states
+2. CPU Scheduling
+ Implement one CPU scheduling algorithm
+o First-Come, First-Served (FCFS) or Round Robin
+ Show execution order and waiting time
+Example: Simple Gantt chart (text-based)
+3. Memory Management
+ Simulate fixed memory partitions
+ Allocate and deallocate memory to processes
+ Show memory usage
+Example: Memory map displayed in the console
+4. File System
+ Create a simple file list
+ Perform basic operations:
+o Create file
+o Delete file
+o Display file contents
+No actual disk access required
+
+5. Simple I/O Simulation
+ Simulate one I/O device (e.g., printer)
+ Queue I/O requests (basic spooling)
+Tools and Language
+Students may use any one of the following:
+ Python
+ C or C++
+ Java
+Deliverables
+1. Source Code (with comments)
+2. Short Report (5-10 pages) including:
+o Program description
+o Explanation of OS concepts used
+o Sample output screenshots
+3. Live Presentation
