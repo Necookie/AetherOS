@@ -74,29 +74,29 @@ You must create at least 3 simulated processes and show the process states:
 
 ### How this should be applied in your project
 
-- [ ] Create at least 3 simulated processes
-Description: Define at least three sample processes such as `P1`, `P2`, `P3` with values like burst time, memory size, arrival order, or status. These can be hardcoded at first if needed.
+- [x] Create at least 3 simulated processes
+Description: The kernel worker now seeds `init`, `compositor`, and `io-daemon` so the simulator always starts with at least three visible process records.
 
-- [ ] Give each process a clear process record
-Description: Each process should have enough fields to make the simulation meaningful. A simple structure may include process ID, state, burst time, remaining time, memory allocation, and whether it is waiting for I/O.
+- [x] Give each process a clear process record
+Description: Process records now carry normalized state, resource metrics, and explicit transition metadata so the UI can render process lifecycle changes without mixing display logic into the worker.
 
-- [ ] Display process states in the console
-Description: The program should print a process table or status list showing the current state of every process.
+- [x] Display process states in the console
+Description: The Task Manager now renders a dedicated process table with state badges and transition labels for every tracked process.
 
-- [ ] Show the `Ready` state
-Description: At least one process should appear in the ready queue before CPU execution begins, or after another process gets the CPU.
+- [x] Show the `Ready` state
+Description: Processes explicitly transition into `Ready` when they are queued for CPU dispatch or when a time slice expires.
 
-- [ ] Show the `Running` state
-Description: When the scheduler picks a process, the output should show that the process is currently running.
+- [x] Show the `Running` state
+Description: The kernel worker dispatches ready processes into `Running`, and the Task Manager highlights the active state in the process table and summary cards.
 
-- [ ] Show the `Waiting` state
-Description: A process should enter waiting when it requests I/O or is paused for a simulated event. This is important because the professor explicitly listed it as a required state.
+- [x] Show the `Waiting` state
+Description: Running processes can move into `Waiting` for simulated I/O, then return to `Ready` when the wait completes.
 
-- [ ] Show the `Terminated` state
-Description: After a process finishes execution, the output should mark it as terminated.
+- [x] Show the `Terminated` state
+Description: Completed or killed processes now transition into `Terminated` and remain visible briefly so the state change can be observed in the UI.
 
-- [ ] Present process states in a clean table or organized list
-Description: A simple printed table is enough. The goal is to make process transitions easy to follow during the demo.
+- [x] Present process states in a clean table or organized list
+Description: The Task Manager uses a readable table layout with status badges, transition history, and disabled kill actions for ended processes.
 
 ### What you should be able to show
 

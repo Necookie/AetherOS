@@ -1,6 +1,6 @@
 import type { Process } from './types'
 
-export const KERNEL_PROTOCOL_VERSION = 2
+export const KERNEL_PROTOCOL_VERSION = 3
 const METRICS = ['cpu', 'mem', 'disk', 'net'] as const
 const KERNEL_ACTIVITY_TYPES = [
     'app-launch',
@@ -35,6 +35,7 @@ export type KernelActivityEventPayload = {
 
 export type KernelTickPayload = {
     protocolVersion: number
+    tickCount: number
     processes: Process[]
     cpuUsage: number
     memUsage: number
@@ -130,6 +131,7 @@ function isKernelTickPayload(value: unknown): value is KernelTickPayload {
     const payload = value as Partial<KernelTickPayload>
     return payload.protocolVersion === KERNEL_PROTOCOL_VERSION
         && Array.isArray(payload.processes)
+        && typeof payload.tickCount === 'number'
         && typeof payload.cpuUsage === 'number'
         && typeof payload.memUsage === 'number'
         && typeof payload.diskUsage === 'number'

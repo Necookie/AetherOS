@@ -3,6 +3,7 @@ import DesktopShell from './components/DesktopShell'
 import LoadingScreen from './components/LoadingScreen'
 import LoginScreen from './components/LoginScreen'
 import AppErrorBoundary from './components/system/AppErrorBoundary'
+import { isActiveProcess } from './features/kernel/processModel'
 import { useKernelStore } from './stores/useKernelStore'
 import { useWindowStore } from './stores/windowStore'
 import { DEFAULT_APPS } from './config/windows'
@@ -42,6 +43,7 @@ function App() {
     useEffect(() => {
         const runningAppIds = new Set(
             processes
+                .filter(isActiveProcess)
                 .map((process) => process.appId)
                 .filter((appId): appId is string => Boolean(appId)),
         )
