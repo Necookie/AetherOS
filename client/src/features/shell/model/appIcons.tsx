@@ -11,6 +11,7 @@ const ICON_MAP: Record<string, string> = {
     notes: '/assets/candy-icons/notes.svg',
     docs: '/assets/candy-icons/docs.svg',
     boards: '/assets/candy-icons/boards.svg',
+    'os-lab': '/assets/candy-icons/os-lab.svg',
 }
 
 export function ShellAppIcon({ appId, className }: { appId: string; className?: string }) {

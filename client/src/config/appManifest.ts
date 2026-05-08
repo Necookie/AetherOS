@@ -57,4 +57,9 @@ export const APP_MANIFEST: AppManifestEntry[] = [
         title: 'Download Manager',
         defaultBounds: { x: 260, y: 120, width: 980, height: 680 },
     },
+    {
+        id: 'os-lab',
+        title: 'OS Simulation Lab',
+        defaultBounds: { x: 150, y: 100, width: 900, height: 600 },
+    },
 ]
