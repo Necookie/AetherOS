@@ -3,6 +3,7 @@ import { registerCors } from './plugins/cors'
 import { registerRateLimit } from './plugins/rateLimit'
 import { aiRoute } from './routes/ai'
 import { healthRoute } from './routes/health'
+import { searchRoute } from './routes/search'
 
 export function buildServer() {
     const fastify = Fastify({ logger: true })
@@ -11,6 +12,7 @@ export function buildServer() {
     fastify.register(registerRateLimit)
     fastify.register(healthRoute)
     fastify.register(aiRoute, { prefix: '/api' })
+    fastify.register(searchRoute, { prefix: '/api' })
 
     return fastify
 }

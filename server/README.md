@@ -13,6 +13,7 @@ Backend API workspace for AetherOS.
 
 - Health endpoint for runtime checks
 - AI proxy endpoint used by the client
+- Search endpoint used by the browser app
 - Mock response fallback when OpenAI key is not set
 
 ## Endpoints
@@ -47,6 +48,33 @@ curl -X POST http://localhost:3000/api/ai \
   -d '{"message":"What is thrashing?"}'
 ```
 
+### `GET /api/search?q=...`
+
+Returns search results for the AetherOS browser.
+
+```bash
+curl "http://localhost:3000/api/search?q=window%20manager"
+```
+
+Response shape:
+
+```json
+{
+  "query": "window manager",
+  "mode": "mock|live",
+  "results": [
+    {
+      "id": "live-1",
+      "title": "Result title",
+      "url": "https://example.com/page",
+      "displayUrl": "example.com/page",
+      "snippet": "Short summary",
+      "source": "live"
+    }
+  ]
+}
+```
+
 ## Setup
 
 From repo root:
@@ -62,6 +90,9 @@ Env values:
 - `OPENAI_API_KEY` optional
   - empty -> `mode: "mock"`
   - set -> `mode: "live"`
+- `TAVILY_SEARCH_API_KEY` or `TAVILY_API_KEY` optional
+  - empty -> `/api/search` returns mock results
+  - set -> `/api/search` returns live Tavily search results when available
 
 ## Run
 
@@ -88,4 +119,4 @@ npm run build --workspace=server
 ## Scope Note
 
 Server persistence/auth endpoints are intentionally out of scope for this phase.
-The API is currently focused on health + AI relay only.
+The API is currently focused on health, AI relay, and browser search.

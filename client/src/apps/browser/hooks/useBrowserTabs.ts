@@ -13,6 +13,8 @@ import {
     startBrowserDownload,
     type BrowserDownloadRequest,
 } from '../services/browserDownloadService';
+import { parseInputToUrl } from '../security/urlUtils';
+import { buildSimulationSearchUrl, isSimulationUrl, parseSimulationUrl } from '../simulation/simulationUrls';
 
 function nextToken(tokens: MutableRefObject<Map<string, number>>, tabId: string) {
     const current = tokens.current.get(tabId) || 0;
@@ -44,6 +46,77 @@ export function useBrowserTabs(activeTabId: string | null, settings: BrowserSett
 
     const handleNavigate = useCallback(async (input: string) => {
         if (!activeTabId) {
+            return;
+        }
+
+        const parsedInput = parseInputToUrl(input, settings.defaultSearchEngine);
+        if (parsedInput.isUnsafe) {
+            addToast('Blocked: unsafe URL scheme', 'error');
+            return;
+        }
+
+        if (!parsedInput.url) {
+            return;
+        }
+
+        if (parsedInput.isSearch) {
+            const internalSearchUrl = buildSimulationSearchUrl(input);
+            useBrowserStore.setState((state) => {
+                const tab = state.tabsById[activeTabId];
+                if (!tab) {
+                    return state;
+                }
+
+                return {
+                    tabsById: {
+                        ...state.tabsById,
+                        [activeTabId]: updateTabForNavigation(tab, {
+                            url: internalSearchUrl,
+                            title: `Search - ${input.trim()}`,
+                            mode: 'internal',
+                            isLoading: false,
+                        }),
+                    },
+                };
+            });
+
+            recordHistory({ url: internalSearchUrl, title: `Search - ${input.trim()}` });
+            return;
+        }
+
+        if (isSimulationUrl(parsedInput.url)) {
+            const simulationLocation = parseSimulationUrl(parsedInput.url);
+            if (!simulationLocation) {
+                return;
+            }
+
+            useBrowserStore.setState((state) => {
+                const tab = state.tabsById[activeTabId];
+                if (!tab) {
+                    return state;
+                }
+
+                return {
+                    tabsById: {
+                        ...state.tabsById,
+                        [activeTabId]: updateTabForNavigation(tab, {
+                            url: parsedInput.url,
+                            title: simulationLocation.kind === 'search'
+                                ? `Search - ${simulationLocation.query}`
+                                : simulationLocation.targetUrl,
+                            mode: 'internal',
+                            isLoading: false,
+                        }),
+                    },
+                };
+            });
+
+            recordHistory({
+                url: parsedInput.url,
+                title: simulationLocation.kind === 'search'
+                    ? `Search - ${simulationLocation.query}`
+                    : simulationLocation.targetUrl,
+            });
             return;
         }
 
