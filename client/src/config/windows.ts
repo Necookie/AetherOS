@@ -13,6 +13,7 @@ const APP_COMPONENTS: Record<string, AppDefinition['component']> = {
     docs: createRecoverableLazyWindow('Docs', () => import('../apps/docs/DocsApp')),
     boards: createRecoverableLazyWindow('Boards', () => import('../apps/boards/BoardsApp')),
     downloads: createRecoverableLazyWindow('Download Manager', () => import('../apps/downloads/DownloadManagerApp')),
+    'os-lab': createRecoverableLazyWindow('OS Simulation Lab', () => import('../apps/os-lab/OSLabApp')),
 }
 
 export const DEFAULT_APPS: AppDefinition[] = APP_MANIFEST.map((entry) => ({

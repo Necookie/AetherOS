@@ -178,6 +178,21 @@ export const APP_REGISTRY_CATALOG: RegistryAppMetadata[] = [
         ],
     },
     {
+        id: 'os-lab',
+        title: 'OS Simulation Lab',
+        summary: 'Interactive CPU and disk scheduling simulations for operating systems study.',
+        category: 'utility',
+        iconId: 'os-lab',
+        launchable: true,
+        releases: [
+            {
+                version: '1.0.0',
+                dependencies: [],
+                changelog: 'Initial CPU scheduling and disk scheduling simulation workspace.',
+            },
+        ],
+    },
+    {
         id: 'mail',
         title: 'Mail',
         summary: 'Unified inbox with offline queue simulation.',
@@ -223,4 +238,4 @@ export const APP_REGISTRY_CATALOG: RegistryAppMetadata[] = [
     },
 ]
 
-export const PREINSTALLED_APP_IDS = ['appstore', 'browser', 'explorer', 'notes', 'docs', 'boards', 'term', 'taskmgr', 'settings'] as const
+export const PREINSTALLED_APP_IDS = ['appstore', 'browser', 'explorer', 'notes', 'docs', 'boards', 'os-lab', 'term', 'taskmgr', 'settings'] as const
