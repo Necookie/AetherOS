@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Copy, Download, FolderOpen } from 'lucide-react'
 import Window from '../../components/system/Window';
 import { DEFAULT_APPS } from '../../config/windows'
@@ -9,13 +9,18 @@ import { useDownloadManagerSnapshot } from '../../features/downloads'
 import BrowserSidebar from './components/BrowserSidebar';
 import ExternalPage from './components/ExternalPage';
 import NewTabPage from './components/NewTabPage';
+import SearchResultsPage from './components/SearchResultsPage';
+import SimulatedPage from './components/SimulatedPage';
 import TabStrip from './components/TabStrip';
 import Toasts from './components/Toasts';
 import Toolbar from './components/Toolbar';
 import WebView from './components/WebView';
 import { useBrowserKeyboard } from './hooks/useBrowserKeyboard';
 import { useBrowserTabs } from './hooks/useBrowserTabs';
+import { createResultNavigationUrl, createSimulatedPageModel, getSimulatedResultById, mergeSearchResults, type SimulatedSearchResult } from './simulation/searchSimulation';
+import { parseSimulationUrl } from './simulation/simulationUrls';
 import { browserDownloadPresets } from './services/browserDownloadService'
+import { querySearch, type BrowserSearchResponse } from '../../services/searchClient';
 
 const explorerApp = DEFAULT_APPS.find((app) => app.id === 'explorer')
 const downloadsApp = DEFAULT_APPS.find((app) => app.id === 'downloads')
@@ -50,6 +55,8 @@ export default function BrowserApp({ id }: { id: string }) {
     const [focusTrigger, setFocusTrigger] = useState(0);
     const [sidebarMode, setSidebarMode] = useState<'bookmarks' | 'history'>('bookmarks');
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [searchResponse, setSearchResponse] = useState<BrowserSearchResponse | null>(null)
+    const [searchError, setSearchError] = useState<string | null>(null)
 
     useEffect(() => {
         if (tabOrder.length === 0) {
@@ -85,6 +92,47 @@ export default function BrowserApp({ id }: { id: string }) {
     const browserDownloads = downloadSnapshot.items
         .filter((item) => item.source === 'browser' && item.status !== 'canceled')
         .slice(0, 3)
+    const simulationLocation = activeTab ? parseSimulationUrl(activeTab.url) : null
+    const simulationQuery = simulationLocation?.query ?? ''
+
+    const resolvedSearch = useMemo(() => mergeSearchResults({
+        query: simulationQuery,
+        response: searchResponse,
+        bookmarks,
+        history: historyGlobal,
+    }), [bookmarks, historyGlobal, searchResponse, simulationQuery])
+    const searchResults = resolvedSearch.results
+
+    const handleOpenSimulatedResult = useCallback((result: SimulatedSearchResult, query: string) => {
+        void handleNavigate(createResultNavigationUrl(result, query))
+    }, [handleNavigate])
+
+    useEffect(() => {
+        if (!simulationQuery) {
+            setSearchResponse(null)
+            setSearchError(null)
+            return
+        }
+
+        let cancelled = false
+        void querySearch(simulationQuery)
+            .then((response) => {
+                if (!cancelled) {
+                    setSearchResponse(response)
+                    setSearchError(null)
+                }
+            })
+            .catch((error) => {
+                if (!cancelled) {
+                    setSearchResponse(null)
+                    setSearchError(error instanceof Error ? error.message : 'Search request failed.')
+                }
+            })
+
+        return () => {
+            cancelled = true
+        }
+    }, [simulationQuery])
 
     const handleCopyPath = useCallback(async (path: string) => {
         try {
@@ -102,6 +150,45 @@ export default function BrowserApp({ id }: { id: string }) {
 
         switch (activeTab.mode) {
             case 'internal':
+                {
+                    if (simulationLocation?.kind === 'search') {
+                        return (
+                            <>
+                                {searchError ? (
+                                    <div className="absolute right-4 top-4 z-40 rounded-2xl border border-amber-200 bg-amber-50/95 px-4 py-3 text-xs text-amber-900 shadow-lg">
+                                        Search API unavailable. Showing fallback results.
+                                    </div>
+                                ) : null}
+                                <SearchResultsPage
+                                    query={simulationLocation.query}
+                                    mode={resolvedSearch.mode}
+                                    results={searchResults}
+                                    onOpenResult={(result) => handleOpenSimulatedResult(result, simulationLocation.query)}
+                                />
+                            </>
+                        )
+                    }
+
+                    if (simulationLocation?.kind === 'result') {
+                        const selectedResult = getSimulatedResultById({
+                            query: simulationLocation.query,
+                            id: simulationLocation.id,
+                            targetUrl: simulationLocation.targetUrl,
+                            bookmarks,
+                            history: historyGlobal,
+                        })
+
+                        if (selectedResult) {
+                            return (
+                                <SimulatedPage
+                                    page={createSimulatedPageModel(selectedResult, simulationLocation.query)}
+                                    relatedResults={searchResults.filter((result) => result.id !== selectedResult.id).slice(0, 4)}
+                                    onOpenResult={(result) => handleOpenSimulatedResult(result, simulationLocation.query)}
+                                />
+                            )
+                        }
+                    }
+
                 return (
                     <NewTabPage
                         onSearch={handleNavigate}
@@ -110,6 +197,7 @@ export default function BrowserApp({ id }: { id: string }) {
                         onStartDownload={handleTriggerDownload}
                     />
                 );
+                }
             case 'embed':
                 return (
                     <WebView

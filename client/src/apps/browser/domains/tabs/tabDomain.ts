@@ -1,4 +1,5 @@
 import type { TabMode, TabState } from '../../../../types/browser';
+import { getDisplayUrlForStoredUrl, isSimulationUrl } from '../../simulation/simulationUrls'
 
 export function createTabId() {
     return `tab_${Math.random().toString(36).slice(2, 9)}`;
@@ -11,7 +12,7 @@ export function createTabState(id: string, args: { url?: string; mode?: TabMode 
         id,
         title: url || 'New Tab',
         url,
-        displayUrl: url,
+        displayUrl: getDisplayUrlForStoredUrl(url),
         mode,
         isLoading: false,
         backStack: [],
@@ -34,7 +35,7 @@ export function updateTabForNavigation(
         backStack: tab.url ? [...tab.backStack, tab.url] : tab.backStack,
         forwardStack: [],
         url: nextState.url,
-        displayUrl: nextState.url,
+        displayUrl: getDisplayUrlForStoredUrl(nextState.url),
         title: nextState.title,
         mode: nextState.mode,
         isLoading: nextState.isLoading,
@@ -55,8 +56,8 @@ export function applyBack(tab: TabState): TabState {
         backStack: nextBackStack,
         forwardStack: tab.url ? [...tab.forwardStack, tab.url] : tab.forwardStack,
         url: previousUrl,
-        displayUrl: previousUrl,
-        isLoading: true,
+        displayUrl: getDisplayUrlForStoredUrl(previousUrl),
+        isLoading: !isSimulationUrl(previousUrl),
     };
 }
 
@@ -73,7 +74,7 @@ export function applyForward(tab: TabState): TabState {
         forwardStack: nextForwardStack,
         backStack: tab.url ? [...tab.backStack, tab.url] : tab.backStack,
         url: nextUrl,
-        displayUrl: nextUrl,
-        isLoading: true,
+        displayUrl: getDisplayUrlForStoredUrl(nextUrl),
+        isLoading: !isSimulationUrl(nextUrl),
     };
 }
