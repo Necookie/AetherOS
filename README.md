@@ -126,6 +126,9 @@ supabase_plan.md           # deferred persistence/auth roadmap (out of scope now
 - `POST /api/ai` -> `{ reply, mode }`
   - `mode: "mock"` when `OPENAI_API_KEY` is missing
   - `mode: "live"` when key is configured
+- `GET /api/search?q=...` -> browser search results
+  - `mode: "mock"` when `TAVILY_SEARCH_API_KEY` and `TAVILY_API_KEY` are missing
+  - `mode: "live"` when Tavily is configured
 
 ## Local Development
 

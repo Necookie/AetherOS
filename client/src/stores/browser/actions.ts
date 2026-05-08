@@ -14,6 +14,7 @@ import {
     markNavigation,
     markTabActivated,
 } from '../../apps/browser/domains/session/sessionDomain';
+import { isSimulationUrl } from '../../apps/browser/simulation/simulationUrls';
 import { reportKernelActivity } from '../../features/kernel/activityReporter';
 import type { BrowserStore } from './types';
 
@@ -195,7 +196,7 @@ export function createBrowserActions(
                 targetAppId: 'browser',
                 units: 0.9,
             });
-            set((state) => withUpdatedTab(state, id, (tab) => ({ ...tab, isLoading: true })));
+            set((state) => withUpdatedTab(state, id, (tab) => ({ ...tab, isLoading: !isSimulationUrl(tab.url) })));
         },
         setSearchEngine: (engine: BrowserStore['settings']['defaultSearchEngine']) => set((state) => ({
             settings: { ...state.settings, defaultSearchEngine: engine },
