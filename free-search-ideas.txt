@@ -1,0 +1,39 @@
+Free search engine ideas for AetherOS browser
+
+Goal:
+Keep search inside AetherOS while avoiding paid API requirements.
+
+Best truly free option:
+- SearXNG
+  - Open-source metasearch engine
+  - Self-hosted
+  - No per-query API fee if you run it yourself
+  - Best fit for "100% free" real search results inside AetherOS
+  - Docs: https://docs.searxng.org/
+
+Limited free-tier hosted options:
+- Tavily
+  - Free tier available
+  - Not unlimited
+  - Easier setup than self-hosting
+
+- SerpAPI
+  - Free tier available
+  - Not unlimited
+  - Good normalization, but not fully free
+
+Not a full search API:
+- DuckDuckGo Instant Answer API
+  - Free
+  - Only instant answers / zero-click style data
+  - Not a full web search result provider
+
+Recommendation:
+1. If the priority is truly free, use SearXNG and point /api/search to it.
+2. If the priority is easier setup, use Tavily free tier.
+3. Keep the current mock fallback for demos when the provider is unavailable.
+
+Implementation note:
+- The current server route is /api/search
+- Replace the Brave provider inside server/src/services/searchService.ts
+- Keep the same client-side browser integration
