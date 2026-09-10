@@ -17,7 +17,7 @@ describe('createThemeTokens', () => {
             },
         })
 
-        expect(tokens.colorBgCanvas).toBe('#0b1220')
+        expect(tokens.colorBgCanvas).toBe('#000000')
         expect(tokens.fontScalePercent).toBe('120%')
     })
 
@@ -48,9 +48,9 @@ describe('getWallpaperCss', () => {
         expect(getWallpaperCss('urban-night')).toContain("url('/assets/wallpapers/urban-night-street.jpg')")
     })
 
-    it('returns gradient css for non-image wallpapers', () => {
-        const value = getWallpaperCss('aurora')
-        expect(value).toContain('linear-gradient')
+    it('returns a flat single-tone fill for solid wallpapers', () => {
+        const value = getWallpaperCss('parchment')
+        expect(value).toBe('linear-gradient(#f5f5f7, #f5f5f7)')
         expect(value).not.toContain('url(')
     })
 })
