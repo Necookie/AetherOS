@@ -6,11 +6,11 @@ export default function ClockWidget() {
 
     return (
         <WidgetCard title="Local Time" subtitle={now.toLocaleDateString([], { weekday: 'short' })}>
-            <div className="rounded-xl border border-white/50 bg-white/45 px-3 py-2">
-                <p className="font-term text-2xl font-semibold text-slate-900">
+            <div className="rounded-md border border-hairline bg-parchment px-3 py-2">
+                <p className="font-term text-2xl font-semibold text-ink">
                     {now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                 </p>
-                <p className="mt-1 text-xs text-slate-700">
+                <p className="mt-1 text-xs text-ink-muted">
                     {now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}
                 </p>
             </div>

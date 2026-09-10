@@ -46,19 +46,19 @@ export default function WeatherWidget() {
 
     return (
         <WidgetCard title="Weather (Mock)" subtitle="Metro profile">
-            <div className="rounded-xl border border-white/50 bg-white/45 p-3">
+            <div className="rounded-md border border-hairline bg-parchment p-3">
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-2xl font-semibold text-slate-900">{snapshot.tempC}C</p>
-                        <p className="text-xs text-slate-700">{snapshot.condition}</p>
+                        <p className="text-2xl font-semibold text-ink">{snapshot.tempC}C</p>
+                        <p className="text-xs text-ink-muted">{snapshot.condition}</p>
                     </div>
-                    <ConditionIcon className="h-8 w-8 text-amber-500" />
+                    <ConditionIcon className="h-8 w-8 text-ink-muted" />
                 </div>
-                <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-slate-700">
-                    <div className="rounded-lg border border-white/45 bg-white/50 px-2 py-1.5">
+                <div className="mt-3 grid grid-cols-2 gap-2 text-[12px] text-ink-muted">
+                    <div className="rounded-sm border border-hairline bg-canvas px-2 py-1.5">
                         Humidity {snapshot.humidity}%
                     </div>
-                    <div className="rounded-lg border border-white/45 bg-white/50 px-2 py-1.5">
+                    <div className="rounded-sm border border-hairline bg-canvas px-2 py-1.5">
                         Wind {snapshot.windKph} kph
                     </div>
                 </div>

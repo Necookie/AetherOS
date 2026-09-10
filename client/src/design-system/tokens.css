@@ -33,6 +33,7 @@
 
   /* ---- Status (extended sparingly — flat, same language) ---- */
   --ds-color-success: #1a7f37;
+  --ds-color-warning: #ff9500;
   --ds-color-danger: #d92d20;
 
   /* ---- Spacing (8px base) ---- */

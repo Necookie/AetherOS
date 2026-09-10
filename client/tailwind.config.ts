@@ -30,6 +30,7 @@ export default {
                 void: 'var(--ds-color-void)',
                 chip: 'var(--ds-color-chip-translucent)',
                 success: 'var(--ds-color-success)',
+                warning: 'var(--ds-color-warning)',
                 danger: 'var(--ds-color-danger)',
             },
             fontFamily: {
