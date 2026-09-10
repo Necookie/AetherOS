@@ -70,10 +70,6 @@
     border: 1px solid var(--os-border);
   }
 
-  .os-button:hover {
-    background: color-mix(in oklab, var(--os-surface-1) 92%, black 8%);
-  }
-
   .os-button:active {
     transform: scale(0.95);
   }
@@ -143,7 +139,7 @@
   }
 
   .os-separator {
-    border-color: color-mix(in oklab, var(--os-border) 70%, black 30%);
+    border-color: var(--os-border);
   }
 
   .font-term {

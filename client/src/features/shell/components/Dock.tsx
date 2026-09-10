@@ -69,7 +69,7 @@ export default function Dock({ taskbarPosition, onLaunchOrToggle, onToggleLaunch
                                         {previewWindow.state.isMaximized ? <Maximize2 className="h-3 w-3" /> : previewWindow.state.isMinimized ? <Minimize2 className="h-3 w-3" /> : null}
                                     </div>
                                     <div className="rounded-md border border-hairline bg-parchment p-2">
-                                        <p className="truncate text-xs font-medium text-ink">{previewWindow.title}</p>
+                                        <p className="truncate text-xs font-semibold text-ink">{previewWindow.title}</p>
                                         <p className="mt-1 text-[12px] text-ink-muted-48">
                                             {Math.round(previewWindow.bounds.width)}x{Math.round(previewWindow.bounds.height)} px
                                         </p>
