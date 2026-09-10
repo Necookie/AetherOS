@@ -15,26 +15,26 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
 
     return (
         <div
-            className={`os-desktop-bg fixed inset-0 z-50 transition-opacity duration-200 motion-reduce:transition-none ${isHandingOff ? 'opacity-0' : 'opacity-100'}`}
+            className={`fixed inset-0 z-50 bg-parchment transition-opacity duration-200 motion-reduce:transition-none ${isHandingOff ? 'opacity-0' : 'opacity-100'}`}
         >
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgb(255_255_255_/_0.52),_transparent_48%)]" />
-            <div className="relative flex h-full w-full items-center justify-center px-4 py-8 sm:px-6 lg:px-10">
+            <div className="flex h-full w-full items-center justify-center px-4 py-8 sm:px-6 lg:px-10">
                 <div className="grid w-full max-w-6xl gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.3fr)]">
-                    <section className="rounded-[28px] border border-white/70 bg-white/45 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+                    {/* Parchment tile: boot progress */}
+                    <section className="rounded-lg border border-hairline bg-canvas p-6 shadow-elevated sm:p-8">
                         <div className="mb-8 flex items-center justify-between gap-4">
                             <div>
-                                <p className="font-term text-[11px] uppercase tracking-[0.32em] text-slate-600">Boot Diagnostics</p>
-                                <h1 className="mt-3 text-3xl font-light tracking-[0.04em] text-slate-900 sm:text-4xl">
+                                <p className="font-term text-[12px] text-ink-muted">Boot Diagnostics</p>
+                                <h1 className="mt-3 text-[34px] font-semibold leading-tight tracking-[-0.374px] text-ink">
                                     Starting AetherOS
                                 </h1>
                             </div>
                             <div
-                                className={`rounded-full px-3 py-1 font-term text-[11px] uppercase tracking-[0.22em] ${
+                                className={`rounded-pill px-3 py-1 font-term text-[12px] ${
                                     snapshot.readinessState === 'booting'
-                                        ? 'bg-slate-900 text-white'
+                                        ? 'bg-ink text-on-dark'
                                         : snapshot.warningCount > 0
-                                          ? 'bg-amber-100 text-amber-900'
-                                          : 'bg-emerald-100 text-emerald-900'
+                                          ? 'bg-warning text-on-dark'
+                                          : 'bg-primary text-on-dark'
                                 }`}
                             >
                                 {snapshot.readinessState === 'booting'
@@ -49,7 +49,7 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
 
                         <div className="space-y-4">
                             <div
-                                className="rounded-2xl border border-slate-200/70 bg-white/55 p-4"
+                                className="rounded-md border border-hairline bg-parchment p-4"
                                 role="progressbar"
                                 aria-label="Boot progress"
                                 aria-valuemin={0}
@@ -58,23 +58,23 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
                             >
                                 <div className="mb-3 flex items-center justify-between gap-3">
                                     <div>
-                                        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Startup Path</p>
-                                        <p className="mt-1 text-sm text-slate-800">
+                                        <p className="text-xs text-ink-muted">Startup Path</p>
+                                        <p className="mt-1 text-sm text-ink">
                                             {activeService ? activeService.detail : 'Diagnostics complete. Handing off to session broker.'}
                                         </p>
                                     </div>
-                                    <div className="font-term text-sm text-slate-700">{snapshot.progressPercent}%</div>
+                                    <div className="font-term text-sm text-ink-muted">{snapshot.progressPercent}%</div>
                                 </div>
 
-                                <div className="h-2 overflow-hidden rounded-full bg-slate-200/80">
+                                <div className="h-2 overflow-hidden rounded-full bg-hairline">
                                     <div
-                                        className="h-full rounded-full bg-slate-900 transition-[width] duration-150 ease-out motion-reduce:transition-none"
+                                        className="h-full rounded-full bg-primary transition-[width] duration-150 ease-out motion-reduce:transition-none"
                                         style={{ width: `${snapshot.progressPercent}%` }}
                                     />
                                 </div>
                             </div>
 
-                            <div className="grid gap-3 text-sm text-slate-700 sm:grid-cols-3">
+                            <div className="grid gap-3 text-sm text-ink sm:grid-cols-3">
                                 <StatCard label="Services ready" value={`${snapshot.completedServices}/${snapshot.services.length}`} />
                                 <StatCard label="Elapsed" value={`${snapshot.totalElapsedMs} ms`} />
                                 <StatCard
@@ -85,13 +85,14 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
                         </div>
                     </section>
 
-                    <section className="rounded-[28px] border border-slate-200/70 bg-slate-950/88 p-4 text-slate-100 shadow-2xl sm:p-6">
+                    {/* Dark tile: live service panel — the color change is the divider */}
+                    <section className="rounded-lg border border-hairline bg-tile-1 p-4 text-on-dark sm:p-6">
                         <div className="mb-4 flex items-center justify-between gap-4">
                             <div>
-                                <p className="font-term text-[11px] uppercase tracking-[0.28em] text-slate-400">Service Panel</p>
-                                <h2 className="mt-2 text-xl font-medium text-white">Startup status</h2>
+                                <p className="font-term text-[12px] text-on-dark-muted">Service Panel</p>
+                                <h2 className="mt-2 text-xl font-semibold text-on-dark">Startup status</h2>
                             </div>
-                            <p className="font-term text-xs uppercase tracking-[0.2em] text-slate-400">
+                            <p className="font-term text-xs text-on-dark-muted">
                                 {snapshot.totalDurationMs} ms budget
                             </p>
                         </div>
@@ -103,13 +104,13 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
                         </div>
 
                         {advisoryServices.length > 0 ? (
-                            <div className="mt-5 rounded-2xl border border-amber-300/20 bg-amber-400/10 p-4">
-                                <p className="font-term text-[11px] uppercase tracking-[0.22em] text-amber-200">Advisories</p>
+                            <div className="mt-5 rounded-md border border-[rgba(255,149,0,0.4)] bg-tile-2 p-4">
+                                <p className="font-term text-[12px] text-warning">Advisories</p>
                                 <div className="mt-3 space-y-2">
                                     {advisoryServices.map((service) =>
                                         service.warning ? (
-                                            <p key={service.id} className="text-sm text-amber-50/90">
-                                                <span className="font-term text-xs text-amber-200">{service.warning.code}</span>{' '}
+                                            <p key={service.id} className="text-sm text-on-dark-muted">
+                                                <span className="font-term text-xs text-warning">{service.warning.code}</span>{' '}
                                                 {service.warning.message}
                                             </p>
                                         ) : null,
@@ -130,26 +131,26 @@ function DiagnosticsRow({ service, isActive }: { service: BootServiceSnapshot; i
 
     return (
         <div
-            className={`rounded-2xl border px-4 py-3 transition-colors duration-150 motion-reduce:transition-none ${
+            className={`rounded-md border px-4 py-3 transition-colors duration-150 motion-reduce:transition-none ${
                 isActive
-                    ? 'border-sky-300/45 bg-sky-400/10'
+                    ? 'border-primary-on-dark bg-tile-2'
                     : service.state === 'warning'
-                      ? 'border-amber-300/25 bg-amber-400/10'
-                      : 'border-slate-800 bg-slate-900/70'
+                      ? 'border-[rgba(255,149,0,0.4)] bg-tile-2'
+                      : 'border-white/10 bg-tile-1'
             }`}
         >
             <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                     <div className="flex items-center gap-2">
                         <StatusIcon state={service.state} />
-                        <p className="text-sm font-medium text-white">{service.label}</p>
+                        <p className="text-sm font-semibold text-on-dark">{service.label}</p>
                     </div>
-                    <p className="mt-2 text-sm text-slate-400">{service.detail}</p>
+                    <p className="mt-2 text-sm text-on-dark-muted">{service.detail}</p>
                 </div>
 
                 <div className="text-right">
-                    <p className="font-term text-[11px] uppercase tracking-[0.18em] text-slate-400">{statusText}</p>
-                    <p className="mt-2 font-term text-xs text-slate-300">
+                    <p className="font-term text-[12px] text-on-dark-muted">{statusText}</p>
+                    <p className="mt-2 font-term text-xs text-on-dark-muted">
                         {service.elapsedMs}/{service.durationMs} ms
                     </p>
                 </div>
@@ -160,25 +161,25 @@ function DiagnosticsRow({ service, isActive }: { service: BootServiceSnapshot; i
 
 function StatusIcon({ state }: { state: BootServiceSnapshot['state'] }) {
     if (state === 'warning') {
-        return <AlertTriangle className="h-4 w-4 text-amber-300" />
+        return <AlertTriangle className="h-4 w-4 text-warning" />
     }
 
     if (state === 'ready') {
-        return <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+        return <CheckCircle2 className="h-4 w-4 text-primary-on-dark" />
     }
 
     if (state === 'starting') {
-        return <Loader2 className="h-4 w-4 animate-spin text-sky-300 motion-reduce:animate-none" />
+        return <Loader2 className="h-4 w-4 animate-spin text-primary-on-dark motion-reduce:animate-none" />
     }
 
-    return <div className="h-2.5 w-2.5 rounded-full bg-slate-500" />
+    return <div className="h-2.5 w-2.5 rounded-full bg-on-dark-muted" />
 }
 
 function StatCard({ label, value }: { label: string; value: string }) {
     return (
-        <div className="rounded-2xl border border-slate-200/70 bg-white/45 px-4 py-3">
-            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{label}</p>
-            <p className="mt-1 font-term text-sm text-slate-800">{value}</p>
+        <div className="rounded-md border border-hairline bg-parchment px-4 py-3">
+            <p className="text-xs text-ink-muted">{label}</p>
+            <p className="mt-1 font-term text-sm text-ink">{value}</p>
         </div>
     )
 }
