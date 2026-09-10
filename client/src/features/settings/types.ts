@@ -82,6 +82,6 @@ export interface ThemeTokens {
 export interface WallpaperOption {
     id: string
     label: string
-    kind: 'image' | 'gradient'
+    kind: 'image' | 'gradient' | 'solid'
     value: string
 }

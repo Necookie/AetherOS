@@ -65,8 +65,8 @@ function ensureReadableTextColor(textColor: string, backgroundColor: string) {
         return textColor
     }
 
-    const nearBlack = '#0b1220'
-    const nearWhite = '#f8fbff'
+    const nearBlack = '#1d1d1f'
+    const nearWhite = '#ffffff'
     const blackContrast = contrastRatio(nearBlack, backgroundColor)
     const whiteContrast = contrastRatio(nearWhite, backgroundColor)
     return blackContrast > whiteContrast ? nearBlack : nearWhite
@@ -83,13 +83,13 @@ function resolvePalette(state: OsSettingsState): ThemePalette {
     const accentStrengthDelta = Math.min(Math.max(state.desktop.accentStrength - 1, -0.3), 0.4)
     const enhancedAccent = accentStrengthDelta >= 0
         ? blend(base.accent, '#ffffff', accentStrengthDelta * 0.55)
-        : blend(base.accent, '#0f172a', Math.abs(accentStrengthDelta) * 0.45)
+        : blend(base.accent, '#1d1d1f', Math.abs(accentStrengthDelta) * 0.45)
 
     const surface = contrastBoost > 0
-        ? blend(base.surface, state.appearance.themeMode === 'dark' ? '#0b1220' : '#ffffff', contrastBoost)
+        ? blend(base.surface, state.appearance.themeMode === 'dark' ? '#000000' : '#ffffff', contrastBoost)
         : base.surface
     const surfaceMuted = contrastBoost > 0
-        ? blend(base.surfaceMuted, state.appearance.themeMode === 'dark' ? '#0f172a' : '#ffffff', contrastBoost * 0.8)
+        ? blend(base.surfaceMuted, state.appearance.themeMode === 'dark' ? '#000000' : '#ffffff', contrastBoost * 0.8)
         : base.surfaceMuted
 
     return {
@@ -124,7 +124,14 @@ export function resolveWallpaper(optionId: string): WallpaperOption {
 export function getWallpaperCss(optionId: string) {
     const wallpaper = resolveWallpaper(optionId)
     if (wallpaper.kind === 'image') {
-        return `linear-gradient(180deg, rgb(2 6 23 / 0.28), rgb(2 6 23 / 0.5)), url('${wallpaper.value}')`
+        // Flat single-tone scrim (no color stops) for legibility over the
+        // photo — expressed as a gradient purely because backgroundImage
+        // requires an <image> value; it produces no visible transition.
+        return `linear-gradient(rgb(0 0 0 / 0.35), rgb(0 0 0 / 0.35)), url('${wallpaper.value}')`
+    }
+
+    if (wallpaper.kind === 'solid') {
+        return `linear-gradient(${wallpaper.value}, ${wallpaper.value})`
     }
 
     return wallpaper.value

@@ -1,29 +1,39 @@
 import type { OsSettingsState, ThemePalette, WallpaperOption } from './types'
 
+// Apple design-system palette (see design.md). One accent, flat surfaces,
+// hairline borders. textMuted uses Apple's real secondary gray (#6e6e73)
+// rather than the spec's fine-print-only ink-muted-48 (#7a7a7a) because
+// themeEngine's contrast guard would otherwise silently swap it to near-black
+// the moment it fails 4.5:1 against surfaceMuted.
 export const LIGHT_THEME: ThemePalette = {
-    canvas: '#cde8ff',
-    elevated: '#f1f7ff',
+    canvas: '#f5f5f7',
+    elevated: '#ffffff',
     surface: '#ffffff',
-    surfaceMuted: '#ecf4ff',
-    border: '#b9cae2',
-    textPrimary: '#172033',
-    textMuted: '#4f678a',
-    accent: '#0a84ff',
-    success: '#22c55e',
-    danger: '#ef4444',
+    surfaceMuted: '#f5f5f7',
+    border: '#e0e0e0',
+    textPrimary: '#1d1d1f',
+    textMuted: '#6e6e73',
+    accent: '#0066cc',
+    success: '#1a7f37',
+    danger: '#d92d20',
 }
 
+// Dark tiles use the spec's near-black tile scale rather than a navy;
+// accent uses Sky Link Blue (#2997ff) — the source system's dark-surface
+// variant of the single accent — since Action Blue is reserved as the
+// primary-button fill and reads better as a fill than as text/focus color
+// against true black.
 export const DARK_THEME: ThemePalette = {
-    canvas: '#0b1220',
-    elevated: '#121b2f',
-    surface: '#16233a',
-    surfaceMuted: '#1d2c46',
-    border: '#2b3c5f',
-    textPrimary: '#e6edf8',
-    textMuted: '#9ab0d0',
-    accent: '#5aa9ff',
-    success: '#22c55e',
-    danger: '#f87171',
+    canvas: '#000000',
+    elevated: '#252527',
+    surface: '#272729',
+    surfaceMuted: '#2a2a2c',
+    border: 'rgba(255, 255, 255, 0.12)',
+    textPrimary: '#ffffff',
+    textMuted: '#cccccc',
+    accent: '#2997ff',
+    success: '#30a350',
+    danger: '#ff6961',
 }
 
 export const WALLPAPER_OPTIONS: WallpaperOption[] = [
@@ -34,16 +44,16 @@ export const WALLPAPER_OPTIONS: WallpaperOption[] = [
         value: '/assets/wallpapers/urban-night-street.jpg',
     },
     {
-        id: 'aurora',
-        label: 'Aurora Sky',
-        kind: 'gradient',
-        value: 'radial-gradient(1200px 700px at 15% 15%, #7dd3fc 0%, transparent 58%), radial-gradient(960px 700px at 85% 20%, #818cf8 0%, transparent 60%), linear-gradient(165deg, #0f172a 0%, #1d4ed8 50%, #0f766e 100%)',
+        id: 'parchment',
+        label: 'Parchment',
+        kind: 'solid',
+        value: '#f5f5f7',
     },
     {
-        id: 'sunrise',
-        label: 'Soft Sunrise',
-        kind: 'gradient',
-        value: 'radial-gradient(900px 500px at 20% 10%, #fda4af 0%, transparent 62%), radial-gradient(1000px 600px at 80% 25%, #93c5fd 0%, transparent 65%), linear-gradient(160deg, #fef3c7 0%, #fde68a 35%, #fbcfe8 100%)',
+        id: 'studio-black',
+        label: 'Studio Black',
+        kind: 'solid',
+        value: '#1d1d1f',
     },
 ]
 
