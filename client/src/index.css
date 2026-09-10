@@ -16,7 +16,7 @@
     --os-accent: var(--ds-color-accent);
     --os-success: var(--ds-color-success);
     --os-danger: var(--ds-color-danger);
-    --os-shadow: var(--ds-shadow-md);
+    --os-shadow: var(--ds-shadow-elevated);
     --os-focus-ring-width: 2px;
     --os-control-min-height: 2.25rem;
     --os-motion-fast: 90ms;
@@ -31,10 +31,7 @@
   html,
   body {
     @apply m-0 h-full w-full overflow-hidden;
-    background: radial-gradient(760px 520px at 12% 14%, #ffd3e8 0%, transparent 65%),
-      radial-gradient(920px 620px at 88% 22%, #c8e2ff 0%, transparent 62%),
-      radial-gradient(1050px 700px at 58% 84%, #d6cbff 0%, transparent 70%),
-      linear-gradient(165deg, #cae8ff 0%, #d9d8ff 44%, #ffd7ea 100%);
+    background: var(--ds-color-bg-canvas);
     color: var(--os-text-0);
     font-family: var(--ds-font-ui);
   }
@@ -49,41 +46,44 @@
   }
 
   :focus-visible {
-    outline: var(--os-focus-ring-width) solid color-mix(in oklab, var(--os-accent) 70%, white 30%);
+    outline: var(--os-focus-ring-width) solid var(--ds-color-accent-focus);
     outline-offset: 1px;
   }
 }
 
 @layer components {
   .os-panel {
-    background: color-mix(in oklab, var(--os-surface-0) 82%, transparent);
-    border: 1px solid color-mix(in oklab, var(--os-border) 70%, white 30%);
-    box-shadow: var(--os-shadow);
+    background: var(--os-surface-0);
+    border: 1px solid var(--os-border);
   }
 
   .os-subtle-panel {
-    background: color-mix(in oklab, var(--os-surface-1) 78%, transparent);
-    border: 1px solid color-mix(in oklab, var(--os-border) 62%, white 38%);
+    background: var(--os-surface-1);
+    border: 1px solid var(--os-border);
   }
 
   .os-button {
-    @apply inline-flex items-center justify-center rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-100;
+    @apply inline-flex items-center justify-center rounded-[--ds-radius-sm] px-3 py-1.5 text-xs font-normal transition-transform duration-100;
     min-height: var(--os-control-min-height);
     color: var(--os-text-0);
-    background: color-mix(in oklab, var(--os-surface-1) 82%, white 18%);
-    border: 1px solid color-mix(in oklab, var(--os-border) 72%, white 28%);
+    background: var(--os-surface-1);
+    border: 1px solid var(--os-border);
   }
 
   .os-button:hover {
-    background: color-mix(in oklab, var(--os-surface-1) 72%, white 28%);
+    background: color-mix(in oklab, var(--os-surface-1) 92%, black 8%);
+  }
+
+  .os-button:active {
+    transform: scale(0.95);
   }
 
   .os-input {
-    @apply w-full rounded-md px-3 py-1.5 text-xs outline-none transition-colors duration-100;
+    @apply w-full rounded-[--ds-radius-sm] px-3 py-1.5 text-xs outline-none transition-colors duration-100;
     min-height: var(--os-control-min-height);
     color: var(--os-text-0);
-    background: color-mix(in oklab, var(--os-bg-1) 88%, white 12%);
-    border: 1px solid color-mix(in oklab, var(--os-border) 65%, white 35%);
+    background: var(--os-bg-1);
+    border: 1px solid var(--os-border);
   }
 
   .os-input::placeholder {
@@ -91,8 +91,9 @@
   }
 
   .os-input:focus {
-    border-color: color-mix(in oklab, var(--os-accent) 70%, white 30%);
-    box-shadow: 0 0 0 2px color-mix(in oklab, var(--os-accent) 30%, transparent);
+    border-color: var(--ds-color-accent-focus);
+    outline: 2px solid var(--ds-color-accent-focus);
+    outline-offset: 1px;
   }
 }
 
@@ -126,23 +127,15 @@
   }
 
   .os-interactive {
-    transition: transform var(--os-motion-fast) ease-out, box-shadow var(--os-motion-fast) ease-out,
-      background-color var(--os-motion-fast) ease-out;
-  }
-
-  .os-interactive:hover {
-    box-shadow: 0 8px 22px rgb(15 23 42 / 0.16);
+    transition: transform var(--os-motion-fast) ease-out, background-color var(--os-motion-fast) ease-out;
   }
 
   .os-interactive:active {
-    transform: scale(0.98);
+    transform: scale(0.95);
   }
 
   .os-desktop-bg {
-    background: radial-gradient(760px 520px at 12% 14%, #ffd3e8 0%, transparent 65%),
-      radial-gradient(920px 620px at 88% 22%, #c8e2ff 0%, transparent 62%),
-      radial-gradient(1050px 700px at 58% 84%, #d6cbff 0%, transparent 70%),
-      linear-gradient(165deg, #cae8ff 0%, #d9d8ff 44%, #ffd7ea 100%);
+    background: var(--ds-color-bg-canvas);
   }
 
   .os-text-muted {
