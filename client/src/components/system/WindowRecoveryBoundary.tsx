@@ -50,26 +50,26 @@ class WindowRecoveryBoundaryInner extends Component<
 
         return (
             <Window id={this.props.windowId} title={`${this.props.appTitle} (Recovery)`}>
-                <div className="flex h-full w-full flex-col justify-between gap-3 bg-slate-950/55 p-4 text-slate-200">
+                <div className="flex h-full w-full flex-col justify-between gap-3 bg-canvas p-4 text-ink">
                     <div>
-                        <h2 className="text-sm font-semibold text-slate-100">This window crashed</h2>
-                        <p className="mt-2 text-xs text-slate-300">
+                        <h2 className="text-sm font-semibold text-ink">This window crashed</h2>
+                        <p className="mt-2 text-xs text-ink-muted">
                             Retry the app or close this window to keep the desktop session stable.
                         </p>
-                        <pre className="mt-3 max-h-28 overflow-auto rounded border border-slate-700 bg-slate-900/75 p-2 font-term text-[11px] text-slate-300">
+                        <pre className="mt-3 max-h-28 overflow-auto rounded-sm border border-hairline bg-parchment p-2 font-term text-[12px] text-ink-muted">
                             {this.state.message || 'Unknown render error'}
                         </pre>
                     </div>
                     <div className="flex gap-2">
                         <button
                             onClick={this.handleRetry}
-                            className="rounded border border-slate-500 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-100 hover:bg-slate-700"
+                            className="rounded-sm border border-hairline bg-parchment px-3 py-1.5 text-xs font-semibold text-ink transition-transform active:scale-95"
                         >
                             Retry window
                         </button>
                         <button
                             onClick={this.props.onClose}
-                            className="rounded border border-red-500/45 bg-red-900/20 px-3 py-1.5 text-xs font-medium text-red-100 hover:bg-red-900/35"
+                            className="rounded-sm border border-hairline bg-canvas px-3 py-1.5 text-xs font-semibold text-danger transition-transform active:scale-95"
                         >
                             Close app
                         </button>
@@ -83,10 +83,10 @@ class WindowRecoveryBoundaryInner extends Component<
 function WindowLoadingFallback({ windowId, appTitle }: { windowId: string; appTitle: string }) {
     return (
         <Window id={windowId} title={`${appTitle} (Loading...)`}>
-            <div className="flex h-full w-full items-center justify-center bg-slate-950/50 text-slate-200">
-                <div className="flex items-center gap-3 rounded-xl border border-slate-700/80 bg-slate-900/60 px-4 py-3">
-                    <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-400" />
-                    <span className="text-xs uppercase tracking-[0.2em]">Loading module</span>
+            <div className="flex h-full w-full items-center justify-center bg-canvas text-ink">
+                <div className="flex items-center gap-3 rounded-lg border border-hairline bg-parchment px-4 py-3">
+                    <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-primary" />
+                    <span className="text-xs text-ink-muted">Loading module</span>
                 </div>
             </div>
         </Window>
