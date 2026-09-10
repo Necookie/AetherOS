@@ -69,20 +69,20 @@ function GanttChart({ segments }: { segments: CpuExecutionSegment[] }) {
     const total = segments[segments.length - 1]?.end ?? 0
 
     if (segments.length === 0 || total === 0) {
-        return <div className="os-subtle-panel rounded-2xl border border-dashed p-5 text-sm os-text-muted">No execution timeline yet.</div>
+        return <div className="os-subtle-panel rounded-lg border border-dashed p-5 text-sm os-text-muted">No execution timeline yet.</div>
     }
 
     return (
         <div className="space-y-3">
-            <div className="flex min-h-[5.5rem] overflow-hidden rounded-2xl border border-white/10 bg-[color-mix(in_oklab,var(--os-bg-1)_82%,transparent)]">
+            <div className="flex min-h-[5.5rem] overflow-hidden rounded-lg border border-white/10 bg-[var(--os-bg-1)]">
                 {segments.map((segment, index) => {
                     const width = `${(segment.end - segment.start) / total * 100}%`
                     const isIdle = segment.pid === 'Idle'
                     return (
                         <div
                             key={`${segment.pid}-${segment.start}-${segment.end}-${index}`}
-                            className={`flex min-w-[3.5rem] flex-col justify-between border-r px-3 py-3 text-xs last:border-r-0 ${isIdle ? 'bg-white/5 text-[var(--os-text-1)]' : 'bg-[linear-gradient(180deg,color-mix(in_oklab,var(--os-accent)_20%,transparent),color-mix(in_oklab,var(--os-surface-1)_90%,transparent))] text-[var(--os-text-0)]'}`}
-                            style={{ width }}
+                            className={`flex min-w-[3.5rem] flex-col justify-between border-r px-3 py-3 text-xs last:border-r-0 ${isIdle ? 'bg-white/5 text-[var(--os-text-1)]' : 'text-white'}`}
+                            style={{ width, background: isIdle ? undefined : 'var(--os-accent)' }}
                         >
                             <span className="font-semibold uppercase tracking-[0.18em]">{segment.pid}</span>
                             <span className="text-[11px] opacity-75">{segment.end - segment.start} units</span>
@@ -102,7 +102,7 @@ function GanttChart({ segments }: { segments: CpuExecutionSegment[] }) {
 
 function DiskChart({ points, maxCylinder }: { points: number[]; maxCylinder: number }) {
     if (points.length < 2) {
-        return <div className="os-subtle-panel rounded-2xl border border-dashed p-5 text-sm os-text-muted">No head movement to plot yet.</div>
+        return <div className="os-subtle-panel rounded-lg border border-dashed p-5 text-sm os-text-muted">No head movement to plot yet.</div>
     }
 
     const width = 760
@@ -123,7 +123,7 @@ function DiskChart({ points, maxCylinder }: { points: number[]; maxCylinder: num
     const polyline = coordinates.map((point) => `${point.x},${point.y}`).join(' ')
 
     return (
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-[color-mix(in_oklab,var(--os-bg-1)_82%,transparent)] p-3">
+        <div className="overflow-hidden rounded-lg border border-white/10 bg-[var(--os-bg-1)] p-3">
             <svg viewBox={`0 0 ${width} ${height}`} className="h-[18rem] w-full" role="img" aria-label="Disk head movement chart">
                 {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
                     const y = paddingY + ratio * plotHeight
@@ -138,7 +138,7 @@ function DiskChart({ points, maxCylinder }: { points: number[]; maxCylinder: num
                 <polyline fill="none" stroke="var(--os-accent)" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" points={polyline} />
                 {coordinates.map((point) => (
                     <g key={`${point.index}-${point.value}`}>
-                        <circle cx={point.x} cy={point.y} r="4.5" fill="color-mix(in oklab, var(--os-accent) 78%, white 22%)" />
+                        <circle cx={point.x} cy={point.y} r="4.5" fill="var(--os-accent)" />
                         <text x={point.x} y={height - 6} textAnchor="middle" fontSize="10" fill="var(--os-text-1)">{point.index}</text>
                     </g>
                 ))}
@@ -177,7 +177,7 @@ function CpuTab() {
 
     return (
         <div className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[22rem,minmax(0,1fr)]">
-            <section className="os-panel os-panel-motion rounded-[1.75rem] p-4">
+            <section className="os-panel os-panel-motion rounded-lg p-4">
                 <div className="flex items-start justify-between gap-3">
                     <div>
                         <p className="text-[11px] uppercase tracking-[0.18em] os-text-muted">CPU Scheduling</p>
@@ -188,7 +188,7 @@ function CpuTab() {
 
                 <div className="mt-4 space-y-3">
                     <label className="block">
-                        <span className="mb-1.5 block text-xs font-medium text-[var(--os-text-0)]">Algorithm</span>
+                        <span className="mb-1.5 block text-xs font-semibold text-[var(--os-text-0)]">Algorithm</span>
                         <select value={algorithm} onChange={(event) => setAlgorithm(event.target.value as CpuAlgorithm)} className="os-input">
                             {CPU_ALGORITHM_OPTIONS.map((option) => (
                                 <option key={option.value} value={option.value}>{option.label}</option>
@@ -196,13 +196,13 @@ function CpuTab() {
                         </select>
                     </label>
 
-                    <p className="rounded-2xl bg-white/5 px-3 py-2 text-xs os-text-muted">
+                    <p className="rounded-lg bg-white/5 px-3 py-2 text-xs os-text-muted">
                         {CPU_ALGORITHM_OPTIONS.find((option) => option.value === algorithm)?.note}
                     </p>
 
                     {algorithm === 'rr' ? (
                         <label className="block">
-                            <span className="mb-1.5 block text-xs font-medium text-[var(--os-text-0)]">Time quantum</span>
+                            <span className="mb-1.5 block text-xs font-semibold text-[var(--os-text-0)]">Time quantum</span>
                             <input type="number" min={1} value={quantum} onChange={(event) => setQuantum(Number(event.target.value) || 1)} className="os-input" />
                         </label>
                     ) : null}
@@ -225,7 +225,7 @@ function CpuTab() {
 
                 <div className="mt-5 space-y-2">
                     {processes.map((process, index) => (
-                        <div key={`${process.pid}-${index}`} className="os-subtle-panel rounded-2xl px-3 py-2.5 text-xs text-[var(--os-text-0)]">
+                        <div key={`${process.pid}-${index}`} className="os-subtle-panel rounded-lg px-3 py-2.5 text-xs text-[var(--os-text-0)]">
                             <div className="flex items-center justify-between gap-2">
                                 <span className="font-semibold uppercase tracking-[0.16em]">{process.pid}</span>
                                 <button type="button" className="text-[11px] os-text-muted transition hover:text-[var(--os-danger)]" onClick={() => setProcesses((current) => current.filter((_, currentIndex) => currentIndex !== index))}>Remove</button>
@@ -238,21 +238,21 @@ function CpuTab() {
 
             <section className="flex min-h-0 flex-col gap-4">
                 <div className="grid gap-4 md:grid-cols-3">
-                    <div className="os-panel os-panel-motion rounded-[1.6rem] p-4">
+                    <div className="os-panel os-panel-motion rounded-lg p-4">
                         <p className="text-[11px] uppercase tracking-[0.18em] os-text-muted">Average Waiting</p>
                         <p className="mt-2 text-3xl font-semibold text-[var(--os-text-0)]">{formatNumber(result.averageWaitingTime)}</p>
                     </div>
-                    <div className="os-panel os-panel-motion rounded-[1.6rem] p-4">
+                    <div className="os-panel os-panel-motion rounded-lg p-4">
                         <p className="text-[11px] uppercase tracking-[0.18em] os-text-muted">Average Turnaround</p>
                         <p className="mt-2 text-3xl font-semibold text-[var(--os-text-0)]">{formatNumber(result.averageTurnaroundTime)}</p>
                     </div>
-                    <div className="os-panel os-panel-motion rounded-[1.6rem] p-4">
+                    <div className="os-panel os-panel-motion rounded-lg p-4">
                         <p className="text-[11px] uppercase tracking-[0.18em] os-text-muted">Scheduler Readout</p>
                         <p className="mt-2 text-sm leading-6 text-[var(--os-text-0)]">{getCpuInsight(result)}</p>
                     </div>
                 </div>
 
-                <div className="os-panel os-panel-motion rounded-[1.75rem] p-4">
+                <div className="os-panel os-panel-motion rounded-lg p-4">
                     <div className="flex items-center justify-between gap-3">
                         <div>
                             <p className="text-[11px] uppercase tracking-[0.18em] os-text-muted">Execution Timeline</p>
@@ -265,7 +265,7 @@ function CpuTab() {
                     </div>
                 </div>
 
-                <div className="os-panel os-panel-motion min-h-0 flex-1 overflow-hidden rounded-[1.75rem] p-4">
+                <div className="os-panel os-panel-motion min-h-0 flex-1 overflow-hidden rounded-lg p-4">
                     <div className="flex items-center justify-between gap-3">
                         <div>
                             <p className="text-[11px] uppercase tracking-[0.18em] os-text-muted">Per-process Metrics</p>
@@ -276,13 +276,13 @@ function CpuTab() {
                         <table className="min-w-full text-left text-sm text-[var(--os-text-0)]">
                             <thead className="text-[11px] uppercase tracking-[0.16em] os-text-muted">
                                 <tr>
-                                    <th className="pb-3 pr-4 font-medium">PID</th>
-                                    <th className="pb-3 pr-4 font-medium">Arrival</th>
-                                    <th className="pb-3 pr-4 font-medium">Burst</th>
-                                    <th className="pb-3 pr-4 font-medium">Priority</th>
-                                    <th className="pb-3 pr-4 font-medium">Completion</th>
-                                    <th className="pb-3 pr-4 font-medium">Turnaround</th>
-                                    <th className="pb-3 font-medium">Waiting</th>
+                                    <th className="pb-3 pr-4 font-semibold">PID</th>
+                                    <th className="pb-3 pr-4 font-semibold">Arrival</th>
+                                    <th className="pb-3 pr-4 font-semibold">Burst</th>
+                                    <th className="pb-3 pr-4 font-semibold">Priority</th>
+                                    <th className="pb-3 pr-4 font-semibold">Completion</th>
+                                    <th className="pb-3 pr-4 font-semibold">Turnaround</th>
+                                    <th className="pb-3 font-semibold">Waiting</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -318,7 +318,7 @@ function DiskTab() {
 
     return (
         <div className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[22rem,minmax(0,1fr)]">
-            <section className="os-panel os-panel-motion rounded-[1.75rem] p-4">
+            <section className="os-panel os-panel-motion rounded-lg p-4">
                 <div className="flex items-start justify-between gap-3">
                     <div>
                         <p className="text-[11px] uppercase tracking-[0.18em] os-text-muted">Disk Scheduling</p>
@@ -329,35 +329,35 @@ function DiskTab() {
 
                 <div className="mt-4 space-y-3">
                     <label className="block">
-                        <span className="mb-1.5 block text-xs font-medium text-[var(--os-text-0)]">Algorithm</span>
+                        <span className="mb-1.5 block text-xs font-semibold text-[var(--os-text-0)]">Algorithm</span>
                         <select value={algorithm} onChange={(event) => setAlgorithm(event.target.value as DiskAlgorithm)} className="os-input">
                             {DISK_ALGORITHM_OPTIONS.map((option) => (
                                 <option key={option.value} value={option.value}>{option.label}</option>
                             ))}
                         </select>
                     </label>
-                    <p className="rounded-2xl bg-white/5 px-3 py-2 text-xs os-text-muted">
+                    <p className="rounded-lg bg-white/5 px-3 py-2 text-xs os-text-muted">
                         {DISK_ALGORITHM_OPTIONS.find((option) => option.value === algorithm)?.note}
                     </p>
                     <div className="grid grid-cols-2 gap-2">
                         <label className="block">
-                            <span className="mb-1.5 block text-xs font-medium text-[var(--os-text-0)]">Initial head</span>
+                            <span className="mb-1.5 block text-xs font-semibold text-[var(--os-text-0)]">Initial head</span>
                             <input type="number" min={0} value={headStart} onChange={(event) => setHeadStart(Number(event.target.value) || 0)} className="os-input" />
                         </label>
                         <label className="block">
-                            <span className="mb-1.5 block text-xs font-medium text-[var(--os-text-0)]">Max cylinder</span>
+                            <span className="mb-1.5 block text-xs font-semibold text-[var(--os-text-0)]">Max cylinder</span>
                             <input type="number" min={1} value={maxCylinder} onChange={(event) => setMaxCylinder(Math.max(1, Number(event.target.value) || 1))} className="os-input" />
                         </label>
                     </div>
                     <label className="block">
-                        <span className="mb-1.5 block text-xs font-medium text-[var(--os-text-0)]">Sweep direction</span>
+                        <span className="mb-1.5 block text-xs font-semibold text-[var(--os-text-0)]">Sweep direction</span>
                         <select value={direction} onChange={(event) => setDirection(event.target.value as ScanDirection)} className="os-input">
                             <option value="left">Toward cylinder 0</option>
                             <option value="right">Toward max cylinder</option>
                         </select>
                     </label>
                     <label className="block">
-                        <span className="mb-1.5 block text-xs font-medium text-[var(--os-text-0)]">Request queue</span>
+                        <span className="mb-1.5 block text-xs font-semibold text-[var(--os-text-0)]">Request queue</span>
                         <textarea value={queueInput} onChange={(event) => setQueueInput(event.target.value)} className="os-input min-h-[7.5rem] resize-none py-2.5 text-sm leading-6" placeholder="98, 183, 37, 122, 14, 124, 65, 67" />
                     </label>
                 </div>
@@ -365,21 +365,21 @@ function DiskTab() {
 
             <section className="flex min-h-0 flex-col gap-4">
                 <div className="grid gap-4 md:grid-cols-3">
-                    <div className="os-panel os-panel-motion rounded-[1.6rem] p-4">
+                    <div className="os-panel os-panel-motion rounded-lg p-4">
                         <p className="text-[11px] uppercase tracking-[0.18em] os-text-muted">Total Seek</p>
                         <p className="mt-2 text-3xl font-semibold text-[var(--os-text-0)]">{result.totalSeekDistance}</p>
                     </div>
-                    <div className="os-panel os-panel-motion rounded-[1.6rem] p-4">
+                    <div className="os-panel os-panel-motion rounded-lg p-4">
                         <p className="text-[11px] uppercase tracking-[0.18em] os-text-muted">Requests Served</p>
                         <p className="mt-2 text-3xl font-semibold text-[var(--os-text-0)]">{queue.length}</p>
                     </div>
-                    <div className="os-panel os-panel-motion rounded-[1.6rem] p-4">
+                    <div className="os-panel os-panel-motion rounded-lg p-4">
                         <p className="text-[11px] uppercase tracking-[0.18em] os-text-muted">Traversal Readout</p>
                         <p className="mt-2 text-sm leading-6 text-[var(--os-text-0)]">{getDiskInsight(result)}</p>
                     </div>
                 </div>
 
-                <div className="os-panel os-panel-motion rounded-[1.75rem] p-4">
+                <div className="os-panel os-panel-motion rounded-lg p-4">
                     <div className="flex items-center justify-between gap-3">
                         <div>
                             <p className="text-[11px] uppercase tracking-[0.18em] os-text-muted">Cylinder Graph</p>
@@ -393,7 +393,7 @@ function DiskTab() {
                 </div>
 
                 <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr),20rem]">
-                    <div className="os-panel os-panel-motion rounded-[1.75rem] p-4">
+                    <div className="os-panel os-panel-motion rounded-lg p-4">
                         <p className="text-[11px] uppercase tracking-[0.18em] os-text-muted">Service Order</p>
                         <div className="mt-3 flex flex-wrap gap-2">
                             {result.points.map((point, index) => (
@@ -403,7 +403,7 @@ function DiskTab() {
                             ))}
                         </div>
                     </div>
-                    <div className="os-panel os-panel-motion rounded-[1.75rem] p-4">
+                    <div className="os-panel os-panel-motion rounded-lg p-4">
                         <p className="text-[11px] uppercase tracking-[0.18em] os-text-muted">Queue Snapshot</p>
                         <p className="mt-3 text-sm leading-6 text-[var(--os-text-0)]">
                             {queue.length > 0 ? queue.join(', ') : 'No valid cylinder requests parsed from the current input.'}
@@ -420,7 +420,7 @@ export default function OSLabApp({ id }: { id: string }) {
 
     return (
         <Window id={id} title="OS Simulation Lab">
-            <div className="flex h-full min-h-0 flex-col bg-[radial-gradient(circle_at_top_left,color-mix(in_oklab,var(--os-accent)_16%,transparent),transparent_34%),linear-gradient(180deg,color-mix(in_oklab,var(--os-surface-0)_94%,transparent),color-mix(in_oklab,var(--os-bg-1)_90%,transparent))] text-[var(--os-text-0)]">
+            <div className="flex h-full min-h-0 flex-col bg-[var(--os-bg-0)] text-[var(--os-text-0)]">
                 <header className="border-b border-white/10 px-5 py-4">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                         <div>
@@ -430,11 +430,11 @@ export default function OSLabApp({ id }: { id: string }) {
                                 Compare scheduler behavior visually, inspect turnaround and waiting costs, and trace disk head movement across cylinders.
                             </p>
                         </div>
-                        <div className="os-subtle-panel inline-flex rounded-2xl p-1">
-                            <button type="button" onClick={() => setActiveTab('cpu')} className={`os-interactive rounded-[1rem] px-4 py-2 text-sm font-medium transition ${activeTab === 'cpu' ? 'bg-[color-mix(in_oklab,var(--os-accent)_18%,white_10%)] text-[var(--os-text-0)] shadow-[0_12px_28px_rgb(15_23_42_/_0.12)]' : 'text-[var(--os-text-1)] hover:text-[var(--os-text-0)]'}`}>
+                        <div className="os-subtle-panel inline-flex rounded-md p-1">
+                            <button type="button" onClick={() => setActiveTab('cpu')} className={`rounded-sm px-4 py-2 text-sm font-semibold transition-transform active:scale-95 ${activeTab === 'cpu' ? 'bg-[var(--os-accent)] text-white' : 'text-[var(--os-text-1)]'}`}>
                                 CPU Scheduling
                             </button>
-                            <button type="button" onClick={() => setActiveTab('disk')} className={`os-interactive rounded-[1rem] px-4 py-2 text-sm font-medium transition ${activeTab === 'disk' ? 'bg-[color-mix(in_oklab,var(--os-accent)_18%,white_10%)] text-[var(--os-text-0)] shadow-[0_12px_28px_rgb(15_23_42_/_0.12)]' : 'text-[var(--os-text-1)] hover:text-[var(--os-text-0)]'}`}>
+                            <button type="button" onClick={() => setActiveTab('disk')} className={`rounded-sm px-4 py-2 text-sm font-semibold transition-transform active:scale-95 ${activeTab === 'disk' ? 'bg-[var(--os-accent)] text-white' : 'text-[var(--os-text-1)]'}`}>
                                 Disk Scheduling
                             </button>
                         </div>
