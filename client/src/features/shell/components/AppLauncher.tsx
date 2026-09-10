@@ -100,7 +100,7 @@ export default function AppLauncher({
         return text.split('').map((character, index) => (
             <span
                 key={`${text}-${index}`}
-                className={highlights.has(index) ? 'rounded-[0.3rem] bg-[color-mix(in_oklab,var(--os-accent)_18%,white_72%)] px-[0.05rem] text-slate-950' : undefined}
+                className={highlights.has(index) ? 'rounded-xs bg-[rgba(0,102,204,0.16)] px-[0.05rem] text-ink' : undefined}
             >
                 {character}
             </span>
@@ -109,38 +109,33 @@ export default function AppLauncher({
 
     const renderResultIcon = (item: CommandPaletteMatch) => {
         if (item.iconAppId) {
-            return <ShellAppIcon appId={item.iconAppId ?? item.id} className="h-8 w-8" />
+            return <ShellAppIcon appId={item.iconAppId ?? item.id} className="h-6 w-6" />
         }
 
         if (item.action.kind === 'lock-session') {
-            return <Lock className="h-5 w-5 text-slate-700" />
+            return <Lock className="h-5 w-5 text-ink-muted-48" />
         }
-        return <Search className="h-5 w-5 text-slate-700" />
+        return <Search className="h-5 w-5 text-ink-muted-48" />
     }
 
     return (
         <div
-            className={`animate-os-flyout-in absolute left-0 z-[var(--ds-z-flyout)] w-[min(38rem,calc(100vw-1.5rem))] rounded-[1.75rem] p-3 backdrop-blur-2xl ${taskbarPosition === 'top' ? 'top-[calc(var(--shell-topbar-height)+var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)]' : 'bottom-[calc(var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)]'}`}
-            style={{
-                background: 'linear-gradient(180deg, rgb(255 255 255 / 0.64), rgb(241 245 249 / 0.4))',
-                border: '1px solid rgb(255 255 255 / 0.58)',
-                boxShadow: '0 26px 64px rgb(15 23 42 / 0.32)',
-            }}
+            className={`absolute left-0 z-[var(--ds-z-flyout)] w-[min(38rem,calc(100vw-1.5rem))] rounded-lg border border-hairline bg-canvas p-3 ${taskbarPosition === 'top' ? 'top-[calc(var(--shell-topbar-height)+var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)]' : 'bottom-[calc(var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)]'}`}
         >
-            <div className="mb-3 rounded-[1.35rem] border border-white/55 bg-[linear-gradient(180deg,rgb(255_255_255_/_0.7),rgb(255_255_255_/_0.42))] p-4">
+            <div className="mb-3 rounded-md border border-hairline bg-parchment p-4">
                 <div className="mb-3 flex items-center justify-between">
                     <div>
-                        <p className="text-[11px] uppercase tracking-[0.16em] text-slate-600">AetherOS</p>
-                        <h2 className="text-base font-semibold text-slate-900">Command Palette</h2>
+                        <p className="text-[12px] text-ink-muted">AetherOS</p>
+                        <h2 className="text-base font-semibold text-ink">Command Palette</h2>
                     </div>
-                    <div className="flex items-center gap-2 rounded-full border border-white/60 bg-white/70 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.12em] text-slate-600">
+                    <div className="flex items-center gap-2 rounded-pill border border-hairline bg-canvas px-3 py-1 text-[12px] text-ink-muted">
                         <Sparkles className="h-3.5 w-3.5" />
                         Keyboard-first
                     </div>
                 </div>
 
                 <label className="relative block">
-                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ds-color-text-muted)]" />
+                    <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
                     <input
                         ref={inputRef}
                         value={query}
@@ -150,11 +145,11 @@ export default function AppLauncher({
                         aria-controls="aether-command-palette-results"
                         aria-activedescendant={activeItem ? `command-palette-item-${activeItem.id}` : undefined}
                         placeholder="Search apps, settings, and shell actions"
-                        className="w-full rounded-2xl border border-white/65 bg-white/85 py-3 pl-10 pr-3 text-sm text-slate-900 outline-none placeholder:text-slate-500 focus:border-white"
+                        className="w-full rounded-pill border border-hairline bg-canvas py-3 pl-11 pr-4 text-sm text-ink outline-none placeholder:text-ink-muted focus:border-primary-focus focus:outline focus:outline-2 focus:outline-primary-focus"
                         type="search"
                     />
                 </label>
-                <div className="mt-3 flex items-center justify-between text-[11px] text-slate-600">
+                <div className="mt-3 flex items-center justify-between text-[12px] text-ink-muted">
                     <span>Enter to open, arrows to navigate, Escape to close</span>
                     <span>{getCommandPaletteResultCountLabel(launcherItems.length)}</span>
                 </div>
@@ -181,38 +176,38 @@ export default function AppLauncher({
                             aria-selected={isActive}
                             onMouseEnter={() => setActiveIndex(index)}
                             onClick={() => executeItem(item)}
-                            className={`os-interactive flex items-center gap-3 rounded-2xl border p-3 text-left transition-colors ${
+                            className={`flex items-center gap-3 rounded-lg border p-3 text-left transition-colors ${
                                 isActive
-                                    ? 'border-[color-mix(in_oklab,var(--os-accent)_32%,white_48%)] bg-[linear-gradient(135deg,rgb(255_255_255_/_0.96),rgb(226_232_240_/_0.88))] shadow-[0_12px_30px_rgb(15_23_42_/_0.12)]'
-                                    : 'border-white/55 bg-white/42 hover:bg-white/68'
+                                    ? 'border-primary-focus bg-[rgba(0,102,204,0.06)]'
+                                    : 'border-hairline bg-canvas hover:bg-parchment'
                             }`}
                         >
-                            <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${isActive ? 'bg-white' : 'bg-white/72'}`}>
+                            <div className="flex h-11 w-11 items-center justify-center rounded-md bg-parchment text-ink">
                                 {renderResultIcon(item)}
                             </div>
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
-                                    <p className="truncate text-sm font-medium text-slate-900">{renderHighlightedText(item.title, item.titleHighlights)}</p>
-                                    <span className="rounded-full bg-white/75 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-600">
+                                    <p className="truncate text-sm font-semibold text-ink">{renderHighlightedText(item.title, item.titleHighlights)}</p>
+                                    <span className="rounded-pill bg-parchment px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-muted">
                                         {item.kind}
                                     </span>
                                 </div>
-                                <p className="mt-0.5 truncate text-xs text-slate-600">{renderHighlightedText(item.subtitle, item.subtitleHighlights)}</p>
-                                <p className={`mt-1 text-[11px] ${item.status === 'running' ? 'text-emerald-700' : item.status === 'minimized' ? 'text-amber-700' : 'text-slate-500'}`}>
+                                <p className="mt-0.5 truncate text-xs text-ink-muted">{renderHighlightedText(item.subtitle, item.subtitleHighlights)}</p>
+                                <p className={`mt-1 text-[12px] ${item.status === 'running' ? 'text-primary' : item.status === 'minimized' ? 'text-ink-muted' : 'text-ink-muted-48'}`}>
                                     {statusLabel ?? item.metadata}
                                 </p>
                             </div>
-                            <div className="hidden text-[11px] text-slate-500 sm:block">Enter</div>
+                            <div className="hidden text-[12px] text-ink-muted-48 sm:block">Enter</div>
                         </button>
                     )
                 })}
 
                 {launcherItems.length === 0 ? (
-                    <div className="col-span-full rounded-2xl border border-dashed border-white/60 bg-[linear-gradient(180deg,rgb(255_255_255_/_0.52),rgb(255_255_255_/_0.3))] p-7 text-center">
-                        <SearchX className="mx-auto h-5 w-5 text-slate-600" />
-                        <p className="mt-2 text-sm font-medium text-slate-800">No results</p>
-                        <p className="mt-1 text-xs text-slate-600">{emptyMessage}</p>
-                        <p className="mt-2 text-[11px] uppercase tracking-[0.12em] text-slate-500">Try an app name, settings section, or command keyword</p>
+                    <div className="col-span-full rounded-lg border border-dashed border-hairline bg-parchment p-7 text-center">
+                        <SearchX className="mx-auto h-5 w-5 text-ink-muted" />
+                        <p className="mt-2 text-sm font-semibold text-ink">No results</p>
+                        <p className="mt-1 text-xs text-ink-muted">{emptyMessage}</p>
+                        <p className="mt-2 text-[12px] text-ink-muted-48">Try an app name, settings section, or command keyword</p>
                     </div>
                 ) : null}
             </div>
