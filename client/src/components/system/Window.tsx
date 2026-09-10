@@ -114,18 +114,19 @@ export default function Window({ id, title, children }: WindowProps) {
                 height: bounds.height,
                 zIndex,
                 visibility: isMinimized ? 'hidden' : 'visible',
-                background: 'linear-gradient(180deg, color-mix(in oklab, var(--os-surface-0) 86%, white 14%), color-mix(in oklab, var(--os-surface-1) 82%, transparent 18%))',
-                borderColor: 'color-mix(in oklab, var(--os-border) 65%, white 35%)',
-                boxShadow: isFocused ? '0 30px 56px rgb(15 23 42 / 0.30)' : '0 14px 30px rgb(15 23 42 / 0.20)',
+                background: 'var(--ds-color-surface-0)',
+                borderColor: 'var(--ds-color-border)',
+                // The system's one reserved drop-shadow lives here, and only
+                // on the focused window — every other surface stays flat.
+                boxShadow: isFocused ? 'var(--ds-shadow-elevated)' : 'none',
                 backdropFilter: `blur(var(--os-window-backdrop-blur))`,
             }}
             onPointerDown={() => focusWindow(id)}
             onFocusCapture={() => focusWindow(id)}
         >
             <div
-                className="flex h-10 select-none items-center justify-between border-b px-3"
+                className="flex h-10 select-none items-center justify-between border-b border-hairline bg-[rgba(245,245,247,0.8)] px-3 backdrop-blur-frosted"
                 style={{
-                    borderColor: 'color-mix(in oklab, var(--os-border) 60%, white 40%)',
                     cursor: isMaximized ? 'default' : 'grab',
                 }}
                 onPointerDown={isMaximized ? undefined : handlePointerDown}
@@ -137,13 +138,13 @@ export default function Window({ id, title, children }: WindowProps) {
                 <div className="flex items-center gap-2 pl-0.5" data-drag-handle="false">
                     <button
                         onClick={(e) => { e.stopPropagation(); closeWindow(id) }}
-                        className="os-hover-motion h-3 w-3 rounded-full border border-red-400/30 bg-[#ff5f57] transition-opacity hover:opacity-100"
+                        className="h-3 w-3 rounded-full bg-ink-muted-48 transition-colors hover:bg-primary"
                         title="Close window"
                         aria-label="Close window"
                     />
                     <button
                         onClick={(e) => { e.stopPropagation(); toggleMinimize(id) }}
-                        className="os-hover-motion h-3 w-3 rounded-full border border-amber-400/30 bg-[#febc2e] transition-opacity hover:opacity-100"
+                        className="h-3 w-3 rounded-full bg-ink-muted-48 transition-colors hover:bg-primary"
                         title="Minimize window"
                         aria-label="Minimize window"
                     />
@@ -157,23 +158,20 @@ export default function Window({ id, title, children }: WindowProps) {
 
                             toggleMaximize(id)
                         }}
-                        className="os-hover-motion h-3 w-3 rounded-full border border-emerald-400/30 bg-[#28c840] transition-opacity hover:opacity-100"
+                        className="h-3 w-3 rounded-full bg-ink-muted-48 transition-colors hover:bg-primary"
                         title={isMaximized ? 'Restore window' : 'Maximize window'}
                         aria-label={isMaximized ? 'Restore window' : 'Maximize window'}
                     />
                 </div>
 
-                <div className="pointer-events-none flex-1 truncate px-4 text-center text-[13px] font-medium text-[var(--os-text-0)]">
+                <div className="pointer-events-none flex-1 truncate px-4 text-center text-sm font-semibold text-ink">
                     {title}
                 </div>
 
                 <div className="w-[52px]" />
             </div>
 
-            <div
-                className="relative flex-1 overflow-hidden"
-                style={{ background: 'color-mix(in oklab, var(--os-surface-0) 82%, var(--os-bg-1) 18%)' }}
-            >
+            <div className="relative flex-1 overflow-hidden bg-surface">
                 {children}
             </div>
 
@@ -183,7 +181,7 @@ export default function Window({ id, title, children }: WindowProps) {
                     data-drag-handle="false"
                     onPointerDown={(event) => startResize(event, 'xy')}
                 >
-                    <div className="absolute bottom-1 right-1 h-2 w-2 rounded-br-[2px] border-b-2 border-r-2 border-slate-500/50" />
+                    <div className="absolute bottom-1 right-1 h-2 w-2 rounded-br-[2px] border-b-2 border-r-2 border-ink-muted-48" />
                 </div>
             )}
 
