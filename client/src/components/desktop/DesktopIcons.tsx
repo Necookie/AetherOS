@@ -1,17 +1,13 @@
 import { DESKTOP_ICONS } from '../../config/desktop'
-import { Folder, Monitor, Settings } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType, type KeyboardEvent, type MouseEvent } from 'react'
+import { Folder, Monitor, Settings, type LucideIcon } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { shallow } from 'zustand/shallow'
 import { DEFAULT_APPS } from '../../config/windows'
 import { useWindowStore } from '../../stores/windowStore'
 import { createSelectionRect, rectFromDomRect, rectIntersects, resolveClickSelection, resolveMarqueeSelection, type MarqueeSelectionMode, type SelectionRect } from '../../features/selection'
 
-const DESKTOP_ICON_ASSETS: Record<string, string> = {
-    pc: '/assets/candy-icons/pc.svg',
-    settings: '/assets/candy-icons/settings.svg',
-}
-
-const ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
+// Flat lucide glyphs (currentColor) — no gradient icon assets.
+const ICON_MAP: Record<string, LucideIcon> = {
     pc: Monitor,
     settings: Settings,
 }
@@ -206,21 +202,18 @@ export default function DesktopIcons({ iconScale = 1 }: { iconScale?: number }) 
                         launchFromIcon(icon.id)
                     }}
                     onKeyDown={(event) => handleIconKeyDown(event, icon.id)}
-                    className={`group flex w-20 flex-col items-center rounded-lg p-2 transition-colors sm:w-24 ${selectedIconIds.includes(icon.id) ? 'bg-white/45 outline outline-1 outline-white/80' : 'hover:bg-white/35'}`}
+                    className={`group flex w-20 flex-col items-center rounded-lg p-2 transition-colors sm:w-24 ${selectedIconIds.includes(icon.id) ? 'bg-[rgba(0,102,204,0.12)] outline outline-1 outline-primary-focus' : 'hover:bg-surface'}`}
                     aria-label={`Open ${icon.label}`}
                 >
                     {(() => {
-                        const iconSrc = DESKTOP_ICON_ASSETS[icon.id]
                         const Icon = ICON_MAP[icon.id] ?? Folder
                         return (
-                            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/70 bg-white/58 text-slate-800 shadow-lg">
-                                {iconSrc
-                                    ? <img src={iconSrc} alt="" aria-hidden className="h-9 w-9" />
-                                    : <Icon className="h-6 w-6" />}
+                            <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-hairline bg-surface text-ink">
+                                <Icon className="h-6 w-6" strokeWidth={1.75} />
                             </div>
                         )
                     })()}
-                    <span className="mt-1.5 text-center text-[11px] font-medium text-slate-900 sm:text-[12px]">
+                    <span className="mt-1.5 text-center text-[12px] text-ink sm:text-[12px]">
                         {icon.label}
                     </span>
                 </button>
@@ -228,7 +221,7 @@ export default function DesktopIcons({ iconScale = 1 }: { iconScale?: number }) 
             {selectionRect && (
                 <div
                     aria-hidden
-                    className="pointer-events-none fixed z-30 border border-white/80 bg-white/20"
+                    className="pointer-events-none fixed z-30 border border-primary-focus bg-[rgba(0,102,204,0.1)]"
                     style={{
                         left: selectionRect.left,
                         top: selectionRect.top,
