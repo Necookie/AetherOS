@@ -1,31 +1,65 @@
+/*
+ * Shared component primitives built on tokens.css.
+ * Rules from design.md: flat surfaces (no color-mix soup), hairline borders
+ * instead of translucent rings, pill radius for actions, scale(0.95) as the
+ * only press state, and the system's one shadow reserved for elevated
+ * surfaces only (applied via .ds-elevated, never on buttons/inputs).
+ */
 @layer components {
   .ds-surface {
-    background: color-mix(in oklab, var(--ds-color-surface-0) 86%, black 14%);
-    border: 1px solid color-mix(in oklab, var(--ds-color-border) 72%, black 28%);
-    box-shadow: var(--ds-shadow-md);
+    background: var(--ds-color-surface-0);
+    border: 1px solid var(--ds-color-border);
   }
 
   .ds-surface-subtle {
-    background: color-mix(in oklab, var(--ds-color-surface-1) 82%, black 18%);
-    border: 1px solid color-mix(in oklab, var(--ds-color-border) 66%, black 34%);
+    background: var(--ds-color-surface-1);
+    border: 1px solid var(--ds-color-border);
+  }
+
+  .ds-elevated {
+    box-shadow: var(--ds-shadow-elevated);
   }
 
   .ds-button {
-    @apply inline-flex items-center justify-center rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-100;
-    color: var(--ds-color-text-primary);
-    background: color-mix(in oklab, var(--ds-color-surface-1) 80%, black 20%);
-    border: 1px solid color-mix(in oklab, var(--ds-color-border) 62%, black 38%);
+    @apply inline-flex items-center justify-center rounded-[--ds-radius-pill] px-[22px] py-[11px] text-[17px] font-normal transition-transform duration-100;
+    color: #ffffff;
+    background: var(--ds-color-accent);
   }
 
   .ds-button:hover {
-    background: color-mix(in oklab, var(--ds-color-surface-1) 72%, white 28%);
+    background: color-mix(in oklab, var(--ds-color-accent) 90%, black 10%);
+  }
+
+  .ds-button:active {
+    transform: scale(0.95);
+  }
+
+  .ds-button-secondary {
+    @apply inline-flex items-center justify-center rounded-[--ds-radius-pill] px-[22px] py-[11px] text-[17px] font-normal transition-transform duration-100;
+    color: var(--ds-color-accent);
+    background: transparent;
+    border: 1px solid var(--ds-color-accent);
+  }
+
+  .ds-button-secondary:active {
+    transform: scale(0.95);
+  }
+
+  .ds-button-utility {
+    @apply inline-flex items-center justify-center rounded-[--ds-radius-sm] px-[15px] py-[8px] text-[14px] font-normal transition-transform duration-100;
+    color: var(--ds-color-text-on-dark);
+    background: var(--ds-color-text-primary);
+  }
+
+  .ds-button-utility:active {
+    transform: scale(0.95);
   }
 
   .ds-input {
-    @apply w-full rounded-md px-3 py-2 text-sm outline-none transition-colors duration-100;
+    @apply w-full rounded-[--ds-radius-pill] px-[20px] py-[12px] text-sm outline-none transition-colors duration-100;
     color: var(--ds-color-text-primary);
-    background: color-mix(in oklab, var(--ds-color-bg-canvas) 78%, black 22%);
-    border: 1px solid color-mix(in oklab, var(--ds-color-border) 64%, black 36%);
+    background: var(--ds-color-surface-0);
+    border: 1px solid var(--ds-color-border);
   }
 
   .ds-input::placeholder {
@@ -33,7 +67,8 @@
   }
 
   .ds-input:focus {
-    border-color: color-mix(in oklab, var(--ds-color-accent) 70%, white 30%);
-    box-shadow: 0 0 0 2px color-mix(in oklab, var(--ds-color-accent) 28%, transparent);
+    border-color: var(--ds-color-accent-focus);
+    outline: 2px solid var(--ds-color-accent-focus);
+    outline-offset: 1px;
   }
 }
