@@ -38,6 +38,11 @@ const SHORTCUT_LABELS: Record<string, string> = {
     [SHORTCUT_ACTION_IDS.maximizeFocusedWindow]: 'Maximize focused window',
 }
 
+// Segmented-control pill shared by theme mode / taskbar position / density.
+function segmentClass(active: boolean) {
+    return `rounded-md border px-3 py-2 text-sm capitalize transition-colors ${active ? 'border-transparent bg-primary text-white' : 'border-hairline bg-canvas text-ink-muted hover:bg-parchment'}`
+}
+
 function SectionButton({
     active,
     label,
@@ -52,8 +57,8 @@ function SectionButton({
     return (
         <button
             onClick={onClick}
-            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
-                active ? 'bg-[color-mix(in_oklab,var(--os-accent)_20%,white_80%)] text-slate-900' : 'text-slate-700 hover:bg-white/70'
+            className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors ${
+                active ? 'bg-[rgba(0,102,204,0.1)] text-ink' : 'text-ink-muted hover:bg-canvas'
             }`}
         >
             <Icon className="h-4 w-4" />
@@ -72,13 +77,13 @@ function SettingsToggle({
     onChange: (next: boolean) => void
 }) {
     return (
-        <label className="flex items-center justify-between gap-3 rounded-lg border border-white/60 bg-white/50 px-3 py-2 text-sm text-slate-800">
+        <label className="flex items-center justify-between gap-3 rounded-md border border-hairline bg-parchment px-3 py-2 text-sm text-ink">
             <span>{label}</span>
             <input
                 type="checkbox"
                 checked={checked}
                 onChange={(event) => onChange(event.target.checked)}
-                className="h-4 w-4 accent-[var(--os-accent)]"
+                className="h-4 w-4 accent-primary"
             />
         </label>
     )
@@ -96,14 +101,14 @@ function ColorField({
     onUpdate: (key: keyof ThemePalette, value: string) => void
 }) {
     return (
-        <label className="flex items-center justify-between gap-3 rounded-lg border border-white/60 bg-white/50 px-3 py-2 text-sm text-slate-800">
+        <label className="flex items-center justify-between gap-3 rounded-md border border-hairline bg-parchment px-3 py-2 text-sm text-ink">
             <span>{label}</span>
             <input
                 aria-label={label}
                 type="color"
                 value={value}
                 onChange={(event) => onUpdate(keyName, event.target.value)}
-                className="h-8 w-10 cursor-pointer rounded border border-slate-300 bg-transparent"
+                className="h-8 w-10 cursor-pointer rounded-sm border border-hairline bg-transparent"
             />
         </label>
     )
@@ -205,9 +210,9 @@ export default function SettingsApp({ id }: { id: string }) {
 
     return (
         <Window id={id} title="Settings">
-            <div className="grid h-full grid-cols-[14rem_1fr]">
-                <aside className="border-r border-white/60 bg-white/45 p-3">
-                    <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600">Personalization</div>
+            <div className="grid h-full grid-cols-[14rem_1fr] bg-canvas">
+                <aside className="border-r border-hairline bg-parchment p-3">
+                    <div className="mb-3 text-[12px] font-semibold text-ink-muted">Personalization</div>
                     <div className="space-y-1">
                         {sectionMeta.map(({ id: sectionId, label, icon }) => (
                             <SectionButton
@@ -221,7 +226,7 @@ export default function SettingsApp({ id }: { id: string }) {
                     </div>
                     <button
                         onClick={resetSettings}
-                        className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-white/60 bg-white/65 px-3 py-2 text-sm font-medium text-slate-800 hover:bg-white"
+                        className="mt-4 flex w-full items-center justify-center gap-2 rounded-pill border border-primary px-3 py-2 text-sm font-semibold text-primary transition-transform active:scale-95"
                     >
                         <RotateCcw className="h-4 w-4" />
                         Reset to defaults
@@ -232,8 +237,8 @@ export default function SettingsApp({ id }: { id: string }) {
                     {section === 'appearance' && (
                         <div className="space-y-4">
                             <div>
-                                <h2 className="text-lg font-semibold text-slate-900">Appearance</h2>
-                                <p className="text-sm text-slate-600">Theme mode, palette, and wallpaper.</p>
+                                <h2 className="text-lg font-semibold text-ink">Appearance</h2>
+                                <p className="text-sm text-ink-muted">Theme mode, palette, and wallpaper.</p>
                             </div>
 
                             <div className="grid grid-cols-3 gap-2">
@@ -241,7 +246,7 @@ export default function SettingsApp({ id }: { id: string }) {
                                     <button
                                         key={mode}
                                         onClick={() => setThemeMode(mode)}
-                                        className={`rounded-lg border px-3 py-2 text-sm capitalize transition-colors ${appearance.themeMode === mode ? 'border-transparent bg-[var(--os-accent)] text-white' : 'border-white/70 bg-white/70 text-slate-700 hover:bg-white'}`}
+                                        className={segmentClass(appearance.themeMode === mode)}
                                     >
                                         {mode}
                                     </button>
@@ -260,27 +265,27 @@ export default function SettingsApp({ id }: { id: string }) {
                             )}
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-800">Wallpaper</label>
+                                <label className="text-sm font-semibold text-ink">Wallpaper</label>
                                 <div className="grid grid-cols-3 gap-2">
                                     {WALLPAPER_OPTIONS.map((option) => (
                                         <button
                                             key={option.id}
                                             onClick={() => setWallpaper(option.id)}
-                                            className={`overflow-hidden rounded-lg border text-left ${appearance.wallpaperId === option.id ? 'border-[var(--os-accent)] ring-2 ring-[color-mix(in_oklab,var(--os-accent)_25%,transparent)]' : 'border-white/70'}`}
+                                            className={`overflow-hidden rounded-md border text-left ${appearance.wallpaperId === option.id ? 'border-primary-focus' : 'border-hairline'}`}
                                         >
                                             <div
                                                 className="h-16"
                                                 style={{
                                                     background: option.kind === 'image'
-                                                        ? `linear-gradient(180deg, rgb(2 6 23 / 0.18), rgb(2 6 23 / 0.45)), url('${option.value}') center/cover no-repeat`
+                                                        ? `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url('${option.value}') center/cover no-repeat`
                                                         : option.value,
                                                 }}
                                             />
-                                            <div className="bg-white/70 px-2 py-1 text-xs text-slate-700">{option.label}</div>
+                                            <div className="bg-parchment px-2 py-1 text-xs text-ink-muted">{option.label}</div>
                                         </button>
                                     ))}
                                 </div>
-                                <p className="text-xs text-slate-600">Selected: {selectedWallpaper.label}</p>
+                                <p className="text-xs text-ink-muted">Selected: {selectedWallpaper.label}</p>
                             </div>
                         </div>
                     )}
@@ -288,12 +293,12 @@ export default function SettingsApp({ id }: { id: string }) {
                     {section === 'desktop' && (
                         <div className="space-y-4">
                             <div>
-                                <h2 className="text-lg font-semibold text-slate-900">Desktop</h2>
-                                <p className="text-sm text-slate-600">Icon sizing, taskbar location, and accent strength.</p>
+                                <h2 className="text-lg font-semibold text-ink">Desktop</h2>
+                                <p className="text-sm text-ink-muted">Icon sizing, taskbar location, and accent strength.</p>
                             </div>
 
-                            <label className="block space-y-2 rounded-lg border border-white/70 bg-white/55 p-3">
-                                <span className="text-sm text-slate-800">Icon scale: {(desktop.iconScale * 100).toFixed(0)}%</span>
+                            <label className="block space-y-2 rounded-md border border-hairline bg-parchment p-3">
+                                <span className="text-sm text-ink">Icon scale: {(desktop.iconScale * 100).toFixed(0)}%</span>
                                 <input
                                     type="range"
                                     min={0.8}
@@ -301,12 +306,12 @@ export default function SettingsApp({ id }: { id: string }) {
                                     step={0.05}
                                     value={desktop.iconScale}
                                     onChange={(event) => setIconScale(Number(event.target.value))}
-                                    className="h-1 w-full accent-[var(--os-accent)]"
+                                    className="h-1 w-full accent-primary"
                                 />
                             </label>
 
-                            <label className="block space-y-2 rounded-lg border border-white/70 bg-white/55 p-3">
-                                <span className="text-sm text-slate-800">Accent strength: {(desktop.accentStrength * 100).toFixed(0)}%</span>
+                            <label className="block space-y-2 rounded-md border border-hairline bg-parchment p-3">
+                                <span className="text-sm text-ink">Accent strength: {(desktop.accentStrength * 100).toFixed(0)}%</span>
                                 <input
                                     type="range"
                                     min={0.7}
@@ -314,20 +319,20 @@ export default function SettingsApp({ id }: { id: string }) {
                                     step={0.05}
                                     value={desktop.accentStrength}
                                     onChange={(event) => setAccentStrength(Number(event.target.value))}
-                                    className="h-1 w-full accent-[var(--os-accent)]"
+                                    className="h-1 w-full accent-primary"
                                 />
                             </label>
 
                             <div className="grid grid-cols-2 gap-2">
                                 <button
                                     onClick={() => setTaskbarPosition('bottom')}
-                                    className={`rounded-lg border px-3 py-2 text-sm ${desktop.taskbarPosition === 'bottom' ? 'border-transparent bg-[var(--os-accent)] text-white' : 'border-white/70 bg-white/70 text-slate-700 hover:bg-white'}`}
+                                    className={segmentClass(desktop.taskbarPosition === 'bottom')}
                                 >
                                     Taskbar bottom
                                 </button>
                                 <button
                                     onClick={() => setTaskbarPosition('top')}
-                                    className={`rounded-lg border px-3 py-2 text-sm ${desktop.taskbarPosition === 'top' ? 'border-transparent bg-[var(--os-accent)] text-white' : 'border-white/70 bg-white/70 text-slate-700 hover:bg-white'}`}
+                                    className={segmentClass(desktop.taskbarPosition === 'top')}
                                 >
                                     Taskbar top
                                 </button>
@@ -338,8 +343,8 @@ export default function SettingsApp({ id }: { id: string }) {
                     {section === 'accessibility' && (
                         <div className="space-y-4">
                             <div>
-                                <h2 className="text-lg font-semibold text-slate-900">Accessibility</h2>
-                                <p className="text-sm text-slate-600">Density, typography, and keyboard usability.</p>
+                                <h2 className="text-lg font-semibold text-ink">Accessibility</h2>
+                                <p className="text-sm text-ink-muted">Density, typography, and keyboard usability.</p>
                             </div>
 
                             <div className="grid grid-cols-3 gap-2">
@@ -347,15 +352,15 @@ export default function SettingsApp({ id }: { id: string }) {
                                     <button
                                         key={density}
                                         onClick={() => setDensity(density)}
-                                        className={`rounded-lg border px-3 py-2 text-sm capitalize ${accessibility.density === density ? 'border-transparent bg-[var(--os-accent)] text-white' : 'border-white/70 bg-white/70 text-slate-700 hover:bg-white'}`}
+                                        className={segmentClass(accessibility.density === density)}
                                     >
                                         {density}
                                     </button>
                                 ))}
                             </div>
 
-                            <label className="block space-y-2 rounded-lg border border-white/70 bg-white/55 p-3">
-                                <span className="text-sm text-slate-800">Font scale: {(accessibility.fontScale * 100).toFixed(0)}%</span>
+                            <label className="block space-y-2 rounded-md border border-hairline bg-parchment p-3">
+                                <span className="text-sm text-ink">Font scale: {(accessibility.fontScale * 100).toFixed(0)}%</span>
                                 <input
                                     type="range"
                                     min={0.85}
@@ -363,7 +368,7 @@ export default function SettingsApp({ id }: { id: string }) {
                                     step={0.05}
                                     value={accessibility.fontScale}
                                     onChange={(event) => setFontScale(Number(event.target.value))}
-                                    className="h-1 w-full accent-[var(--os-accent)]"
+                                    className="h-1 w-full accent-primary"
                                 />
                             </label>
 
@@ -373,8 +378,8 @@ export default function SettingsApp({ id }: { id: string }) {
                                 <SettingsToggle label="Keyboard hints + strong focus ring" checked={accessibility.keyboardHints} onChange={setKeyboardHints} />
                             </div>
 
-                            <div className="rounded-lg border border-white/70 bg-white/60 p-3 text-sm text-slate-700">
-                                <p className="font-medium text-slate-900">Accessibility checks</p>
+                            <div className="rounded-md border border-hairline bg-parchment p-3 text-sm text-ink-muted">
+                                <p className="font-semibold text-ink">Accessibility checks</p>
                                 <p className="mt-1">Contrast ratio: {report.contrastRatio.toFixed(2)} ({report.contrastPass ? 'pass' : 'fail'})</p>
                                 <p>Keyboard focus visibility: {report.keyboardFocusPass ? 'pass' : 'fail'}</p>
                                 <p>Keyboard target sizing: {report.keyboardTargetPass ? 'pass' : 'fail'}</p>
@@ -385,8 +390,8 @@ export default function SettingsApp({ id }: { id: string }) {
                     {section === 'behavior' && (
                         <div className="space-y-4">
                             <div>
-                                <h2 className="text-lg font-semibold text-slate-900">Behavior</h2>
-                                <p className="text-sm text-slate-600">Interaction and motion behavior across shell.</p>
+                                <h2 className="text-lg font-semibold text-ink">Behavior</h2>
+                                <p className="text-sm text-ink-muted">Interaction and motion behavior across shell.</p>
                             </div>
 
                             <div className="space-y-2">
@@ -400,14 +405,14 @@ export default function SettingsApp({ id }: { id: string }) {
                     {section === 'shortcuts' && (
                         <div className="space-y-4">
                             <div>
-                                <h2 className="text-lg font-semibold text-slate-900">Shortcuts</h2>
-                                <p className="text-sm text-slate-600">Browser-safe keymap with remappable entries.</p>
+                                <h2 className="text-lg font-semibold text-ink">Shortcuts</h2>
+                                <p className="text-sm text-ink-muted">Browser-safe keymap with remappable entries.</p>
                             </div>
-                            <div className="space-y-2 rounded-lg border border-white/70 bg-white/55 p-3">
-                                <p className="text-xs text-slate-600">Fixed defaults: App switcher next `Ctrl+Alt+]`, previous `Ctrl+Alt+[`.</p>
+                            <div className="space-y-2 rounded-md border border-hairline bg-parchment p-3">
+                                <p className="text-xs text-ink-muted">Fixed defaults: App switcher next `Ctrl+Alt+]`, previous `Ctrl+Alt+[`.</p>
                                 {REMAPPABLE_SHORTCUTS.map((actionId) => (
                                     <div key={actionId} className="grid grid-cols-[14rem_1fr_auto] items-center gap-2 text-sm">
-                                        <label className="text-slate-800">{SHORTCUT_LABELS[actionId]}</label>
+                                        <label className="text-ink">{SHORTCUT_LABELS[actionId]}</label>
                                         <input
                                             value={shortcutDrafts[actionId] ?? ''}
                                             onChange={(event) => {
@@ -432,7 +437,7 @@ export default function SettingsApp({ id }: { id: string }) {
                                                 }))
                                             }}
                                             placeholder={resolvedShortcutKeymap[actionId]}
-                                            className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-800"
+                                            className="rounded-sm border border-hairline bg-canvas px-2 py-1 text-sm text-ink"
                                         />
                                         <button
                                             onClick={() => {
@@ -442,14 +447,14 @@ export default function SettingsApp({ id }: { id: string }) {
                                                     [actionId]: resolvedShortcutKeymap[actionId],
                                                 }))
                                             }}
-                                            className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-white"
+                                            className="rounded-sm border border-hairline px-2 py-1 text-xs text-ink-muted transition-colors hover:bg-canvas"
                                         >
                                             Reset
                                         </button>
                                     </div>
                                 ))}
                                 {shortcutValidation.conflicts.length > 0 && (
-                                    <p className="text-xs text-rose-700">Conflicting shortcuts detected. Reset one mapping to continue.</p>
+                                    <p className="text-xs text-danger">Conflicting shortcuts detected. Reset one mapping to continue.</p>
                                 )}
                             </div>
                         </div>
@@ -458,49 +463,49 @@ export default function SettingsApp({ id }: { id: string }) {
                     {section === 'permissions' && (
                         <div className="space-y-4">
                             <div>
-                                <h2 className="text-lg font-semibold text-slate-900">Permission Center</h2>
-                                <p className="text-sm text-slate-600">Review saved capabilities for the current profile and revoke them instantly.</p>
+                                <h2 className="text-lg font-semibold text-ink">Permission Center</h2>
+                                <p className="text-sm text-ink-muted">Review saved capabilities for the current profile and revoke them instantly.</p>
                             </div>
 
-                            <div className="rounded-xl border border-white/70 bg-white/60 p-4 text-sm text-slate-700">
-                                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Active profile</p>
-                                <p className="mt-2 text-base font-semibold text-slate-900">
+                            <div className="rounded-lg border border-hairline bg-parchment p-4 text-sm text-ink-muted">
+                                <p className="text-xs font-semibold text-ink-muted">Active profile</p>
+                                <p className="mt-2 text-base font-semibold text-ink">
                                     {activeAccount ? `${activeAccount.displayName} (${activeAccount.role})` : 'No active profile'}
                                 </p>
-                                <p className="mt-1 text-sm text-slate-600">Revoking a grant takes effect immediately. The next protected action will ask again.</p>
+                                <p className="mt-1 text-sm text-ink-muted">Revoking a grant takes effect immediately. The next protected action will ask again.</p>
                             </div>
 
                             <div className="space-y-3">
                                 {permissionStatuses.map((status) => (
-                                    <article key={status.id} className="rounded-xl border border-white/70 bg-white/60 p-4">
+                                    <article key={status.id} className="rounded-lg border border-hairline bg-parchment p-4">
                                         <div className="flex items-start justify-between gap-4">
                                             <div>
                                                 <div className="flex items-center gap-2">
-                                                    <h3 className="text-sm font-semibold text-slate-900">{status.label}</h3>
-                                                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${status.granted ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'}`}>
+                                                    <h3 className="text-sm font-semibold text-ink">{status.label}</h3>
+                                                    <span className={`rounded-pill px-2 py-0.5 text-[12px] font-semibold ${status.granted ? 'bg-[rgba(26,127,55,0.12)] text-success' : 'bg-canvas text-ink-muted'}`}>
                                                         {status.granted ? 'Granted' : 'Not granted'}
                                                     </span>
                                                 </div>
-                                                <p className="mt-1 text-sm text-slate-600">{status.description}</p>
-                                                <p className="mt-2 text-xs uppercase tracking-[0.12em] text-slate-500">{status.category}</p>
+                                                <p className="mt-1 text-sm text-ink-muted">{status.description}</p>
+                                                <p className="mt-2 text-xs text-ink-muted-48">{status.category}</p>
                                             </div>
                                             <button
                                                 onClick={() => revokePermission(status.id)}
                                                 disabled={!status.granted}
-                                                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                                className="rounded-md border border-hairline bg-canvas px-3 py-2 text-xs font-semibold text-ink transition-colors hover:bg-parchment disabled:cursor-not-allowed disabled:opacity-50"
                                             >
                                                 Revoke
                                             </button>
                                         </div>
 
-                                        <div className="mt-3 rounded-lg border border-white/70 bg-white/70 p-3 text-xs text-slate-600">
+                                        <div className="mt-3 rounded-md border border-hairline bg-canvas p-3 text-xs text-ink-muted">
                                             {status.grant ? (
                                                 <>
-                                                    <p className="text-slate-800">Granted because: {status.grant.source.reason}</p>
+                                                    <p className="text-ink">Granted because: {status.grant.source.reason}</p>
                                                     <p className="mt-1">Saved at: {new Date(status.grant.grantedAt).toLocaleString()}</p>
                                                 </>
                                             ) : (
-                                                <p className="text-slate-800">This capability is not currently saved for the active profile.</p>
+                                                <p className="text-ink">This capability is not currently saved for the active profile.</p>
                                             )}
                                             <p className="mt-2">{status.recovery}</p>
                                         </div>
