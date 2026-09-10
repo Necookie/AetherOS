@@ -33,13 +33,13 @@ export default function Toolbar({
     const isBookmarked = tab?.url ? bookmarks.some((entry) => entry.url === tab.url) : false;
 
     const navBtnClass = (enabled: boolean) =>
-        `os-hover-motion rounded-md p-1.5 transition-colors ${enabled ? 'text-slate-700 hover:bg-white/75 active:scale-95' : 'cursor-default text-slate-400'}`;
+        `rounded-sm p-1.5 transition-transform ${enabled ? 'text-ink hover:bg-canvas active:scale-95' : 'cursor-default text-ink-muted-48'}`;
 
     const iconBtnClass =
-        'os-hover-motion rounded-md p-1.5 text-slate-600 transition-colors hover:bg-white/75 hover:text-slate-800';
+        'rounded-sm p-1.5 text-ink-muted transition-colors hover:bg-canvas hover:text-ink';
 
     return (
-        <div className="os-panel-motion flex items-center gap-1 border-b border-white/70 bg-white/50 px-2 py-1.5 backdrop-blur-md">
+        <div className="flex items-center gap-1 border-b border-hairline bg-parchment px-2 py-1.5">
             <button className={navBtnClass(canGoBack)} onClick={() => activeTabId && canGoBack && back(activeTabId)} disabled={!canGoBack}>
                 <ChevronLeft className="h-4 w-4" />
             </button>
@@ -57,7 +57,7 @@ export default function Toolbar({
             />
 
             <button
-                className={`${iconBtnClass} ${isBookmarked ? 'text-amber-500 hover:text-amber-500' : ''}`}
+                className={`${iconBtnClass} ${isBookmarked ? 'text-primary hover:text-primary' : ''}`}
                 onClick={() => tab?.url && toggleBookmark({ url: tab.url, title: tab.title || tab.url })}
                 disabled={!tab?.url}
                 title={isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
@@ -73,7 +73,7 @@ export default function Toolbar({
             </button>
 
             <button
-                className={`${iconBtnClass} ${connectivity.online ? 'text-emerald-600' : 'text-rose-500'}`}
+                className={`${iconBtnClass} ${connectivity.online ? 'text-success' : 'text-danger'}`}
                 onClick={() => setConnectivityOnline(!connectivity.online)}
                 title={connectivity.online ? 'Go offline' : 'Go online'}
             >
@@ -84,7 +84,7 @@ export default function Toolbar({
                 aria-label="Latency"
                 value={connectivity.latencyMs}
                 onChange={(event) => setConnectivityLatency(Number(event.target.value))}
-                className="rounded-md border border-white/80 bg-white/80 px-1.5 py-1 text-[11px] text-slate-700 focus:border-sky-400 focus:outline-none"
+                className="rounded-sm border border-hairline bg-canvas px-1.5 py-1 text-[12px] text-ink-muted focus:border-primary-focus focus:outline-none"
             >
                 <option value={0}>0ms</option>
                 <option value={200}>200ms</option>

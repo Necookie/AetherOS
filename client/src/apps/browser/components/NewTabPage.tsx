@@ -21,33 +21,33 @@ export default function NewTabPage({ onSearch, bookmarks, downloads, onStartDown
     };
 
     return (
-        <div className="flex h-full w-full select-none flex-col items-center justify-center bg-[radial-gradient(760px_520px_at_12%_14%,#ffd3e8_0%,transparent_65%),radial-gradient(920px_620px_at_88%_22%,#c8e2ff_0%,transparent_62%),radial-gradient(1050px_700px_at_58%_84%,#d6cbff_0%,transparent_70%),linear-gradient(165deg,#cae8ff_0%,#d9d8ff_44%,#ffd7ea_100%)] px-6">
+        <div className="flex h-full w-full select-none flex-col items-center justify-center bg-parchment px-6">
             <div className="mb-8 flex flex-col items-center gap-2">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-400 text-2xl font-bold text-white shadow-lg">
+                <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-primary text-2xl font-bold text-white">
                     A
                 </div>
-                <h1 className="text-lg font-semibold tracking-tight text-slate-800">Aether Browser</h1>
+                <h1 className="text-lg font-semibold tracking-tight text-ink">Aether Browser</h1>
             </div>
 
             <form onSubmit={handleSubmit} className="w-full max-w-md">
                 <div className="group relative">
-                    <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 transition-colors group-focus-within:text-sky-500" />
+                    <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted-48 transition-colors group-focus-within:text-primary" />
                     <input
                         type="text"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         placeholder="Search the web or enter a URL..."
                         autoFocus
-                        className="w-full rounded-lg border border-white/80 bg-white/75 py-3 pl-10 pr-4 text-sm
-                            text-slate-800 placeholder-slate-500 shadow-sm
-                            transition-all duration-200
-                            focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-400/30"
+                        className="w-full rounded-pill border border-hairline bg-canvas py-3 pl-11 pr-4 text-sm
+                            text-ink placeholder-ink-muted-48
+                            transition-colors duration-200
+                            focus:border-primary-focus focus:outline-none focus:ring-1 focus:ring-primary-focus"
                     />
                 </div>
             </form>
 
-            <p className="mt-4 text-xs text-slate-600">
-                Press <kbd className="font-term rounded border border-white/80 bg-white/80 px-1.5 py-0.5 text-[10px] text-slate-700">Enter</kbd> to search
+            <p className="mt-4 text-xs text-ink-muted">
+                Press <kbd className="font-term rounded-sm border border-hairline bg-canvas px-1.5 py-0.5 text-[10px] text-ink-muted">Enter</kbd> to search
             </p>
 
             {bookmarks.length > 0 && (
@@ -56,7 +56,7 @@ export default function NewTabPage({ onSearch, bookmarks, downloads, onStartDown
                         <button
                             key={bookmark.id}
                             onClick={() => onSearch(bookmark.url)}
-                            className="truncate rounded-full border border-white/80 bg-white/75 px-3 py-1.5 text-xs text-slate-700 transition-colors hover:bg-white"
+                            className="truncate rounded-pill border border-hairline bg-canvas px-3 py-1.5 text-xs text-ink-muted transition-colors hover:bg-parchment"
                             title={bookmark.url}
                         >
                             {bookmark.title}
@@ -66,13 +66,13 @@ export default function NewTabPage({ onSearch, bookmarks, downloads, onStartDown
             )}
 
             {downloads.length > 0 && (
-                <div className="mt-8 w-full max-w-3xl rounded-3xl border border-white/60 bg-white/40 p-4 shadow-[0_24px_80px_rgb(15_23_42_/_0.12)] backdrop-blur">
+                <div className="mt-8 w-full max-w-3xl rounded-lg border border-hairline bg-canvas p-4">
                     <div className="flex items-center justify-between gap-3">
                         <div>
-                            <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Quick exports</p>
-                            <h2 className="mt-1 text-sm font-semibold text-slate-800">Simulated browser downloads</h2>
+                            <p className="text-[12px] text-ink-muted">Quick exports</p>
+                            <h2 className="mt-1 text-sm font-semibold text-ink">Simulated browser downloads</h2>
                         </div>
-                        <span className="rounded-full bg-sky-500/10 px-3 py-1 text-[11px] font-medium text-sky-700">
+                        <span className="rounded-pill bg-[rgba(0,102,204,0.1)] px-3 py-1 text-[12px] font-semibold text-primary">
                             Saves to Downloads
                         </span>
                     </div>
@@ -82,11 +82,11 @@ export default function NewTabPage({ onSearch, bookmarks, downloads, onStartDown
                             <button
                                 key={download.id}
                                 onClick={() => onStartDownload(download)}
-                                className="rounded-2xl border border-white/70 bg-white/65 p-4 text-left transition-transform duration-200 hover:-translate-y-0.5 hover:bg-white"
+                                className="rounded-lg border border-hairline bg-parchment p-4 text-left transition-colors hover:bg-canvas"
                             >
-                                <p className="text-sm font-semibold text-slate-800">{download.label}</p>
-                                <p className="mt-1 text-xs text-slate-600">{download.description}</p>
-                                <p className="mt-3 text-[11px] uppercase tracking-[0.18em] text-slate-500">{download.fileName}</p>
+                                <p className="text-sm font-semibold text-ink">{download.label}</p>
+                                <p className="mt-1 text-xs text-ink-muted">{download.description}</p>
+                                <p className="mt-3 text-[12px] text-ink-muted-48">{download.fileName}</p>
                             </button>
                         ))}
                     </div>

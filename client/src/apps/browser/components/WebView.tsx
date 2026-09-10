@@ -44,7 +44,7 @@ export default function WebView({ url, onLoad, onError }: WebViewProps) {
             key={url} // forces re-mount on URL change for clean reload
             src={url}
             title="Web Content"
-            className="h-full w-full border-0 bg-white"
+            className="h-full w-full border-0 bg-canvas"
             sandbox="allow-forms allow-scripts allow-popups allow-popups-to-escape-sandbox"
             referrerPolicy="no-referrer"
             loading="eager"
