@@ -190,7 +190,7 @@ export default function BoardsApp({ id }: { id: string }) {
 
     return (
         <Window id={id} title="Boards">
-            <div className="flex h-full flex-col bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.12),_transparent_28%),linear-gradient(135deg,_rgba(15,23,42,1),_rgba(15,23,42,0.96)_45%,_rgba(30,41,59,0.94))] text-slate-100 md:flex-row">
+            <div className="flex h-full flex-col bg-tile-1 text-on-dark md:flex-row">
                 <RecordListPane
                     label="Boards"
                     records={editor.records}
@@ -200,24 +200,24 @@ export default function BoardsApp({ id }: { id: string }) {
                     onSelect={editor.selectRecord}
                 />
                 <main className="flex min-h-0 flex-1 flex-col">
-                    <header className="border-b border-slate-700/70 px-4 py-3">
+                    <header className="border-b border-white/10 px-4 py-3">
                         <input
                             value={editor.title}
                             onChange={(event) => editor.setTitle(event.target.value)}
                             placeholder="Board title"
-                            className="w-full rounded-md border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none focus:border-[var(--os-accent)]"
+                            className="w-full rounded-md border border-white/10 bg-tile-2 px-3 py-2 text-sm text-on-dark outline-none focus:border-[var(--os-accent)]"
                         />
                         <div className="mt-2 flex items-start justify-between gap-3">
                             <div>
-                                <p className="text-xs text-slate-400">{editor.statusLabel}</p>
-                                <p className="mt-1 text-[11px] uppercase tracking-[0.24em] text-slate-500">
+                                <p className="text-xs text-on-dark-muted">{editor.statusLabel}</p>
+                                <p className="mt-1 text-[11px] uppercase tracking-[0.24em] text-on-dark-muted">
                                     Drag handles to move cards and columns. Keyboard fallback: card handle `Alt` + arrows, column handle `Alt` + `Shift` + arrows.
                                 </p>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setTemplatePickerOpen((open) => !open)}
-                                className="rounded-full border border-cyan-500/35 bg-cyan-500/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-cyan-100 transition hover:bg-cyan-500/20"
+                                className="rounded-pill border border-primary-on-dark px-3 py-1 text-[12px] font-semibold text-primary-on-dark transition-transform active:scale-95"
                             >
                                 Templates
                             </button>
@@ -236,7 +236,7 @@ export default function BoardsApp({ id }: { id: string }) {
                                     }}
                                 />
                             ) : null}
-                            <section ref={boardRef} tabIndex={-1} className="overflow-auto rounded-xl border border-slate-700/80 bg-slate-950/55 p-3 outline-none focus:ring-2 focus:ring-[var(--os-accent)]">
+                            <section ref={boardRef} tabIndex={-1} className="overflow-auto rounded-xl border border-white/10 bg-tile-1 p-3 outline-none focus:ring-2 focus:ring-[var(--os-accent)]">
                                 <div className="flex min-h-full items-start gap-3">
                                 <div
                                     onDragOver={(event) => {
@@ -252,14 +252,14 @@ export default function BoardsApp({ id }: { id: string }) {
                                     }}
                                     className={`mt-1 hidden h-[calc(100%-0.5rem)] w-3 rounded-full border transition md:block ${
                                         dragState?.type === 'column' && columnDropTarget === 0
-                                            ? 'border-cyan-400 bg-cyan-400/70 shadow-[0_0_0_4px_rgba(34,211,238,0.16)]'
-                                            : 'border-transparent bg-slate-800/70'
+                                            ? 'border-primary-on-dark bg-primary-on-dark'
+                                            : 'border-transparent bg-tile-2'
                                     }`}
                                 />
                                 {board.columns.map((column, columnIndex) => (
                                     <Fragment key={column.id}>
-                                        <div className="min-w-[18rem] flex-1 rounded-xl border border-slate-700/90 bg-slate-900/72 p-2.5 shadow-[0_18px_50px_rgba(2,6,23,0.28)]">
-                                            <div className="mb-2 flex items-center justify-between gap-2 rounded-lg border border-slate-800/90 bg-slate-950/70 px-2.5 py-2">
+                                        <div className="min-w-[18rem] flex-1 rounded-xl border border-white/10 bg-tile-2 p-2.5">
+                                            <div className="mb-2 flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-tile-1 px-2.5 py-2">
                                                 <div className="flex min-w-0 items-center gap-2">
                                                     <button
                                                         type="button"
@@ -270,19 +270,19 @@ export default function BoardsApp({ id }: { id: string }) {
                                                         onKeyDown={(event) => handleColumnKeyDown(event, column.id)}
                                                         className={`rounded-md border px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] transition focus:outline-none focus:ring-2 focus:ring-[var(--os-accent)] ${
                                                             dragState?.type === 'column' && dragState.columnId === column.id
-                                                                ? 'border-cyan-400 bg-cyan-400/20 text-cyan-100'
-                                                                : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-slate-500'
+                                                                ? 'border-primary-on-dark bg-[rgba(41,151,255,0.16)] text-primary-on-dark'
+                                                                : 'border-white/10 bg-tile-1 text-on-dark-muted hover:border-white/20'
                                                         }`}
                                                     >
                                                         Drag
                                                     </button>
                                                     <div className="min-w-0">
-                                                        <p className="truncate text-sm font-semibold text-slate-100">{column.title}</p>
-                                                        <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">{column.cards.length} cards</p>
+                                                        <p className="truncate text-sm font-semibold text-on-dark">{column.title}</p>
+                                                        <p className="text-[11px] uppercase tracking-[0.2em] text-on-dark-muted">{column.cards.length} cards</p>
                                                     </div>
                                                 </div>
                                                 <button
-                                                    className="rounded-md border border-slate-600 bg-slate-800 px-2 py-1 text-xs transition hover:bg-slate-700"
+                                                    className="rounded-md border border-white/10 bg-tile-1 px-2 py-1 text-xs transition-colors hover:bg-tile-2"
                                                     onClick={() => addCard(column.id)}
                                                 >
                                                     Add
@@ -305,18 +305,18 @@ export default function BoardsApp({ id }: { id: string }) {
                                                             }}
                                                             className={`h-2 rounded-full border transition ${
                                                                 dragState?.type === 'card' && cardDropTarget?.columnId === column.id && cardDropTarget.index === cardIndex
-                                                                    ? 'border-cyan-400 bg-cyan-400/70 shadow-[0_0_0_4px_rgba(34,211,238,0.16)]'
-                                                                    : 'border-transparent bg-slate-800/70'
+                                                                    ? 'border-primary-on-dark bg-primary-on-dark'
+                                                                    : 'border-transparent bg-tile-2'
                                                             }`}
                                                         />
                                                         <article className={`rounded-lg border p-2.5 transition ${
                                                             dragState?.type === 'card' && dragState.cardId === card.id
-                                                                ? 'border-cyan-400/80 bg-slate-950/90 shadow-[0_18px_40px_rgba(14,165,233,0.14)]'
-                                                                : 'border-slate-700/90 bg-slate-950/72'
+                                                                ? 'border-primary-on-dark bg-tile-1'
+                                                                : 'border-white/10 bg-tile-1'
                                                         }`}>
                                                             <div className="flex items-start justify-between gap-2">
                                                                 <div className="min-w-0">
-                                                                    <p className="truncate text-xs font-semibold uppercase tracking-[0.16em] text-slate-100">{card.title}</p>
+                                                                    <p className="truncate text-xs font-semibold uppercase tracking-[0.16em] text-on-dark">{card.title}</p>
                                                                 </div>
                                                                 <button
                                                                     type="button"
@@ -327,8 +327,8 @@ export default function BoardsApp({ id }: { id: string }) {
                                                                     onKeyDown={(event) => handleCardKeyDown(event, card.id)}
                                                                     className={`rounded border px-1.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] transition focus:outline-none focus:ring-2 focus:ring-[var(--os-accent)] ${
                                                                         dragState?.type === 'card' && dragState.cardId === card.id
-                                                                            ? 'border-cyan-400 bg-cyan-400/20 text-cyan-100'
-                                                                            : 'border-slate-700 bg-slate-900 text-slate-400 hover:border-slate-500'
+                                                                            ? 'border-primary-on-dark bg-[rgba(41,151,255,0.16)] text-primary-on-dark'
+                                                                            : 'border-white/10 bg-tile-1 text-on-dark-muted hover:border-white/20'
                                                                     }`}
                                                                 >
                                                                     Grip
@@ -338,9 +338,9 @@ export default function BoardsApp({ id }: { id: string }) {
                                                                 value={card.description}
                                                                 onChange={(event) => editDescription(column.id, card.id, event.target.value)}
                                                                 placeholder="Card details. Link with [[notes:abc123]]."
-                                                                className="mt-2 h-24 w-full resize-none rounded-md border border-slate-700 bg-slate-900/92 p-2 text-xs text-slate-200 outline-none focus:border-[var(--os-accent)]"
+                                                                className="mt-2 h-24 w-full resize-none rounded-md border border-white/10 bg-tile-1 p-2 text-xs text-on-dark outline-none focus:border-primary-on-dark"
                                                             />
-                                                            <p className="mt-2 text-[11px] text-slate-500">Drag to reorder or move across columns.</p>
+                                                            <p className="mt-2 text-[11px] text-on-dark-muted">Drag to reorder or move across columns.</p>
                                                         </article>
                                                     </Fragment>
                                                 ))}
@@ -358,8 +358,8 @@ export default function BoardsApp({ id }: { id: string }) {
                                                     }}
                                                     className={`flex min-h-[1rem] items-center justify-center rounded-lg border border-dashed px-2 py-3 text-[11px] uppercase tracking-[0.2em] transition ${
                                                         dragState?.type === 'card' && cardDropTarget?.columnId === column.id && cardDropTarget.index === column.cards.length
-                                                            ? 'border-cyan-400 bg-cyan-400/12 text-cyan-100'
-                                                            : 'border-slate-800 bg-slate-950/45 text-slate-500'
+                                                            ? 'border-primary-on-dark bg-[rgba(41,151,255,0.12)] text-primary-on-dark'
+                                                            : 'border-white/10 bg-tile-1 text-on-dark-muted'
                                                     }`}
                                                 >
                                                     {column.cards.length === 0 ? 'Drop first card here' : 'Drop at end'}
@@ -380,8 +380,8 @@ export default function BoardsApp({ id }: { id: string }) {
                                             }}
                                             className={`mt-1 hidden h-[calc(100%-0.5rem)] w-3 rounded-full border transition md:block ${
                                                 dragState?.type === 'column' && columnDropTarget === columnIndex + 1
-                                                    ? 'border-cyan-400 bg-cyan-400/70 shadow-[0_0_0_4px_rgba(34,211,238,0.16)]'
-                                                    : 'border-transparent bg-slate-800/70'
+                                                    ? 'border-primary-on-dark bg-primary-on-dark'
+                                                    : 'border-transparent bg-tile-2'
                                             }`}
                                         />
                                     </Fragment>

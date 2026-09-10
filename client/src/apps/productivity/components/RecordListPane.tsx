@@ -11,12 +11,12 @@ interface RecordListPaneProps {
 
 export default function RecordListPane({ label, records, activeId, onCreate, onOpenTemplates, onSelect }: RecordListPaneProps) {
     return (
-        <aside className="w-full border-b border-slate-700/70 bg-slate-950/45 md:w-72 md:border-b-0 md:border-r">
+        <aside className="w-full border-b border-white/10 bg-tile-2 md:w-72 md:border-b-0 md:border-r">
             <div className="px-3 py-3">
                 <div className="flex items-center justify-between gap-2">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">{label}</p>
+                    <p className="text-[12px] font-semibold text-on-dark-muted">{label}</p>
                     <button
-                        className="rounded-md border border-slate-600 bg-slate-800 px-2 py-1 text-xs text-slate-200 transition hover:bg-slate-700"
+                        className="rounded-sm border border-white/10 bg-tile-1 px-2 py-1 text-xs text-on-dark transition-transform active:scale-95"
                         onClick={onCreate}
                     >
                         New
@@ -24,7 +24,7 @@ export default function RecordListPane({ label, records, activeId, onCreate, onO
                 </div>
                 {onOpenTemplates ? (
                     <button
-                        className="mt-2 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left text-xs text-slate-300 transition hover:border-[var(--os-accent)] hover:bg-white/10"
+                        className="mt-2 w-full rounded-md border border-white/10 bg-tile-1 px-3 py-2 text-left text-xs text-on-dark-muted transition-colors hover:border-primary-on-dark"
                         onClick={onOpenTemplates}
                     >
                         Quick create from template
@@ -35,19 +35,19 @@ export default function RecordListPane({ label, records, activeId, onCreate, onO
                 {records.map((record) => (
                     <button
                         key={record.id}
-                        className={`block w-full border-l-2 px-3 py-2 text-left transition ${
+                        className={`block w-full border-l-2 px-3 py-2 text-left transition-colors ${
                             activeId === record.id
-                                ? 'border-[var(--os-accent)] bg-slate-800/75 text-slate-100'
-                                : 'border-transparent text-slate-300 hover:bg-slate-800/50'
+                                ? 'border-primary-on-dark bg-tile-1 text-on-dark'
+                                : 'border-transparent text-on-dark-muted hover:bg-tile-1'
                         }`}
                         onClick={() => onSelect(record.id)}
                     >
-                        <p className="truncate text-sm font-medium">{record.title || 'Untitled'}</p>
-                        <p className="mt-1 truncate text-xs text-slate-400">rev {record.revision}</p>
+                        <p className="truncate text-sm font-semibold">{record.title || 'Untitled'}</p>
+                        <p className="mt-1 truncate text-xs text-on-dark-muted">rev {record.revision}</p>
                     </button>
                 ))}
                 {records.length === 0 && (
-                    <p className="px-3 py-4 text-xs text-slate-400">No items yet.</p>
+                    <p className="px-3 py-4 text-xs text-on-dark-muted">No items yet.</p>
                 )}
             </div>
         </aside>

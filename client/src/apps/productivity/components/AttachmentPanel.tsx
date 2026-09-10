@@ -14,18 +14,18 @@ export default function AttachmentPanel({
     onRemoveAttachment,
 }: AttachmentPanelProps) {
     return (
-        <section className="rounded-lg border border-slate-700 bg-slate-900/60 p-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400">Attachments (VFS paths)</p>
+        <section className="rounded-md border border-white/10 bg-tile-2 p-3">
+            <p className="text-[12px] font-semibold text-on-dark-muted">Attachments (VFS paths)</p>
             <div className="mt-2 flex gap-2">
                 <input
                     value={attachmentInput}
                     onChange={(event) => onAttachmentInputChange(event.target.value)}
                     placeholder="/home/user/Downloads/example.txt"
-                    className="flex-1 rounded-md border border-slate-700 bg-slate-950/80 px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-[var(--os-accent)]"
+                    className="flex-1 rounded-sm border border-white/10 bg-tile-1 px-2 py-1.5 text-xs text-on-dark outline-none focus:border-primary-on-dark"
                 />
                 <button
                     onClick={onAddAttachment}
-                    className="rounded-md border border-slate-600 bg-slate-800 px-2 py-1 text-xs text-slate-100 transition hover:bg-slate-700"
+                    className="rounded-sm border border-white/10 bg-tile-1 px-2 py-1 text-xs text-on-dark transition-transform active:scale-95"
                 >
                     Add
                 </button>
@@ -34,7 +34,7 @@ export default function AttachmentPanel({
                 {attachments.map((path) => (
                     <button
                         key={path}
-                        className="rounded border border-slate-600 bg-slate-800/70 px-2 py-1 text-[11px] text-slate-200"
+                        className="rounded-sm border border-white/10 bg-tile-1 px-2 py-1 text-[12px] text-on-dark"
                         onClick={() => onRemoveAttachment(path)}
                         title="Click to remove"
                     >

@@ -47,28 +47,28 @@ function getPlaceholder(block: DocsBlock) {
 function getBlockClasses(block: DocsBlock) {
     if (block.type === 'heading') {
         return {
-            shell: 'border-amber-300/20 bg-amber-300/8',
+            shell: 'border-white/10 bg-tile-2',
             label: `H${block.level ?? 1}`,
             textarea: block.level === 1
-                ? 'text-2xl font-semibold leading-tight text-slate-50'
+                ? 'text-2xl font-semibold leading-tight text-on-dark'
                 : block.level === 2
-                    ? 'text-xl font-semibold leading-tight text-slate-100'
-                    : 'text-lg font-semibold leading-snug text-slate-100',
+                    ? 'text-xl font-semibold leading-tight text-on-dark'
+                    : 'text-lg font-semibold leading-snug text-on-dark',
         }
     }
 
     if (block.type === 'checklist') {
         return {
-            shell: 'border-emerald-400/25 bg-emerald-400/8',
+            shell: 'border-white/10 bg-tile-2',
             label: 'Task',
-            textarea: 'text-sm leading-6 text-slate-100',
+            textarea: 'text-sm leading-6 text-on-dark',
         }
     }
 
     return {
-        shell: 'border-slate-700/80 bg-slate-950/70',
+        shell: 'border-white/10 bg-tile-1',
         label: 'Text',
-        textarea: 'text-sm leading-7 text-slate-100',
+        textarea: 'text-sm leading-7 text-on-dark',
     }
 }
 
@@ -348,7 +348,7 @@ export default function DocsApp({ id }: { id: string }) {
 
     return (
         <Window id={id} title="Docs">
-            <div className="flex h-full flex-col bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950/45 text-slate-100 md:flex-row">
+            <div className="flex h-full flex-col bg-tile-1 text-on-dark md:flex-row">
                 <RecordListPane
                     label="Documents"
                     records={editor.records}
@@ -358,71 +358,71 @@ export default function DocsApp({ id }: { id: string }) {
                     onSelect={editor.selectRecord}
                 />
                 <main className="flex min-h-0 flex-1 flex-col">
-                    <header className="border-b border-slate-700/70 px-4 py-3">
+                    <header className="border-b border-white/10 px-4 py-3">
                         <input
                             value={editor.title}
                             onChange={(event) => editor.setTitle(event.target.value)}
                             placeholder="Document title"
-                            className="w-full rounded-md border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 outline-none focus:border-[var(--os-accent)]"
+                            className="w-full rounded-md border border-white/10 bg-tile-2 px-3 py-2 text-sm text-on-dark outline-none focus:border-primary-on-dark"
                         />
                         <div className="mt-3 flex flex-wrap items-center gap-2">
                             <button
-                                className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-200 transition hover:bg-slate-800"
+                                className="rounded-pill border border-white/10 bg-tile-2 px-3 py-1.5 text-xs text-on-dark transition-transform active:scale-95"
                                 onClick={() => applyBlockType('paragraph')}
                                 type="button"
                             >
                                 Text
                             </button>
                             <button
-                                className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-200 transition hover:bg-slate-800"
+                                className="rounded-pill border border-white/10 bg-tile-2 px-3 py-1.5 text-xs text-on-dark transition-transform active:scale-95"
                                 onClick={() => applyBlockType('heading', 1)}
                                 type="button"
                             >
                                 H1
                             </button>
                             <button
-                                className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-200 transition hover:bg-slate-800"
+                                className="rounded-pill border border-white/10 bg-tile-2 px-3 py-1.5 text-xs text-on-dark transition-transform active:scale-95"
                                 onClick={() => applyBlockType('heading', 2)}
                                 type="button"
                             >
                                 H2
                             </button>
                             <button
-                                className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-200 transition hover:bg-slate-800"
+                                className="rounded-pill border border-white/10 bg-tile-2 px-3 py-1.5 text-xs text-on-dark transition-transform active:scale-95"
                                 onClick={() => applyBlockType('heading', 3)}
                                 type="button"
                             >
                                 H3
                             </button>
                             <button
-                                className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-200 transition hover:bg-slate-800"
+                                className="rounded-pill border border-white/10 bg-tile-2 px-3 py-1.5 text-xs text-on-dark transition-transform active:scale-95"
                                 onClick={() => applyBlockType('checklist')}
                                 type="button"
                             >
                                 Checklist
                             </button>
                             <button
-                                className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-200 transition hover:bg-slate-800"
+                                className="rounded-pill border border-white/10 bg-tile-2 px-3 py-1.5 text-xs text-on-dark transition-transform active:scale-95"
                                 onClick={applyLink}
                                 type="button"
                             >
                                 Link
                             </button>
                             <button
-                                className="rounded-full border border-cyan-500/40 bg-cyan-500/10 px-3 py-1.5 text-xs text-cyan-100 transition hover:bg-cyan-500/20"
+                                className="rounded-pill border border-primary-on-dark px-3 py-1.5 text-xs font-semibold text-primary-on-dark transition-transform active:scale-95"
                                 onClick={() => setTemplatePickerOpen((open) => !open)}
                                 type="button"
                             >
                                 Templates
                             </button>
                             <button
-                                className="rounded-full border border-cyan-500/40 bg-cyan-500/10 px-3 py-1.5 text-xs text-cyan-100 transition hover:bg-cyan-500/20"
+                                className="rounded-pill border border-primary-on-dark px-3 py-1.5 text-xs font-semibold text-primary-on-dark transition-transform active:scale-95"
                                 onClick={() => insertBlockAfterActive('paragraph')}
                                 type="button"
                             >
                                 Add block
                             </button>
-                            <p className="ml-auto text-xs text-slate-400">
+                            <p className="ml-auto text-xs text-on-dark-muted">
                                 {editor.statusLabel} | `Ctrl/Cmd+Enter` adds a block
                             </p>
                         </div>
@@ -443,7 +443,7 @@ export default function DocsApp({ id }: { id: string }) {
                             <article
                                 ref={editorRef}
                                 tabIndex={-1}
-                                className="min-h-[240px] overflow-auto rounded-lg border border-slate-700 bg-slate-950/70 p-4"
+                                className="min-h-[240px] overflow-auto rounded-lg border border-white/10 bg-tile-2 p-4"
                             >
                                 <div className="mx-auto flex max-w-3xl flex-col gap-3">
                                     {blocks.map((block) => {
@@ -453,11 +453,11 @@ export default function DocsApp({ id }: { id: string }) {
                                         return (
                                             <section
                                                 key={block.id}
-                                                className={`rounded-2xl border p-3 shadow-[0_18px_45px_rgba(15,23,42,0.22)] transition ${styles.shell} ${activeBlockId === block.id ? 'ring-1 ring-cyan-400/35' : ''}`}
+                                                className={`rounded-lg border p-3 transition ${styles.shell} ${activeBlockId === block.id ? 'ring-1 ring-primary-on-dark' : ''}`}
                                                 onMouseDown={() => setActiveBlockId(block.id)}
                                             >
                                                 <div className="flex items-start gap-3">
-                                                    <div className="mt-1 min-w-[3rem] text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                                                    <div className="mt-1 min-w-[3rem] text-[10px] font-semibold uppercase tracking-[0.2em] text-on-dark-muted">
                                                         {styles.label}
                                                     </div>
                                                     <div className="flex-1">
@@ -465,7 +465,7 @@ export default function DocsApp({ id }: { id: string }) {
                                                             {block.type === 'checklist' && (
                                                                 <input
                                                                     checked={Boolean(block.checked)}
-                                                                    className="mt-2 h-4 w-4 rounded border-slate-600 bg-slate-900 text-emerald-400 focus:ring-emerald-400"
+                                                                    className="mt-2 h-4 w-4 rounded border-white/10 bg-tile-2 text-primary-on-dark focus:ring-primary-on-dark"
                                                                     onChange={() => toggleChecklist(block.id)}
                                                                     type="checkbox"
                                                                 />
@@ -477,7 +477,7 @@ export default function DocsApp({ id }: { id: string }) {
                                                                 value={block.text}
                                                                 rows={Math.max(1, block.text.split('\n').length)}
                                                                 placeholder={getPlaceholder(block)}
-                                                                className={`w-full resize-none overflow-hidden bg-transparent outline-none placeholder:text-slate-500 ${styles.textarea} ${block.type === 'checklist' && block.checked ? 'text-slate-400 line-through' : ''}`}
+                                                                className={`w-full resize-none overflow-hidden bg-transparent outline-none placeholder:text-on-dark0 ${styles.textarea} ${block.type === 'checklist' && block.checked ? 'text-on-dark-muted line-through' : ''}`}
                                                                 onChange={(event) => {
                                                                     const nextText = event.target.value
                                                                     resizeTextarea(event.target)
@@ -518,7 +518,7 @@ export default function DocsApp({ id }: { id: string }) {
                                                                     <a
                                                                         key={`${block.id}-${link.href}-${link.label}`}
                                                                         href={link.href}
-                                                                        className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-[11px] text-cyan-100 transition hover:bg-cyan-400/20"
+                                                                        className="rounded-pill border border-primary-on-dark px-2.5 py-1 text-[12px] text-primary-on-dark"
                                                                         rel="noreferrer"
                                                                         target="_blank"
                                                                     >
