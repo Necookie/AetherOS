@@ -1,34 +1,22 @@
-import { useEffect, useState } from 'react'
-import { Download, Settings } from 'lucide-react'
+import { Activity, Download, FileText, FlaskConical, FolderOpen, Globe, Kanban, Settings, StickyNote, Store, Terminal, type LucideIcon } from 'lucide-react'
 
-const ICON_MAP: Record<string, string> = {
-    appstore: '/assets/candy-icons/appstore.svg',
-    browser: '/assets/candy-icons/browser.svg',
-    explorer: '/assets/candy-icons/explorer.svg',
-    term: '/assets/candy-icons/term.svg',
-    taskmgr: '/assets/candy-icons/taskmgr.svg',
-    settings: '/assets/candy-icons/settings.svg',
-    notes: '/assets/candy-icons/notes.svg',
-    docs: '/assets/candy-icons/docs.svg',
-    boards: '/assets/candy-icons/boards.svg',
-    'os-lab': '/assets/candy-icons/os-lab.svg',
+// Flat, single-tone glyphs (currentColor) replace the old rainbow-gradient
+// candy-icon SVGs — design.md: one accent, no decorative gradients.
+const ICON_MAP: Record<string, LucideIcon> = {
+    appstore: Store,
+    browser: Globe,
+    explorer: FolderOpen,
+    term: Terminal,
+    taskmgr: Activity,
+    settings: Settings,
+    notes: StickyNote,
+    docs: FileText,
+    boards: Kanban,
+    'os-lab': FlaskConical,
+    downloads: Download,
 }
 
 export function ShellAppIcon({ appId, className }: { appId: string; className?: string }) {
-    const iconSrc = ICON_MAP[appId]
-    const [hasError, setHasError] = useState(false)
-
-    useEffect(() => {
-        setHasError(false)
-    }, [appId])
-
-    if (appId === 'downloads') {
-        return <Download className={className} />
-    }
-
-    if (!iconSrc || hasError) {
-        return <Settings className={className} />
-    }
-
-    return <img src={iconSrc} className={className} aria-hidden alt="" onError={() => setHasError(true)} />
+    const Icon = ICON_MAP[appId] ?? Settings
+    return <Icon className={className} strokeWidth={1.75} aria-hidden />
 }

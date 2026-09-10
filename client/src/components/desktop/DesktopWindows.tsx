@@ -24,7 +24,7 @@ export default function DesktopWindows() {
             ))}
             {snapPreview && (
                 <div
-                    className="pointer-events-none absolute rounded-xl border border-white/70 bg-white/20 shadow-[0_12px_28px_rgb(15_23_42_/_0.24)] backdrop-blur-sm"
+                    className="pointer-events-none absolute rounded-lg border-2 border-primary-focus bg-[rgba(0,102,204,0.1)]"
                     style={{
                         left: snapPreview.region.bounds.x,
                         top: snapPreview.region.bounds.y,
