@@ -29,40 +29,40 @@ export default function SelectionDetails() {
 
     if (!selectedNode) {
         return (
-            <aside className="hidden w-64 shrink-0 border-l border-slate-700/80 bg-slate-950/50 p-3 lg:block">
-                <div className="text-xs uppercase tracking-wide text-slate-500">Details</div>
-                <p className="mt-3 text-xs text-slate-400">Select one file or folder to view metadata.</p>
+            <aside className="hidden w-64 shrink-0 border-l border-hairline bg-parchment p-3 lg:block">
+                <div className="text-xs uppercase tracking-wide text-ink-muted-48">Details</div>
+                <p className="mt-3 text-xs text-ink-muted">Select one file or folder to view metadata.</p>
             </aside>
         );
     }
 
     return (
-        <aside className="hidden w-64 shrink-0 border-l border-slate-700/80 bg-slate-950/50 p-3 lg:block">
+        <aside className="hidden w-64 shrink-0 border-l border-hairline bg-parchment p-3 lg:block">
             <div className="mb-4 flex items-center gap-2">
-                {selectedNode.type === VfsNodeType.DIR ? <Folder size={16} className="text-indigo-300" /> : <FileText size={16} className="text-slate-300" />}
-                <span className="truncate text-sm font-medium text-slate-100">{selectedNode.name}</span>
+                {selectedNode.type === VfsNodeType.DIR ? <Folder size={16} className="text-primary" /> : <FileText size={16} className="text-ink-muted-48" />}
+                <span className="truncate text-sm font-semibold text-ink">{selectedNode.name}</span>
             </div>
 
-            <div className="space-y-2 text-xs text-slate-300">
+            <div className="space-y-2 text-xs text-ink-muted">
                 {pendingCut && (
-                    <div className="rounded border border-amber-500/40 bg-amber-950/40 px-2 py-1 text-amber-100">
+                    <div className="rounded-sm border border-hairline bg-canvas px-2 py-1 text-warning">
                         Pending move: this item will be moved on paste.
                     </div>
                 )}
                 <div className="flex items-center justify-between">
-                    <span className="text-slate-500">Type</span>
+                    <span className="text-ink-muted-48">Type</span>
                     <span>{selectedNode.type === VfsNodeType.DIR ? 'Folder' : 'File'}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                    <span className="text-slate-500">Size</span>
+                    <span className="text-ink-muted-48">Size</span>
                     <span>{selectedNode.size} bytes</span>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                    <span className="inline-flex items-center gap-1 text-slate-500"><Clock3 size={12} />Modified</span>
+                    <span className="inline-flex items-center gap-1 text-ink-muted-48"><Clock3 size={12} />Modified</span>
                     <span>{Math.floor(selectedNode.modifiedAt)}</span>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                    <span className="inline-flex items-center gap-1 text-slate-500"><Shield size={12} />Mode</span>
+                    <span className="inline-flex items-center gap-1 text-ink-muted-48"><Shield size={12} />Mode</span>
                     <span>{formatMode(selectedNode.mode)}</span>
                 </div>
             </div>

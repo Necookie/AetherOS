@@ -71,11 +71,11 @@ export default function DirectoryTree() {
     }, [directoryTree]);
 
     return (
-        <div className="mt-3 border-t border-slate-800/80 pt-2">
-            <div className="mb-1 px-4 py-1 text-xs font-semibold text-slate-500">Folders</div>
+        <div className="mt-3 border-t border-hairline pt-2">
+            <div className="mb-1 px-4 py-1 text-xs font-semibold text-ink-muted-48">Folders</div>
             <button
                 onClick={() => navigate('/')}
-                className={`mx-2 mb-1 flex w-[calc(100%-1rem)] items-center gap-2 rounded px-2 py-1 text-left text-xs ${currentPath === '/' ? 'bg-indigo-500/20 text-indigo-100' : 'text-slate-300 hover:bg-slate-800/60'}`}
+                className={`mx-2 mb-1 flex w-[calc(100%-1rem)] items-center gap-2 rounded-sm px-2 py-1 text-left text-xs ${currentPath === '/' ? 'bg-[rgba(0,102,204,0.08)] text-ink font-semibold' : 'text-ink-muted hover:bg-canvas'}`}
             >
                 <FolderTree size={14} />
                 Root
@@ -86,10 +86,10 @@ export default function DirectoryTree() {
                     <button
                         key={row.id}
                         onClick={() => navigate(row.path)}
-                        className={`mx-1 flex w-[calc(100%-0.5rem)] items-center rounded px-2 py-1 text-left text-xs ${currentPath === row.path ? 'bg-indigo-500/20 text-indigo-100' : 'text-slate-300 hover:bg-slate-800/60'}`}
+                        className={`mx-1 flex w-[calc(100%-0.5rem)] items-center rounded-sm px-2 py-1 text-left text-xs ${currentPath === row.path ? 'bg-[rgba(0,102,204,0.08)] text-ink font-semibold' : 'text-ink-muted hover:bg-canvas'}`}
                         style={{ paddingLeft: `${row.depth * 12}px` }}
                     >
-                        <ChevronRight size={12} className="mr-1 text-slate-500" />
+                        <ChevronRight size={12} className="mr-1 text-ink-muted-48" />
                         <span className="truncate">{row.label}</span>
                     </button>
                 ))}

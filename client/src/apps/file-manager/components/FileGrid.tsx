@@ -3,14 +3,16 @@ import { useClipboardSnapshot } from '../../../features/clipboard';
 import { useFsStore } from '../../../stores/fsStore';
 import { Folder, FileText, FileCode, Image as Img } from 'lucide-react';
 
+// One accent only: folders (the navigable/actionable type) get primary,
+// every file type is neutral ink-muted-48 — shape (not color) carries the
+// type distinction between text/image/code icons.
 const getIcon = (type: VfsNodeType, name: string) => {
-    if (type === VfsNodeType.DIR) return <Folder size={48} className="text-indigo-300" fill="currentColor" fillOpacity={0.2} strokeWidth={1.5} />;
+    if (type === VfsNodeType.DIR) return <Folder size={48} className="text-primary" fill="currentColor" fillOpacity={0.2} strokeWidth={1.5} />;
 
-    // Simple mime check via extension
-    if (name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.svg')) return <Img size={48} className="text-sky-300" strokeWidth={1.5} />;
-    if (name.endsWith('.ts') || name.endsWith('.tsx') || name.endsWith('.js') || name.endsWith('.json')) return <FileCode size={48} className="text-amber-300" strokeWidth={1.5} />;
+    if (name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.svg')) return <Img size={48} className="text-ink-muted-48" strokeWidth={1.5} />;
+    if (name.endsWith('.ts') || name.endsWith('.tsx') || name.endsWith('.js') || name.endsWith('.json')) return <FileCode size={48} className="text-ink-muted-48" strokeWidth={1.5} />;
 
-    return <FileText size={48} className="text-slate-400" strokeWidth={1.5} />;
+    return <FileText size={48} className="text-ink-muted-48" strokeWidth={1.5} />;
 };
 
 export default function FileGrid({ items }: { items: VfsNode[] }) {
@@ -41,8 +43,8 @@ export default function FileGrid({ items }: { items: VfsNode[] }) {
                         key={item.id}
                         data-id={item.id}
                         data-selectable-id={item.id}
-                        className={`h-28 w-24 cursor-pointer rounded p-2 transition-colors ${isSelected ? 'bg-indigo-500/20 outline outline-1 outline-indigo-400/70' : 'hover:bg-slate-800/55'
-                            } ${isPendingCut ? 'opacity-45 outline outline-1 outline-dashed outline-amber-400/70' : ''
+                        className={`h-28 w-24 cursor-pointer rounded-sm p-2 transition-colors ${isSelected ? 'bg-[rgba(0,102,204,0.1)] outline outline-1 outline-primary-focus' : 'hover:bg-parchment'
+                            } ${isPendingCut ? 'opacity-45 outline outline-1 outline-dashed outline-warning' : ''
                             }`}
                         onClick={(e) => {
                             e.stopPropagation();
@@ -53,10 +55,10 @@ export default function FileGrid({ items }: { items: VfsNode[] }) {
                             handleDoubleClick(item);
                         }}
                     >
-                        <div className="mb-1 flex h-14 items-center justify-center pointer-events-none shadow-sm">
+                        <div className="mb-1 flex h-14 items-center justify-center pointer-events-none">
                             {getIcon(item.type, item.name)}
                         </div>
-                        <div className={`pointer-events-none w-full break-words px-1 text-center text-xs line-clamp-2 ${isSelected ? 'font-medium text-indigo-100' : 'text-slate-200'} ${isPendingCut ? 'text-amber-100' : ''}`}>
+                        <div className={`pointer-events-none w-full break-words px-1 text-center text-xs line-clamp-2 ${isSelected ? 'font-semibold text-ink' : 'text-ink'} ${isPendingCut ? 'text-warning' : ''}`}>
                             {item.name}
                         </div>
                     </div>

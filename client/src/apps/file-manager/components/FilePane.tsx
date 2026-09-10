@@ -163,21 +163,21 @@ export default function FilePane() {
         <div className="relative flex flex-1 overflow-hidden">
             <div
                 ref={paneRef}
-                className="relative flex-1 overflow-y-auto bg-slate-950/30 outline-none"
+                className="relative flex-1 overflow-y-auto bg-canvas outline-none"
                 onMouseDown={handleMouseDown}
                 onClick={handlePaneClick}
                 onContextMenu={handleContextMenu}
                 tabIndex={0}
             >
                 {error && (
-                    <div className="absolute left-1/2 top-4 z-50 flex -translate-x-1/2 items-center gap-4 rounded border border-red-700 bg-red-950/90 px-4 py-2 text-red-100 shadow">
+                    <div className="absolute left-1/2 top-4 z-50 flex -translate-x-1/2 items-center gap-4 rounded-md border border-hairline bg-canvas px-4 py-2 text-danger">
                         <span>{error}</span>
                         <button onClick={clearError} className="text-xl leading-none">&times;</button>
                     </div>
                 )}
 
                 {isMutating && (
-                    <div className="absolute right-4 top-4 z-40 rounded border border-indigo-500/40 bg-indigo-950/80 px-2 py-1 text-xs text-indigo-100">
+                    <div className="absolute right-4 top-4 z-40 rounded-pill border border-primary-focus bg-canvas px-2 py-1 text-xs text-primary">
                         Applying changes...
                     </div>
                 )}
@@ -186,7 +186,7 @@ export default function FilePane() {
                 {selectionRect && (
                     <div
                         aria-hidden
-                        className="pointer-events-none fixed z-30 border border-indigo-400/70 bg-indigo-500/20"
+                        className="pointer-events-none fixed z-30 border border-primary-focus bg-[rgba(0,102,204,0.1)]"
                         style={{
                             left: selectionRect.left,
                             top: selectionRect.top,
