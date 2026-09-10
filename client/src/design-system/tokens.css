@@ -1,15 +1,41 @@
+/*
+ * AetherOS design tokens — derived from design.md (Apple web design system,
+ * adapted for a desktop-OS shell). One accent, flat surfaces, hairline
+ * borders, one reserved shadow. See design.md for the full rationale.
+ */
 :root {
-  --ds-color-bg-canvas: #cde8ff;
-  --ds-color-bg-elevated: #f1f7ff;
-  --ds-color-surface-0: #ffffff;
-  --ds-color-surface-1: #ecf4ff;
-  --ds-color-border: #b9cae2;
-  --ds-color-text-primary: #172033;
-  --ds-color-text-muted: #4f678a;
-  --ds-color-accent: #0a84ff;
-  --ds-color-success: #22c55e;
-  --ds-color-danger: #ef4444;
+  /* ---- Accent (single brand color — never a second one) ---- */
+  --ds-color-accent: #0066cc; /* Action Blue */
+  --ds-color-accent-focus: #0071e3; /* Focus Blue — keyboard focus ring only */
+  --ds-color-accent-on-dark: #2997ff; /* Sky Link Blue — links on dark tiles only */
 
+  /* ---- Surfaces ---- */
+  --ds-color-bg-canvas: #f5f5f7; /* Parchment — default desktop/app canvas */
+  --ds-color-bg-elevated: #ffffff; /* Pure white — dialogs, elevated panels */
+  --ds-color-surface-0: #ffffff; /* Card / window content fill */
+  --ds-color-surface-1: #fafafc; /* Pearl — secondary "ghost" surfaces */
+  --ds-color-tile-1: #272729; /* Near-black tile — primary dark chrome */
+  --ds-color-tile-2: #2a2a2c; /* Near-black tile, one step lighter */
+  --ds-color-tile-3: #252527; /* Near-black tile, one step darker */
+  --ds-color-void: #000000; /* True black — taskbar / terminal surfaces */
+  --ds-color-chip-translucent: rgba(210, 210, 215, 0.64); /* floating circular controls */
+
+  /* ---- Text ---- */
+  --ds-color-text-primary: #1d1d1f; /* Ink */
+  --ds-color-text-muted: #7a7a7a; /* Ink muted 48 */
+  --ds-color-text-on-dark: #ffffff;
+  --ds-color-text-on-dark-muted: #cccccc;
+  --ds-color-text-on-pearl: #333333; /* Ink muted 80 */
+
+  /* ---- Hairlines ---- */
+  --ds-color-border: #e0e0e0; /* Hairline */
+  --ds-color-divider-soft: rgba(0, 0, 0, 0.04);
+
+  /* ---- Status (extended sparingly — flat, same language) ---- */
+  --ds-color-success: #1a7f37;
+  --ds-color-danger: #d92d20;
+
+  /* ---- Spacing (8px base) ---- */
   --ds-space-1: 0.25rem;
   --ds-space-2: 0.5rem;
   --ds-space-3: 0.75rem;
@@ -17,24 +43,29 @@
   --ds-space-5: 1.25rem;
   --ds-space-6: 1.5rem;
 
-  --ds-radius-sm: 0.5rem;
-  --ds-radius-md: 0.75rem;
-  --ds-radius-lg: 1rem;
-  --ds-radius-xl: 1.25rem;
+  /* ---- Radius scale — no values outside this list ---- */
+  --ds-radius-none: 0px;
+  --ds-radius-xs: 5px;
+  --ds-radius-sm: 8px;
+  --ds-radius-md: 11px;
+  --ds-radius-lg: 18px;
+  --ds-radius-pill: 9999px;
 
-  --ds-shadow-sm: 0 8px 18px rgb(30 58 138 / 0.16);
-  --ds-shadow-md: 0 16px 32px rgb(30 58 138 / 0.24);
-  --ds-shadow-lg: 0 22px 44px rgb(30 58 138 / 0.3);
+  /* ---- Elevation — exactly one shadow exists in this system ---- */
+  --ds-shadow-elevated: 3px 5px 30px 0 rgba(0, 0, 0, 0.22);
+  --ds-blur-frosted: blur(20px) saturate(180%);
 
   --ds-z-topbar: 500;
   --ds-z-desktop: 400;
   --ds-z-dock: 700;
   --ds-z-flyout: 900;
 
-  --ds-font-ui: "Segoe UI", "Inter", "SF Pro Text", system-ui, sans-serif;
+  /* ---- Typography ---- */
+  --ds-font-display: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif;
+  --ds-font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
   --ds-font-mono: "JetBrains Mono", "Cascadia Code", "Fira Code", monospace;
 
-  --shell-topbar-height: 2rem;
+  --shell-topbar-height: 2.75rem;
   --shell-dock-height: 3.5rem;
   --shell-edge-gap: 0.75rem;
 }
