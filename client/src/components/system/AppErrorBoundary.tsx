@@ -48,25 +48,25 @@ export default class AppErrorBoundary extends React.Component<AppErrorBoundaryPr
         }
 
         return (
-            <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[radial-gradient(780px_540px_at_15%_20%,#ffd3e8_0%,transparent_68%),linear-gradient(160deg,#cfe7ff_0%,#e2dbff_52%,#ffd8ea_100%)] p-4">
-                <div className="max-w-lg rounded-2xl border border-white/70 bg-white/75 p-5 shadow-2xl backdrop-blur-xl">
-                    <h1 className="text-lg font-semibold text-slate-900">AetherOS crashed during render</h1>
-                    <p className="mt-2 text-sm text-slate-700">
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-parchment p-4">
+                <div className="max-w-lg rounded-lg border border-hairline bg-canvas p-5 shadow-elevated">
+                    <h1 className="text-lg font-semibold text-ink">AetherOS crashed during render</h1>
+                    <p className="mt-2 text-sm text-ink-muted">
                         Refresh to recover. If this keeps happening, share the error text below.
                     </p>
-                    <pre className="mt-3 max-h-40 overflow-auto rounded-lg border border-slate-200/80 bg-white/80 p-3 font-term text-xs text-slate-700">
+                    <pre className="mt-3 max-h-40 overflow-auto rounded-md border border-hairline bg-parchment p-3 font-term text-xs text-ink-muted">
                         {this.state.message || 'Unknown error'}
                     </pre>
                     <button
                         onClick={this.handleReload}
-                        className="mt-4 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                        className="mt-4 rounded-pill bg-primary px-4 py-2 text-sm text-white transition-transform active:scale-95"
                     >
                         Reload app
                     </button>
                     {this.props.onResetDesktop && (
                         <button
                             onClick={this.handleRecoverDesktop}
-                            className="ml-2 mt-4 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                            className="ml-2 mt-4 rounded-pill border border-primary px-4 py-2 text-sm text-primary transition-transform active:scale-95"
                         >
                             Reset desktop session
                         </button>
