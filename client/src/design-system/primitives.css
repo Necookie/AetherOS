@@ -26,10 +26,6 @@
     background: var(--ds-color-accent);
   }
 
-  .ds-button:hover {
-    background: color-mix(in oklab, var(--ds-color-accent) 90%, black 10%);
-  }
-
   .ds-button:active {
     transform: scale(0.95);
   }
