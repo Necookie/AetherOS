@@ -21,36 +21,31 @@ export default function DateTimeFlyout({
 
     return (
         <div
-            className={`animate-os-flyout-in absolute right-0 z-[var(--ds-z-flyout)] w-[min(26rem,calc(100vw-1.5rem))] rounded-2xl p-4 backdrop-blur-2xl ${taskbarPosition === 'top' ? 'top-[calc(var(--shell-topbar-height)+var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)]' : 'bottom-[calc(var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)]'}`}
-            style={{
-                background: 'linear-gradient(180deg, rgb(255 255 255 / 0.58), rgb(255 255 255 / 0.34))',
-                border: '1px solid rgb(255 255 255 / 0.58)',
-                boxShadow: '0 20px 40px rgb(15 23 42 / 0.25)',
-            }}
+            className={`absolute right-0 z-[var(--ds-z-flyout)] w-[min(26rem,calc(100vw-1.5rem))] rounded-lg border border-hairline bg-canvas p-4 ${taskbarPosition === 'top' ? 'top-[calc(var(--shell-topbar-height)+var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)]' : 'bottom-[calc(var(--shell-dock-height)+var(--shell-edge-gap)+0.5rem)]'}`}
         >
             <div className="mb-4 flex items-center justify-between">
-                <p className="text-base font-semibold text-slate-900">
+                <p className="text-base font-semibold text-ink">
                     {now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })}
                 </p>
-                <p className="text-sm text-slate-700">
+                <p className="text-sm text-ink-muted">
                     {now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: showSeconds ? '2-digit' : undefined })}
                 </p>
             </div>
 
-            <div className="rounded-xl border border-white/58 bg-white/45 p-4">
+            <div className="rounded-md border border-hairline bg-parchment p-4">
                 <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-slate-900">
+                    <h3 className="text-lg font-semibold text-ink">
                         {viewedMonth.toLocaleDateString([], { month: 'long', year: 'numeric' })}
                     </h3>
                     <div className="flex items-center gap-2">
-                        <button onClick={onBackMonth} className="os-interactive rounded border border-white/65 bg-white/70 px-2 py-1 text-xs text-slate-900" aria-label="Previous month">&lt;</button>
-                        <button onClick={onForwardMonth} className="os-interactive rounded border border-white/65 bg-white/70 px-2 py-1 text-xs text-slate-900" aria-label="Next month">&gt;</button>
+                        <button onClick={onBackMonth} className="rounded border border-hairline bg-canvas px-2 py-1 text-xs text-ink transition-transform active:scale-95" aria-label="Previous month">&lt;</button>
+                        <button onClick={onForwardMonth} className="rounded border border-hairline bg-canvas px-2 py-1 text-xs text-ink transition-transform active:scale-95" aria-label="Next month">&gt;</button>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-7 gap-y-2 text-center text-sm">
                     {WEEKDAY_LABELS.map((weekday) => (
-                        <p key={weekday} className="text-xs uppercase tracking-wide text-slate-600">{weekday}</p>
+                        <p key={weekday} className="text-xs uppercase tracking-wide text-ink-muted">{weekday}</p>
                     ))}
 
                     {days.map((date) => {
@@ -62,10 +57,10 @@ export default function DateTimeFlyout({
                                 key={date.toISOString()}
                                 className={`mx-auto flex h-9 w-9 items-center justify-center rounded-full text-sm ${
                                     isToday
-                                        ? 'bg-[var(--ds-color-accent)] text-white'
+                                        ? 'bg-primary text-white'
                                         : isCurrentMonth
-                                            ? 'text-slate-900'
-                                            : 'text-slate-500'
+                                            ? 'text-ink'
+                                            : 'text-ink-muted-48'
                                 }`}
                             >
                                 {date.getDate()}
