@@ -49,7 +49,7 @@ export default function AddressBar({ displayUrl, onSubmit, focusTrigger }: Addre
     return (
         <form onSubmit={handleSubmit} className="flex-1 min-w-0">
             <div className="relative">
-                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-muted-48" />
                 <input
                     ref={inputRef}
                     type="text"
@@ -58,11 +58,11 @@ export default function AddressBar({ displayUrl, onSubmit, focusTrigger }: Addre
                     onFocus={handleFocus}
                     onBlur={handleBlur}
                     placeholder="Search or enter URL..."
-                    className={`w-full rounded-md border py-1.5 pl-8 pr-3 text-xs
-                        bg-white/75 text-slate-800 placeholder-slate-500
-                        focus:border-sky-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-400/30
-                        transition-all duration-150
-                        ${isFocused ? 'border-sky-400' : 'border-white/80'}
+                    className={`w-full rounded-pill border py-1.5 pl-9 pr-3 text-xs
+                        bg-canvas text-ink placeholder-ink-muted-48
+                        focus:border-primary-focus focus:outline-none focus:ring-1 focus:ring-primary-focus
+                        transition-colors duration-150
+                        ${isFocused ? 'border-primary-focus' : 'border-hairline'}
                     `}
                 />
             </div>

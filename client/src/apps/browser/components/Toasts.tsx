@@ -35,21 +35,21 @@ function Toast({ toast, onDismiss }: { toast: ToastMessage; onDismiss: (id: stri
     }, [toast.id, onDismiss]);
 
     const bgColor = toast.type === 'error'
-        ? 'bg-red-50/90 border-red-300 text-red-700'
+        ? 'bg-canvas border-hairline text-danger'
         : toast.type === 'warning'
-            ? 'bg-amber-50/90 border-amber-300 text-amber-700'
-            : 'bg-white/90 border-white text-slate-800';
+            ? 'bg-canvas border-hairline text-warning'
+            : 'bg-canvas border-hairline text-ink';
 
     return (
         <div
-            className={`pointer-events-auto flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm shadow-lg backdrop-blur-md
+            className={`pointer-events-auto flex items-center gap-2 rounded-md border px-4 py-2.5 text-sm
                 transition-all duration-200 ${bgColor}
                 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
             `}
         >
             <AlertTriangle className="w-4 h-4 flex-shrink-0" />
             <span className="flex-1">{toast.message}</span>
-            <button onClick={() => onDismiss(toast.id)} className="rounded p-0.5 hover:bg-white/10">
+            <button onClick={() => onDismiss(toast.id)} className="rounded-sm p-0.5 hover:bg-parchment">
                 <X className="w-3.5 h-3.5" />
             </button>
         </div>

@@ -155,7 +155,7 @@ export default function BrowserApp({ id }: { id: string }) {
                         return (
                             <>
                                 {searchError ? (
-                                    <div className="absolute right-4 top-4 z-40 rounded-2xl border border-amber-200 bg-amber-50/95 px-4 py-3 text-xs text-amber-900 shadow-lg">
+                                    <div className="absolute right-4 top-4 z-40 rounded-md border border-hairline bg-canvas px-4 py-3 text-xs text-warning">
                                         Search API unavailable. Showing fallback results.
                                     </div>
                                 ) : null}
@@ -221,7 +221,7 @@ export default function BrowserApp({ id }: { id: string }) {
 
     return (
         <Window id={id} title="Aether Browser">
-            <div className="flex h-full w-full select-none flex-col overflow-hidden rounded-b-lg text-sm text-slate-800">
+            <div className="flex h-full w-full select-none flex-col overflow-hidden bg-canvas text-sm text-ink">
                 <TabStrip />
                 <Toolbar
                     activeTabId={activeTabId}
@@ -239,26 +239,26 @@ export default function BrowserApp({ id }: { id: string }) {
                 <div className="relative flex-1 overflow-hidden">
                     {activeTab?.isLoading && (
                         <div className="absolute left-0 right-0 top-0 z-50 h-0.5">
-                            <div className="h-full animate-pulse rounded-r bg-sky-400" style={{ width: '60%' }} />
+                            <div className="h-full animate-pulse rounded-r bg-primary" style={{ width: '60%' }} />
                         </div>
                     )}
                     {browserDownloads.length > 0 && (
                         <div className="pointer-events-none absolute right-4 top-4 z-40 w-[min(24rem,calc(100%-2rem))]">
-                            <div className="pointer-events-auto rounded-3xl border border-sky-200/40 bg-slate-950/78 p-3 text-slate-100 shadow-[0_24px_70px_rgb(2_6_23_/_0.45)] backdrop-blur-xl">
+                            <div className="pointer-events-auto rounded-lg border border-white/10 bg-tile-1 p-3 text-on-dark">
                                 <div className="flex items-center justify-between gap-3">
                                     <div className="flex items-center gap-2">
-                                        <div className="rounded-2xl bg-sky-500/20 p-2 text-sky-200">
+                                        <div className="rounded-lg bg-tile-2 p-2 text-primary-on-dark">
                                             <Download className="h-4 w-4" />
                                         </div>
                                         <div>
-                                            <p className="text-xs uppercase tracking-[0.18em] text-sky-200/70">Browser transfers</p>
-                                            <p className="text-sm font-semibold text-white">Downloads in progress</p>
+                                            <p className="text-xs uppercase tracking-[0.18em] text-on-dark-muted">Browser transfers</p>
+                                            <p className="text-sm font-semibold text-on-dark">Downloads in progress</p>
                                         </div>
                                     </div>
                                     {downloadsApp ? (
                                         <button
                                             onClick={() => openWindow(downloadsApp)}
-                                            className="rounded-full border border-white/15 bg-white/8 px-3 py-1 text-[11px] font-medium text-slate-200 hover:bg-white/14"
+                                            className="rounded-pill border border-white/10 bg-tile-2 px-3 py-1 text-[12px] font-semibold text-on-dark transition-transform active:scale-95"
                                         >
                                             Open manager
                                         </button>
@@ -269,29 +269,29 @@ export default function BrowserApp({ id }: { id: string }) {
                                     {browserDownloads.map((item) => {
                                         const progress = Math.min(100, Math.round((item.receivedBytes / item.totalBytes) * 100))
                                         return (
-                                            <div key={item.id} className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                                            <div key={item.id} className="rounded-lg border border-white/10 bg-tile-2 p-3">
                                                 <div className="flex items-start justify-between gap-3">
                                                     <div className="min-w-0 flex-1">
-                                                        <p className="truncate text-sm font-medium text-white">{item.fileName}</p>
-                                                        <p className="mt-1 truncate text-xs text-slate-400">{item.destinationPath}</p>
+                                                        <p className="truncate text-sm font-semibold text-on-dark">{item.fileName}</p>
+                                                        <p className="mt-1 truncate text-xs text-on-dark-muted">{item.destinationPath}</p>
                                                     </div>
                                                     {item.status === 'complete' ? (
-                                                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" />
+                                                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
                                                     ) : item.status === 'failed' ? (
-                                                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" />
+                                                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-danger" />
                                                     ) : (
-                                                        <span className="text-xs text-sky-200">{progress}%</span>
+                                                        <span className="text-xs text-primary-on-dark">{progress}%</span>
                                                     )}
                                                 </div>
 
-                                                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
+                                                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-tile-1">
                                                     <div
                                                         className={`h-full rounded-full transition-[width] duration-500 ${
                                                             item.status === 'complete'
-                                                                ? 'bg-emerald-400'
+                                                                ? 'bg-success'
                                                                 : item.status === 'failed'
-                                                                    ? 'bg-rose-400'
-                                                                    : 'bg-sky-400'
+                                                                    ? 'bg-danger'
+                                                                    : 'bg-primary-on-dark'
                                                         }`}
                                                         style={{ width: `${progress}%` }}
                                                     />
@@ -304,7 +304,7 @@ export default function BrowserApp({ id }: { id: string }) {
                                                                 openWindow(explorerApp)
                                                                 revealPath(item.destinationPath)
                                                             }}
-                                                            className="rounded-full border border-white/15 bg-white/8 px-3 py-1 text-[11px] font-medium text-slate-200 hover:bg-white/14"
+                                                            className="rounded-pill border border-white/10 bg-tile-2 px-3 py-1 text-[12px] font-semibold text-on-dark transition-transform active:scale-95"
                                                         >
                                                             <span className="inline-flex items-center gap-1">
                                                                 <FolderOpen className="h-3 w-3" />
@@ -316,13 +316,13 @@ export default function BrowserApp({ id }: { id: string }) {
                                                                 openWindow(explorerApp)
                                                                 revealPath(getParentPath(item.destinationPath))
                                                             }}
-                                                            className="rounded-full border border-white/15 bg-white/8 px-3 py-1 text-[11px] font-medium text-slate-200 hover:bg-white/14"
+                                                            className="rounded-pill border border-white/10 bg-tile-2 px-3 py-1 text-[12px] font-semibold text-on-dark transition-transform active:scale-95"
                                                         >
                                                             Open folder
                                                         </button>
                                                         <button
                                                             onClick={() => void handleCopyPath(item.destinationPath)}
-                                                            className="rounded-full border border-white/15 bg-white/8 px-3 py-1 text-[11px] font-medium text-slate-200 hover:bg-white/14"
+                                                            className="rounded-pill border border-white/10 bg-tile-2 px-3 py-1 text-[12px] font-semibold text-on-dark transition-transform active:scale-95"
                                                         >
                                                             <span className="inline-flex items-center gap-1">
                                                                 <Copy className="h-3 w-3" />
@@ -331,7 +331,7 @@ export default function BrowserApp({ id }: { id: string }) {
                                                         </button>
                                                     </div>
                                                 ) : item.status === 'failed' ? (
-                                                    <p className="mt-3 text-xs text-rose-200">{item.errorMessage ?? 'The file could not be written to Downloads.'}</p>
+                                                    <p className="mt-3 text-xs text-danger">{item.errorMessage ?? 'The file could not be written to Downloads.'}</p>
                                                 ) : null}
                                             </div>
                                         )
