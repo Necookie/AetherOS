@@ -57,17 +57,21 @@ export function useTerminal({ terminalRef, engine, session, onReady }: UseTermin
     useEffect(() => {
         if (!terminalRef.current) return
 
-        const surfaceColor = readThemeColor('--os-surface-1', '#ecf4ff')
-        const textColor = readThemeColor('--os-text-0', '#172033')
-        const accentColor = readThemeColor('--os-accent', '#0a84ff')
-        const borderColor = readThemeColor('--os-border', '#b9cae2')
+        // Terminal is the system's "true void" surface (design.md:
+        // Pure Black is reserved for video/terminal surfaces), so it reads
+        // its colors from the fixed brand tokens rather than the themeable
+        // --os-* bridge that Settings can repaint.
+        const surfaceColor = readThemeColor('--ds-color-void', '#000000')
+        const textColor = readThemeColor('--ds-color-text-on-dark', '#ffffff')
+        const accentColor = readThemeColor('--ds-color-accent-on-dark', '#2997ff')
+        const selectionColor = 'rgba(255, 255, 255, 0.18)'
 
         const term = new Terminal({
             theme: {
                 background: surfaceColor,
                 foreground: textColor,
                 cursor: accentColor,
-                selectionBackground: borderColor,
+                selectionBackground: selectionColor,
             },
             cursorBlink: true,
             fontFamily: 'JetBrains Mono, Cascadia Code, Fira Code, monospace',

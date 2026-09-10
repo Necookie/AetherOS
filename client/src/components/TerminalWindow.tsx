@@ -50,7 +50,7 @@ export default function TerminalWindow({ id }: { id: string }) {
 
     return (
         <Window id={id} title="Terminal">
-            <div ref={terminalRef} className="w-full h-full p-2" />
+            <div ref={terminalRef} className="w-full h-full bg-void p-2" />
         </Window>
     )
 }
