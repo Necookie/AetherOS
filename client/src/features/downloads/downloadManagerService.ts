@@ -326,7 +326,7 @@ export function createDownloadManagerService(options: DownloadManagerOptions = {
         }
     }
 
-    service = {
+    const service: DownloadManagerService = {
         enqueue: (input) => {
             const id = input.id ?? `download-${now()}-${++idCounter}`
             const createdAt = now()

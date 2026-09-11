@@ -8,9 +8,10 @@ import { useProductivityDeepLink } from '../productivity/hooks/useProductivityDe
 import { useProductivityEditor } from '../productivity/hooks/useProductivityEditor'
 import { createBoardTemplate, parseBoardState, type BoardState } from './boardModel'
 import { addCardToColumn, findCardLocation, moveCard, reorderColumns, updateCardDescription } from './boardState'
+import { safeRandomUUID } from '../../lib/uuid'
 
 function nextId() {
-    return crypto.randomUUID().slice(0, 8)
+    return safeRandomUUID().slice(0, 8)
 }
 
 type DragState =
