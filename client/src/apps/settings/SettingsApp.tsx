@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Palette, Monitor, Accessibility, SlidersHorizontal, RotateCcw, Keyboard, Shield, Upload, Trash2 } from 'lucide-react'
+import { Palette, Monitor, Accessibility, SlidersHorizontal, RotateCcw, Keyboard, Shield, Upload, Trash2, Package, Search, ShieldCheck } from 'lucide-react'
 import Window from '../../components/system/Window'
 import { getActiveAccount } from '../../features/accounts/services/sessionSelectors'
 import { WALLPAPER_OPTIONS } from '../../features/settings/defaults'
@@ -11,6 +11,10 @@ import { createThemeTokens, resolveWallpaper } from '../../features/settings/the
 import { useDeepLinkIntentStore } from '../../features/deep-links/store'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { useSessionStore } from '../../stores/useSessionStore'
+import { useWindowStore } from '../../stores/windowStore'
+import { ShellAppIcon } from '../../features/shell/model/appIcons'
+import { DEFAULT_APPS } from '../../config/windows'
+import { registryService, useAppRegistryStore } from '../../stores/appRegistryStore'
 import type { PermissionId } from '../../features/permissions/types'
 import type { ThemePalette } from '../../features/settings/types'
 import type { SettingsSection } from '../../features/deep-links/types'
@@ -20,9 +24,13 @@ import {
     SHORTCUT_ACTION_IDS,
     validateShortcutOverrides,
 } from '../../features/shortcuts/shortcutConfig'
+
+const SYSTEM_APP_IDS = new Set(['appstore', 'browser', 'explorer', 'taskmgr', 'settings'])
+
 const sectionMeta: Array<{ id: SettingsSection; label: string; icon: typeof Palette }> = [
     { id: 'appearance', label: 'Appearance', icon: Palette },
     { id: 'desktop', label: 'Desktop', icon: Monitor },
+    { id: 'apps', label: 'Applications', icon: Package },
     { id: 'accessibility', label: 'Accessibility', icon: Accessibility },
     { id: 'behavior', label: 'Behavior', icon: SlidersHorizontal },
     { id: 'shortcuts', label: 'Shortcuts', icon: Keyboard },
@@ -169,6 +177,29 @@ export default function SettingsApp({ id }: { id: string }) {
 
         return permissionService.listPermissionStatuses(activeUserId)
     }, [activeUserId, permissionsVersion])
+
+    const { installed, uninstallApp, operations } = useAppRegistryStore((state) => ({
+        installed: state.installed,
+        uninstallApp: state.uninstallApp,
+        operations: state.operations,
+    }))
+    const openWindow = useWindowStore((state) => state.openWindow)
+    const [appSearch, setAppSearch] = useState('')
+    const [confirmUninstallId, setConfirmUninstallId] = useState<string | null>(null)
+
+    const allCatalogApps = useMemo(() => registryService.listAvailable(), [])
+    const filteredApps = useMemo(() => {
+        const query = appSearch.trim().toLowerCase()
+        return allCatalogApps.filter((app) => {
+            if (!query) return true
+            return (
+                app.title.toLowerCase().includes(query) ||
+                app.summary.toLowerCase().includes(query) ||
+                app.category.toLowerCase().includes(query) ||
+                app.id.toLowerCase().includes(query)
+            )
+        })
+    }, [allCatalogApps, appSearch])
 
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [uploadError, setUploadError] = useState<string | null>(null)
@@ -424,6 +455,158 @@ export default function SettingsApp({ id }: { id: string }) {
                                 >
                                     Taskbar top
                                 </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {section === 'apps' && (
+                        <div className="space-y-4">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <h2 className="text-lg font-semibold text-ink">Applications</h2>
+                                    <p className="text-sm text-ink-muted">Manage installed applications and system components.</p>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        const appStoreDef = DEFAULT_APPS.find((a) => a.id === 'appstore')
+                                        if (appStoreDef) openWindow(appStoreDef)
+                                    }}
+                                    className="inline-flex items-center gap-1.5 rounded-pill bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-all hover:opacity-90 active:scale-95"
+                                >
+                                    <Package className="h-3.5 w-3.5" />
+                                    Open App Store
+                                </button>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <div className="relative flex-1">
+                                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted-48" />
+                                    <input
+                                        type="search"
+                                        placeholder="Search installed applications..."
+                                        value={appSearch}
+                                        onChange={(e) => setAppSearch(e.target.value)}
+                                        className="w-full rounded-pill border border-hairline bg-canvas py-1.5 pl-9 pr-3 text-sm text-ink placeholder:text-ink-muted-48 focus:border-primary-focus focus:outline-none"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-1.5 text-xs text-ink-muted">
+                                    <span className="rounded-pill border border-hairline bg-parchment px-2.5 py-1">
+                                        {Object.keys(installed).length} Installed
+                                    </span>
+                                    <span className="rounded-pill border border-hairline bg-parchment px-2.5 py-1">
+                                        {SYSTEM_APP_IDS.size} System
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2.5">
+                                {filteredApps.map((app) => {
+                                    const installedApp = installed[app.id]
+                                    const isSystem = SYSTEM_APP_IDS.has(app.id) || installedApp?.source === 'system' || app.category === 'system'
+                                    const operation = operations[app.id]
+                                    const isBusy = operation && ['installing', 'updating', 'removing'].includes(operation.state)
+                                    const isConfirming = confirmUninstallId === app.id
+                                    const latestVersion = registryService.getLatestVersion(app.id) ?? '1.0.0'
+                                    const appDef = DEFAULT_APPS.find((a) => a.id === app.id)
+
+                                    return (
+                                        <article
+                                            key={app.id}
+                                            className="flex flex-col gap-3 rounded-lg border border-hairline bg-parchment p-3 transition-colors sm:flex-row sm:items-center sm:justify-between"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <ShellAppIcon appId={app.id} variant="tile" size="md" />
+                                                <div>
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <h3 className="text-sm font-semibold text-ink">{app.title}</h3>
+                                                        {isSystem ? (
+                                                            <span className="inline-flex items-center gap-1 rounded-pill border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-[#0066cc]">
+                                                                <ShieldCheck className="h-3 w-3" /> Built-in
+                                                            </span>
+                                                        ) : installedApp ? (
+                                                            <span className="rounded-pill border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                                                Installed
+                                                            </span>
+                                                        ) : (
+                                                            <span className="rounded-pill border border-hairline bg-canvas px-2 py-0.5 text-[10px] text-ink-muted">
+                                                                Not installed
+                                                            </span>
+                                                        )}
+                                                        <span className="rounded-pill border border-hairline bg-canvas px-2 py-0.5 text-[10px] uppercase tracking-wider text-ink-muted-48">
+                                                            {app.category}
+                                                        </span>
+                                                    </div>
+                                                    <p className="mt-0.5 text-xs text-ink-muted">{app.summary}</p>
+                                                    <p className="mt-1 text-[11px] text-ink-muted-48">
+                                                        Version: {installedApp ? installedApp.version : latestVersion}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-2 sm:self-center">
+                                                {isSystem ? (
+                                                    <span
+                                                        className="cursor-not-allowed select-none rounded-md border border-hairline bg-canvas px-3 py-1.5 text-xs text-ink-muted-48"
+                                                        title="Built-in system components cannot be uninstalled"
+                                                    >
+                                                        Protected
+                                                    </span>
+                                                ) : installedApp ? (
+                                                    isConfirming ? (
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="text-xs font-medium text-danger">Uninstall?</span>
+                                                            <button
+                                                                onClick={async () => {
+                                                                    setConfirmUninstallId(null)
+                                                                    await uninstallApp(app.id)
+                                                                }}
+                                                                disabled={isBusy}
+                                                                className="rounded-md bg-danger px-2.5 py-1 text-xs font-semibold text-white transition-all active:scale-95 disabled:opacity-50"
+                                                            >
+                                                                Confirm
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setConfirmUninstallId(null)}
+                                                                className="rounded-md border border-hairline bg-canvas px-2.5 py-1 text-xs text-ink transition-colors hover:bg-parchment"
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => setConfirmUninstallId(app.id)}
+                                                            disabled={isBusy}
+                                                            className="inline-flex items-center gap-1 rounded-md border border-hairline bg-canvas px-3 py-1.5 text-xs font-semibold text-danger transition-all hover:bg-red-50 active:scale-95 disabled:opacity-50"
+                                                            title={`Uninstall ${app.title}`}
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                            Uninstall
+                                                        </button>
+                                                    )
+                                                ) : (
+                                                    <button
+                                                        onClick={() => {
+                                                            const appStoreDef = DEFAULT_APPS.find((a) => a.id === 'appstore')
+                                                            if (appStoreDef) openWindow(appStoreDef)
+                                                        }}
+                                                        className="rounded-md border border-hairline bg-canvas px-3 py-1.5 text-xs font-semibold text-primary transition-all hover:bg-parchment active:scale-95"
+                                                    >
+                                                        Get in Store
+                                                    </button>
+                                                )}
+
+                                                {appDef && installedApp && (
+                                                    <button
+                                                        onClick={() => openWindow(appDef)}
+                                                        className="rounded-md border border-hairline bg-canvas px-3 py-1.5 text-xs font-semibold text-ink transition-all hover:bg-parchment active:scale-95"
+                                                    >
+                                                        Open
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </article>
+                                    )
+                                })}
                             </div>
                         </div>
                     )}
