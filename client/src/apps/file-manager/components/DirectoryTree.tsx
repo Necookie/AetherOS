@@ -71,25 +71,35 @@ export default function DirectoryTree() {
     }, [directoryTree]);
 
     return (
-        <div className="mt-3 border-t border-hairline pt-2">
-            <div className="mb-1 px-4 py-1 text-xs font-semibold text-ink-muted-48">Folders</div>
+        <div className="mt-2 border-t border-hairline pt-2">
+            <div className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-ink-muted-48">Folder Tree</div>
             <button
+                type="button"
                 onClick={() => navigate('/')}
-                className={`mx-2 mb-1 flex w-[calc(100%-1rem)] items-center gap-2 rounded-sm px-2 py-1 text-left text-xs ${currentPath === '/' ? 'bg-[rgba(0,102,204,0.08)] text-ink font-semibold' : 'text-ink-muted hover:bg-canvas'}`}
+                className={`group mx-1.5 mb-1 flex w-[calc(100%-0.75rem)] items-center gap-2 rounded-md px-2.5 py-1 text-left text-xs transition-colors ${
+                    currentPath === '/'
+                        ? 'bg-primary/10 font-semibold text-primary shadow-2xs'
+                        : 'text-ink-muted hover:bg-black/[0.04] hover:text-ink'
+                }`}
             >
-                <FolderTree size={14} />
-                Root
+                <FolderTree size={14} className={currentPath === '/' ? 'text-primary' : 'text-ink-muted-48'} />
+                <span className="truncate">Root (/)</span>
             </button>
 
-            <div className="max-h-48 overflow-y-auto px-1">
+            <div className="max-h-48 overflow-y-auto px-0.5">
                 {rows.map((row) => (
                     <button
+                        type="button"
                         key={row.id}
                         onClick={() => navigate(row.path)}
-                        className={`mx-1 flex w-[calc(100%-0.5rem)] items-center rounded-sm px-2 py-1 text-left text-xs ${currentPath === row.path ? 'bg-[rgba(0,102,204,0.08)] text-ink font-semibold' : 'text-ink-muted hover:bg-canvas'}`}
-                        style={{ paddingLeft: `${row.depth * 12}px` }}
+                        className={`mx-1.5 flex w-[calc(100%-0.75rem)] items-center rounded-md px-2 py-1 text-left text-xs transition-colors ${
+                            currentPath === row.path
+                                ? 'bg-primary/10 font-semibold text-primary shadow-2xs'
+                                : 'text-ink-muted hover:bg-black/[0.04] hover:text-ink'
+                        }`}
+                        style={{ paddingLeft: `${Math.max(8, row.depth * 10)}px` }}
                     >
-                        <ChevronRight size={12} className="mr-1 text-ink-muted-48" />
+                        <ChevronRight size={11} className="mr-1 shrink-0 text-ink-muted-48" />
                         <span className="truncate">{row.label}</span>
                     </button>
                 ))}

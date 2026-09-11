@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useFsStore } from '../../../stores/fsStore';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, HardDrive, Home } from 'lucide-react';
 
 export default function AddressBar() {
     const { currentPath, navigate } = useFsStore();
@@ -50,48 +50,58 @@ export default function AddressBar() {
 
     if (isEditing) {
         return (
-            <form onSubmit={handleSubmit} className="flex-1 max-w-2xl">
-                <input
-                    ref={inputRef}
-                    type="text"
-                    value={editPath}
-                    onChange={(e) => setEditPath(e.target.value)}
-                    onBlur={handleBlur}
-                    onKeyDown={handleInputKeyDown}
-                    className="w-full rounded-pill border border-primary-focus bg-canvas px-2 py-1 text-sm text-ink focus:outline-none focus:ring-1 focus:ring-primary-focus"
-                />
+            <form onSubmit={handleSubmit} className="flex min-w-[220px] max-w-xl flex-1 items-center">
+                <div className="relative flex w-full items-center">
+                    <input
+                        ref={inputRef}
+                        type="text"
+                        value={editPath}
+                        onChange={(e) => setEditPath(e.target.value)}
+                        onBlur={handleBlur}
+                        onKeyDown={handleInputKeyDown}
+                        className="h-7 w-full rounded-md border border-primary bg-canvas px-2.5 text-xs text-ink shadow-xs outline-none ring-2 ring-primary/20"
+                    />
+                </div>
             </form>
         );
     }
 
     const parts = currentPath.split('/').filter(Boolean);
+    const isHome = currentPath.startsWith('/home/user');
 
     return (
         <div
-            className="flex max-w-2xl flex-1 cursor-text items-center overflow-hidden rounded-pill border border-hairline bg-canvas px-2 py-1"
+            className="group flex h-7 min-w-[220px] max-w-xl flex-1 cursor-text items-center overflow-x-auto rounded-md border border-hairline bg-canvas/80 px-2 py-0.5 shadow-2xs transition-colors hover:border-ink-muted-48/50"
             onClick={(e) => {
                 if (e.target === e.currentTarget) {
                     setIsEditing(true);
                 }
             }}
+            title="Click to edit path (Ctrl+L)"
         >
-            <div
-                className="flex cursor-pointer items-center rounded-sm px-1.5 py-0.5 text-sm font-semibold text-ink-muted transition-colors hover:bg-parchment hover:text-ink"
+            <button
+                type="button"
+                className="flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium text-ink-muted transition-colors hover:bg-black/[0.05] hover:text-ink"
                 onClick={(e) => { e.stopPropagation(); navigate('/'); }}
             >
-                Root
-            </div>
+                {isHome ? <Home size={13} className="text-primary" /> : <HardDrive size={13} className="text-ink-muted-48" />}
+                <span>{isHome ? '~' : '/'}</span>
+            </button>
             {parts.map((part, idx) => {
                 const path = '/' + parts.slice(0, idx + 1).join('/');
+                const isLast = idx === parts.length - 1;
                 return (
                     <React.Fragment key={path}>
-                        <ChevronRight className="mx-0.5 h-4 w-4 text-ink-muted-48" />
-                        <div
-                            className="max-w-[150px] truncate rounded-sm px-1.5 py-0.5 text-ink-muted transition-colors hover:bg-parchment hover:text-ink"
+                        <ChevronRight className="h-3 w-3 shrink-0 text-ink-muted-48/60" />
+                        <button
+                            type="button"
+                            className={`max-w-[140px] truncate rounded px-1.5 py-0.5 text-xs transition-colors hover:bg-black/[0.05] ${
+                                isLast ? 'font-semibold text-ink' : 'text-ink-muted hover:text-ink'
+                            }`}
                             onClick={(e) => { e.stopPropagation(); navigate(path); }}
                         >
                             {part}
-                        </div>
+                        </button>
                     </React.Fragment>
                 );
             })}
