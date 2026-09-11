@@ -108,9 +108,8 @@ export function calculateTiledResize(
         if (leftWindows.length > 0 && rightWindows.length > 0) {
             // Find current vertical seam position
             const currentSplitX = leftWindows[0].bounds.width
-            const effectiveDelta = isLeftColumn ? deltaX : -deltaX
             const maxLeftWidth = workspace.width - minWidth
-            const newLeftWidth = clamp(currentSplitX + effectiveDelta, minWidth, maxLeftWidth)
+            const newLeftWidth = clamp(currentSplitX + deltaX, minWidth, maxLeftWidth)
             const newRightWidth = workspace.width - newLeftWidth
             const newRightX = workspace.x + newLeftWidth
 
@@ -160,9 +159,8 @@ export function calculateTiledResize(
 
         if (topWindows.length > 0 && bottomWindows.length > 0) {
             const currentSplitY = topWindows[0].bounds.height
-            const effectiveDelta = isTopRow ? deltaY : -deltaY
             const maxTopHeight = workspace.height - minHeight
-            const newTopHeight = clamp(currentSplitY + effectiveDelta, minHeight, maxTopHeight)
+            const newTopHeight = clamp(currentSplitY + deltaY, minHeight, maxTopHeight)
             const newBottomHeight = workspace.height - newTopHeight
             const newBottomY = workspace.y + newTopHeight
 

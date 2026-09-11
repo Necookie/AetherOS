@@ -98,6 +98,7 @@ export default function Window({ id, title, children }: WindowProps) {
 
         const snapContext = getSnapContext()
         const workspace = getWorkspaceRect(snapContext)
+        const initialWindows = useWindowStore.getState().windows
 
         let pendingEvent: PointerEvent | null = null
         let resizeRaf: number | null = null
@@ -112,14 +113,13 @@ export default function Window({ id, title, children }: WindowProps) {
 
                     const deltaX = pendingEvent.clientX - startX
                     const deltaY = pendingEvent.clientY - startY
-                    const allWindows = useWindowStore.getState().windows
 
                     const updates = calculateTiledResize(
                         id,
                         direction,
                         deltaX,
                         deltaY,
-                        allWindows,
+                        initialWindows,
                         workspace,
                     )
 

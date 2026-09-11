@@ -547,8 +547,11 @@ export default function ShellFrame() {
             >
                 <DesktopIcons iconScale={iconScale} refreshKey={desktopRefreshKey} />
                 <WidgetBoard />
-                <DesktopWindows />
             </main>
+
+            <div className="pointer-events-none absolute inset-0 z-[var(--ds-z-desktop)]">
+                <DesktopWindows />
+            </div>
 
             <div ref={dockRef}>
                 <Dock
