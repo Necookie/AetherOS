@@ -79,8 +79,20 @@ export function useTerminal({ terminalRef, engine, session, onReady }: UseTermin
         const fitAddon = new FitAddon()
         term.loadAddon(fitAddon)
         term.open(terminalRef.current)
-        requestAnimationFrame(() => fitAddon.fit())
-        onReadyRef.current(term, () => fitAddon.fit())
+
+        const safeFit = () => {
+            try {
+                const element = terminalRef.current
+                if (element && element.clientWidth > 0 && element.clientHeight > 0) {
+                    fitAddon.fit()
+                }
+            } catch {
+                // Ignore dimensions calculation failure when element is hidden or transitioning
+            }
+        }
+
+        requestAnimationFrame(safeFit)
+        onReadyRef.current(term, safeFit)
 
         BANNER_LINES.forEach(line => term.writeln(line))
         term.writeln('')
@@ -183,7 +195,7 @@ export function useTerminal({ terminalRef, engine, session, onReady }: UseTermin
 
         term.onKey(handleKey)
 
-        const resizeObserver = new ResizeObserver(() => fitAddon.fit())
+        const resizeObserver = new ResizeObserver(safeFit)
         resizeObserver.observe(terminalRef.current)
 
         return () => {

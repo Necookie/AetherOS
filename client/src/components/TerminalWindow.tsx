@@ -27,7 +27,13 @@ export default function TerminalWindow({ id }: { id: string }) {
             return
         }
 
-        const runFit = () => fitTerminal.current?.()
+        const runFit = () => {
+            try {
+                fitTerminal.current?.()
+            } catch {
+                // Ignore dimensions calculation during window transitions
+            }
+        }
         let timeoutId: number | null = null
         const raf = window.requestAnimationFrame(() => {
             runFit()
