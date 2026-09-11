@@ -19,7 +19,7 @@ const offlineProfile: ConnectivityState = {
 describe('BrowserConnectivityService', () => {
     it('serves cached page when offline after a successful online request', async () => {
         const adapter: NetworkAdapter = {
-            request: vi.fn(async (request, _connectivity) => ({
+            request: vi.fn(async (request) => ({
                 ok: true as const,
                 url: request.url,
                 resolvedAt: 1,
@@ -51,7 +51,7 @@ describe('BrowserConnectivityService', () => {
 
     it('throws when offline and no cache entry exists', async () => {
         const adapter: NetworkAdapter = {
-            request: vi.fn(async (_request, _connectivity) => ({
+            request: vi.fn(async () => ({
                 ok: true as const,
                 url: 'https://example.com',
                 resolvedAt: 1,
