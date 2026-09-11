@@ -13,7 +13,7 @@ interface WindowRecoveryBoundaryState {
     message: string
 }
 
-class WindowRecoveryBoundaryInner extends Component<
+export class WindowRecoveryBoundaryInner extends Component<
     WindowRecoveryBoundaryProps & { onClose: () => void },
     WindowRecoveryBoundaryState
 > {

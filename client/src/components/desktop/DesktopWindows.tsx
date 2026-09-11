@@ -1,15 +1,27 @@
 import { memo } from 'react'
-import { selectSnapPreview, selectWindowComponentById, selectWindowOrder } from '../../features/window-manager/selectors'
+import { selectSnapPreview, selectWindowById, selectWindowComponentById, selectWindowOrder } from '../../features/window-manager/selectors'
 import { useWindowShortcuts } from '../../features/window-manager/useWindowShortcuts'
 import { useWindowStore } from '../../stores/windowStore'
+import { WindowRecoveryBoundaryInner } from '../system/WindowRecoveryBoundary'
 
 const WindowRenderer = memo(function WindowRenderer({ id }: { id: string }) {
     const WindowComponent = useWindowStore(selectWindowComponentById(id))
-    if (!WindowComponent) {
+    const windowData = useWindowStore(selectWindowById(id))
+    const closeWindow = useWindowStore((state) => state.closeWindow)
+
+    if (!WindowComponent || !windowData) {
         return null
     }
 
-    return <WindowComponent id={id} />
+    return (
+        <WindowRecoveryBoundaryInner
+            windowId={id}
+            appTitle={windowData.title}
+            onClose={() => closeWindow(id)}
+        >
+            <WindowComponent id={id} />
+        </WindowRecoveryBoundaryInner>
+    )
 })
 
 export default function DesktopWindows() {
