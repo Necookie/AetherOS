@@ -34,29 +34,68 @@ function formatNoteDate(timestamp?: number): string {
     return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
 }
 
-function formatFullDate(timestamp?: number): string {
-    const date = timestamp ? new Date(timestamp) : new Date()
-    const datePart = date.toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-    })
-    const timePart = date.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-    })
-    return `${datePart} at ${timePart}`
+// --- Menu bar helpers ---
+type MenuId = 'file' | 'edit' | 'format' | 'view' | null
+
+interface MenuItem {
+    label?: string
+    shortcut?: string
+    action?: () => void
+    separator?: boolean
+    disabled?: boolean
+}
+
+interface MenuDropdownProps {
+    items: MenuItem[]
+    onClose: () => void
+}
+
+function MenuDropdown({ items, onClose }: MenuDropdownProps) {
+    return (
+        <div
+            className="absolute top-full left-0 z-50 mt-px min-w-[180px] rounded-sm border border-hairline bg-canvas shadow-[0_4px_16px_rgba(0,0,0,0.14)]"
+            onMouseLeave={onClose}
+        >
+            {items.map((item, i) =>
+                item.separator ? (
+                    <div key={i} className="my-1 h-px bg-hairline" />
+                ) : (
+                    <button
+                        key={i}
+                        type="button"
+                        disabled={item.disabled}
+                        onClick={() => {
+                            item.action?.()
+                            onClose()
+                        }}
+                        className="flex w-full items-center justify-between gap-6 px-3 py-1.5 text-left text-[13px] text-ink hover:bg-primary hover:text-white disabled:pointer-events-none disabled:opacity-40"
+                    >
+                        <span>{item.label}</span>
+                        {item.shortcut && (
+                            <span className="text-[11px] opacity-60">{item.shortcut}</span>
+                        )}
+                    </button>
+                ),
+            )}
+        </div>
+    )
 }
 
 export default function NotesApp({ id }: { id: string }) {
     const editorRef = useRef<HTMLTextAreaElement>(null)
     const linksRef = useRef<HTMLDivElement>(null)
     const attachmentsRef = useRef<HTMLDivElement>(null)
+    const importFileInputRef = useRef<HTMLInputElement>(null)
+
+    const [openMenu, setOpenMenu] = useState<MenuId>(null)
     const [isTemplatePickerOpen, setTemplatePickerOpen] = useState(false)
     const [isSidebarOpen, setSidebarOpen] = useState(true)
     const [searchQuery, setSearchQuery] = useState('')
     const [showMetaPanel, setShowMetaPanel] = useState(false)
     const [copied, setCopied] = useState(false)
+    const [wrapLines, setWrapLines] = useState(true)
+    const [fontSize, setFontSize] = useState(14)
+    const [fontFamily, setFontFamily] = useState<'mono' | 'sans'>('sans')
 
     const editor = useProductivityEditor({ appId: 'notes' })
 
@@ -85,6 +124,8 @@ export default function NotesApp({ id }: { id: string }) {
         })
     }, [editor.records, searchQuery])
 
+    const lineCount = useMemo(() => editor.body.split('\n').length, [editor.body])
+
     const wordCount = useMemo(() => {
         const trimmed = editor.body.trim()
         return trimmed ? trimmed.split(/\s+/).length : 0
@@ -92,11 +133,10 @@ export default function NotesApp({ id }: { id: string }) {
 
     const charCount = editor.body.length
 
+    // --- Handlers ---
     const handleClipboardShortcut = (event: KeyboardEvent<HTMLTextAreaElement>) => {
         const modifier = event.ctrlKey || event.metaKey
-        if (!modifier || event.altKey) {
-            return
-        }
+        if (!modifier || event.altKey) return
 
         const target = event.currentTarget
         const selectionStart = target.selectionStart ?? 0
@@ -107,34 +147,29 @@ export default function NotesApp({ id }: { id: string }) {
         if (key === 'c' && selection.length > 0) {
             event.preventDefault()
             clipboardService.setText(selection, 'notes')
-            editor.setStatusLabel(`Copied ${selection.length} character${selection.length === 1 ? '' : 's'}`)
+            editor.setStatusLabel(`Copied ${selection.length} char${selection.length === 1 ? '' : 's'}`)
             return
         }
-
         if (key === 'x' && selection.length > 0) {
             event.preventDefault()
             clipboardService.setText(selection, 'notes')
             const nextBody = `${editor.body.slice(0, selectionStart)}${editor.body.slice(selectionEnd)}`
             editor.setBody(nextBody)
-            editor.setStatusLabel(`Cut ${selection.length} character${selection.length === 1 ? '' : 's'}`)
+            editor.setStatusLabel(`Cut ${selection.length} char${selection.length === 1 ? '' : 's'}`)
             window.requestAnimationFrame(() => {
                 target.selectionStart = selectionStart
                 target.selectionEnd = selectionStart
             })
             return
         }
-
         if (key === 'v') {
             const payload = clipboardService.getSnapshot().payload
-            if (!payload || payload.kind !== 'text') {
-                return
-            }
-
+            if (!payload || payload.kind !== 'text') return
             event.preventDefault()
             const nextBody = `${editor.body.slice(0, selectionStart)}${payload.text}${editor.body.slice(selectionEnd)}`
             const nextCaret = selectionStart + payload.text.length
             editor.setBody(nextBody)
-            editor.setStatusLabel(`Pasted ${payload.text.length} character${payload.text.length === 1 ? '' : 's'}`)
+            editor.setStatusLabel(`Pasted ${payload.text.length} char${payload.text.length === 1 ? '' : 's'}`)
             window.requestAnimationFrame(() => {
                 target.selectionStart = nextCaret
                 target.selectionEnd = nextCaret
@@ -149,8 +184,7 @@ export default function NotesApp({ id }: { id: string }) {
         const end = textarea.selectionEnd ?? 0
         const text = editor.body
         const lineStart = text.lastIndexOf('\n', start - 1) + 1
-        const nextBody = `${text.slice(0, lineStart)}- [ ] ${text.slice(lineStart)}`
-        editor.setBody(nextBody)
+        editor.setBody(`${text.slice(0, lineStart)}- [ ] ${text.slice(lineStart)}`)
         window.requestAnimationFrame(() => {
             textarea.focus()
             textarea.selectionStart = start + 6
@@ -165,8 +199,7 @@ export default function NotesApp({ id }: { id: string }) {
         const end = textarea.selectionEnd ?? 0
         const text = editor.body
         const lineStart = text.lastIndexOf('\n', start - 1) + 1
-        const nextBody = `${text.slice(0, lineStart)}• ${text.slice(lineStart)}`
-        editor.setBody(nextBody)
+        editor.setBody(`${text.slice(0, lineStart)}• ${text.slice(lineStart)}`)
         window.requestAnimationFrame(() => {
             textarea.focus()
             textarea.selectionStart = start + 2
@@ -174,16 +207,21 @@ export default function NotesApp({ id }: { id: string }) {
         })
     }
 
+    const handleSelectAll = () => {
+        const textarea = editorRef.current
+        if (!textarea) return
+        textarea.focus()
+        textarea.select()
+    }
+
     const handleCopyAll = () => {
         const fullText = `${editor.title ? `${editor.title}\n\n` : ''}${editor.body}`
         if (!fullText.trim()) return
         clipboardService.setText(fullText, 'notes')
         setCopied(true)
-        editor.setStatusLabel('Copied note to clipboard')
+        editor.setStatusLabel('Copied to clipboard')
         setTimeout(() => setCopied(false), 2000)
     }
-
-    const importFileInputRef = useRef<HTMLInputElement>(null)
 
     const handleDownloadHost = () => {
         const titleText = editor.title.trim() || 'Untitled'
@@ -198,7 +236,7 @@ export default function NotesApp({ id }: { id: string }) {
         anchor.click()
         document.body.removeChild(anchor)
         URL.revokeObjectURL(url)
-        editor.setStatusLabel(`Downloaded ${safeName}.md to computer`)
+        editor.setStatusLabel(`Downloaded ${safeName}.md`)
     }
 
     const handleSaveToDocuments = () => {
@@ -208,7 +246,6 @@ export default function NotesApp({ id }: { id: string }) {
         const targetDir = '/home/user/Documents'
         const targetFile = `${targetDir}/${filename}`
         const content = `${editor.title ? `# ${editor.title}\n\n` : ''}${editor.body}`
-
         try {
             fsService.resolvePath(targetFile)
             fsService.writeFile(targetFile, content)
@@ -217,7 +254,7 @@ export default function NotesApp({ id }: { id: string }) {
             try {
                 fsService.createNode(targetDir, filename, VfsNodeType.FILE, content, 'text/markdown')
                 editor.setStatusLabel(`Saved to Documents/${filename}`)
-            } catch (err) {
+            } catch {
                 editor.setStatusLabel('Failed to save to Documents')
             }
         }
@@ -226,7 +263,6 @@ export default function NotesApp({ id }: { id: string }) {
     const handleImportFile = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0]
         if (!file) return
-
         const reader = new FileReader()
         reader.onload = (e) => {
             const text = (e.target?.result as string) || ''
@@ -242,265 +278,406 @@ export default function NotesApp({ id }: { id: string }) {
         event.target.value = ''
     }
 
+    // --- Menu definitions ---
     const totalNotesCount = editor.records.length
     const hasAttachmentsOrLinks = editor.attachments.length > 0 || editor.linkedRecords.length > 0
 
+    const fileMenuItems: MenuItem[] = [
+        { label: 'New Note', shortcut: 'Ctrl+N', action: () => editor.createRecord() },
+        { separator: true },
+        { label: 'Import File…', action: () => importFileInputRef.current?.click() },
+        { label: 'Save to Documents', shortcut: 'Ctrl+S', action: handleSaveToDocuments },
+        { label: 'Download as .md', action: handleDownloadHost },
+        { separator: true },
+        { label: 'Templates…', action: () => setTemplatePickerOpen(true) },
+    ]
+
+    const editMenuItems: MenuItem[] = [
+        { label: 'Select All', shortcut: 'Ctrl+A', action: handleSelectAll },
+        { separator: true },
+        { label: 'Copy All', action: handleCopyAll },
+        { separator: true },
+        { label: 'Insert Checklist Item', action: handleInsertChecklist },
+        { label: 'Insert Bullet Point', action: handleInsertBullet },
+    ]
+
+    const formatMenuItems: MenuItem[] = [
+        { label: wrapLines ? '✓ Word Wrap' : 'Word Wrap', action: () => setWrapLines((w) => !w) },
+        { separator: true },
+        { label: 'Font: Monospace', action: () => setFontFamily('mono') },
+        { label: 'Font: Sans-serif', action: () => setFontFamily('sans') },
+        { separator: true },
+        { label: 'Increase Font Size', shortcut: 'Ctrl++', action: () => setFontSize((s) => Math.min(s + 1, 28)) },
+        { label: 'Decrease Font Size', shortcut: 'Ctrl+-', action: () => setFontSize((s) => Math.max(s - 1, 10)) },
+        { label: 'Reset Font Size', action: () => setFontSize(14) },
+    ]
+
+    const viewMenuItems: MenuItem[] = [
+        {
+            label: isSidebarOpen ? '✓ Show Notes List' : 'Show Notes List',
+            action: () => setSidebarOpen((o) => !o),
+        },
+        {
+            label: hasAttachmentsOrLinks || showMetaPanel ? '✓ Show Attachments' : 'Show Attachments',
+            action: () => setShowMetaPanel((o) => !o),
+        },
+        { separator: true },
+        { label: 'Zoom In', shortcut: 'Ctrl++', action: () => setFontSize((s) => Math.min(s + 1, 28)) },
+        { label: 'Zoom Out', shortcut: 'Ctrl+-', action: () => setFontSize((s) => Math.max(s - 1, 10)) },
+    ]
+
+    const menus: Array<{ id: MenuId; label: string; items: MenuItem[] }> = [
+        { id: 'file', label: 'File', items: fileMenuItems },
+        { id: 'edit', label: 'Edit', items: editMenuItems },
+        { id: 'format', label: 'Format', items: formatMenuItems },
+        { id: 'view', label: 'View', items: viewMenuItems },
+    ]
+
+    const editorFontStyle: React.CSSProperties = {
+        fontSize: `${fontSize}px`,
+        fontFamily: fontFamily === 'mono'
+            ? '"Cascadia Code", "Consolas", "Courier New", monospace'
+            : '"Segoe UI", system-ui, -apple-system, sans-serif',
+        lineHeight: 1.65,
+        whiteSpace: wrapLines ? 'pre-wrap' : 'pre',
+        wordBreak: wrapLines ? 'break-word' : 'normal',
+        overflowX: wrapLines ? 'hidden' : 'auto',
+    }
+
     return (
         <Window id={id} title="Notes">
-            <div className="flex h-full w-full select-none overflow-hidden bg-parchment text-ink">
-                {/* Left Sidebar - Apple Notes List */}
-                {isSidebarOpen && (
-                    <aside className="flex w-72 shrink-0 flex-col border-r border-hairline bg-parchment">
-                        {/* Sidebar Header */}
-                        <div className="border-b border-hairline px-3.5 py-3">
-                            <div className="flex items-center justify-between gap-2">
-                                <div className="flex items-center gap-2">
-                                    <h2 className="text-sm font-semibold tracking-tight text-ink">All Notes</h2>
-                                    <span className="rounded-pill bg-canvas px-2 py-0.5 text-[11px] font-semibold text-ink-muted-48 border border-hairline">
+            {/* Classic Notepad Shell */}
+            <div className="flex h-full w-full flex-col overflow-hidden bg-canvas text-ink">
+
+                {/* === MENU BAR === */}
+                <div
+                    className="flex shrink-0 items-center border-b border-hairline bg-canvas px-1"
+                    style={{ height: '24px' }}
+                    onMouseLeave={() => setOpenMenu(null)}
+                >
+                    {menus.map((menu) => (
+                        <div key={menu.id} className="relative">
+                            <button
+                                type="button"
+                                className={`relative px-2.5 py-0.5 text-[13px] leading-none transition-colors ${
+                                    openMenu === menu.id
+                                        ? 'bg-primary text-white'
+                                        : 'text-ink hover:bg-canvas-elevated'
+                                }`}
+                                onMouseEnter={() => {
+                                    if (openMenu !== null) setOpenMenu(menu.id)
+                                }}
+                                onClick={() => setOpenMenu((prev) => (prev === menu.id ? null : menu.id))}
+                            >
+                                {menu.label}
+                            </button>
+                            {openMenu === menu.id && (
+                                <MenuDropdown items={menu.items} onClose={() => setOpenMenu(null)} />
+                            )}
+                        </div>
+                    ))}
+                </div>
+
+                {/* === TOOLBAR === */}
+                <div className="flex shrink-0 items-center gap-0.5 border-b border-hairline bg-canvas px-1 py-0.5">
+                    {/* New note */}
+                    <button
+                        type="button"
+                        onClick={() => editor.createRecord()}
+                        className="rounded p-1.5 text-ink-muted transition-colors hover:bg-canvas-elevated hover:text-ink active:bg-canvas-elevated"
+                        title="New Note (Ctrl+N)"
+                        aria-label="New note"
+                    >
+                        <PenSquare className="h-4 w-4" />
+                    </button>
+
+                    {/* Toggle sidebar */}
+                    <button
+                        type="button"
+                        onClick={() => setSidebarOpen((o) => !o)}
+                        className={`rounded p-1.5 transition-colors hover:bg-canvas-elevated active:bg-canvas-elevated ${
+                            isSidebarOpen ? 'text-ink' : 'text-ink-muted'
+                        }`}
+                        title="Toggle notes list"
+                        aria-label="Toggle sidebar"
+                    >
+                        <PanelLeft className="h-4 w-4" />
+                    </button>
+
+                    <div className="mx-1 h-5 w-px bg-hairline" />
+
+                    {/* Checklist */}
+                    <button
+                        type="button"
+                        onClick={handleInsertChecklist}
+                        className="rounded p-1.5 text-ink-muted transition-colors hover:bg-canvas-elevated hover:text-ink active:bg-canvas-elevated"
+                        title="Insert checklist item"
+                        aria-label="Insert checklist"
+                    >
+                        <CheckSquare className="h-4 w-4" />
+                    </button>
+
+                    {/* Bullet */}
+                    <button
+                        type="button"
+                        onClick={handleInsertBullet}
+                        className="rounded p-1.5 text-ink-muted transition-colors hover:bg-canvas-elevated hover:text-ink active:bg-canvas-elevated"
+                        title="Insert bullet"
+                        aria-label="Insert bullet"
+                    >
+                        <List className="h-4 w-4" />
+                    </button>
+
+                    <div className="mx-1 h-5 w-px bg-hairline" />
+
+                    {/* Copy */}
+                    <button
+                        type="button"
+                        onClick={handleCopyAll}
+                        className="rounded p-1.5 text-ink-muted transition-colors hover:bg-canvas-elevated hover:text-ink active:bg-canvas-elevated"
+                        title="Copy note"
+                        aria-label="Copy note"
+                    >
+                        {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
+                    </button>
+
+                    {/* Download */}
+                    <button
+                        type="button"
+                        onClick={handleDownloadHost}
+                        className="rounded p-1.5 text-ink-muted transition-colors hover:bg-canvas-elevated hover:text-ink active:bg-canvas-elevated"
+                        title="Download as .md"
+                        aria-label="Download note"
+                    >
+                        <Download className="h-4 w-4" />
+                    </button>
+
+                    {/* Save to Documents */}
+                    <button
+                        type="button"
+                        onClick={handleSaveToDocuments}
+                        className="rounded p-1.5 text-ink-muted transition-colors hover:bg-canvas-elevated hover:text-ink active:bg-canvas-elevated"
+                        title="Save to AetherOS Documents"
+                        aria-label="Save to Documents"
+                    >
+                        <FolderDown className="h-4 w-4" />
+                    </button>
+
+                    {/* Import */}
+                    <button
+                        type="button"
+                        onClick={() => importFileInputRef.current?.click()}
+                        className="rounded p-1.5 text-ink-muted transition-colors hover:bg-canvas-elevated hover:text-ink active:bg-canvas-elevated"
+                        title="Import .txt/.md file"
+                        aria-label="Import file"
+                    >
+                        <Upload className="h-4 w-4" />
+                    </button>
+
+                    <input
+                        ref={importFileInputRef}
+                        type="file"
+                        accept=".txt,.md,text/plain,text/markdown"
+                        className="hidden"
+                        onChange={handleImportFile}
+                    />
+
+                    {/* Templates */}
+                    <button
+                        type="button"
+                        onClick={() => setTemplatePickerOpen((o) => !o)}
+                        className="rounded p-1.5 text-ink-muted transition-colors hover:bg-canvas-elevated hover:text-ink active:bg-canvas-elevated"
+                        title="Templates"
+                        aria-label="Templates"
+                    >
+                        <Sparkles className="h-4 w-4" />
+                    </button>
+
+                    <div className="mx-1 h-5 w-px bg-hairline" />
+
+                    {/* Attachments / meta */}
+                    <button
+                        type="button"
+                        onClick={() => setShowMetaPanel((o) => !o)}
+                        className={`rounded p-1.5 transition-colors active:bg-canvas-elevated ${
+                            showMetaPanel || hasAttachmentsOrLinks
+                                ? 'text-primary hover:bg-canvas-elevated'
+                                : 'text-ink-muted hover:bg-canvas-elevated hover:text-ink'
+                        }`}
+                        title="Attachments & Links"
+                        aria-label="Toggle attachments"
+                    >
+                        <Paperclip className="h-4 w-4" />
+                    </button>
+                </div>
+
+                {/* === BODY AREA === */}
+                <div className="flex min-h-0 flex-1">
+
+                    {/* --- Notes List Sidebar --- */}
+                    {isSidebarOpen && (
+                        <aside
+                            className="flex w-60 shrink-0 flex-col border-r border-hairline bg-canvas"
+                            style={{ background: 'var(--color-bg-canvas)' }}
+                        >
+                            {/* Sidebar header */}
+                            <div className="flex items-center justify-between border-b border-hairline px-2 py-1.5">
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-[12px] font-semibold text-ink">Notes</span>
+                                    <span className="rounded bg-canvas-elevated px-1.5 py-px text-[10px] font-semibold text-ink-muted">
                                         {totalNotesCount}
                                     </span>
                                 </div>
-                                <div className="flex items-center gap-1">
-                                    <button
-                                        type="button"
-                                        onClick={() => setTemplatePickerOpen((open) => !open)}
-                                        className="rounded-sm p-1 text-ink-muted transition-colors hover:bg-canvas hover:text-ink active:scale-95"
-                                        title="Templates"
-                                        aria-label="Note templates"
-                                    >
-                                        <Sparkles className="h-4 w-4" />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => editor.createRecord()}
-                                        className="rounded-sm p-1 text-primary transition-transform hover:bg-canvas active:scale-95"
-                                        title="New Note"
-                                        aria-label="Create new note"
-                                    >
-                                        <PenSquare className="h-4 w-4" />
-                                    </button>
-                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => editor.createRecord()}
+                                    className="rounded p-1 text-ink-muted hover:bg-canvas-elevated hover:text-ink active:scale-95"
+                                    title="New Note"
+                                    aria-label="New note"
+                                >
+                                    <PenSquare className="h-3.5 w-3.5" />
+                                </button>
                             </div>
 
-                            {/* Search bar */}
-                            <div className="relative mt-2.5">
-                                <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-muted-48" />
-                                <input
-                                    type="text"
-                                    value={searchQuery}
-                                    onChange={(event) => setSearchQuery(event.target.value)}
-                                    placeholder="Search notes..."
-                                    className="w-full rounded-pill border border-hairline bg-canvas pl-8 pr-3 py-1.5 text-xs text-ink outline-none placeholder:text-ink-muted-48 focus:border-primary-focus focus:ring-1 focus:ring-primary-focus"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Notes Scrollable List */}
-                        <div className="flex-1 overflow-y-auto p-2 space-y-1">
-                            {filteredRecords.map((record) => {
-                                const isSelected = editor.activeId === record.id
-                                const snippet = record.body.replace(/\n+/g, ' ').trim() || 'No additional text'
-                                return (
-                                    <button
-                                        key={record.id}
-                                        type="button"
-                                        onClick={() => editor.selectRecord(record.id)}
-                                        className={`group relative w-full rounded-lg px-3 py-2.5 text-left transition-colors ${
-                                            isSelected
-                                                ? 'bg-canvas border border-hairline shadow-[0_1px_3px_rgba(0,0,0,0.04)]'
-                                                : 'border border-transparent hover:bg-canvas/60'
-                                        }`}
-                                    >
-                                        {isSelected && (
-                                            <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r bg-primary" />
-                                        )}
-                                        <p className="truncate text-sm font-semibold tracking-tight text-ink">
-                                            {record.title || 'New Note'}
-                                        </p>
-                                        <div className="mt-1 flex items-center gap-2 text-xs text-ink-muted-48">
-                                            <span className="shrink-0 font-medium">
-                                                {formatNoteDate(record.updatedAt || record.createdAt)}
-                                            </span>
-                                            <span className="truncate">{snippet}</span>
-                                        </div>
-                                    </button>
-                                )
-                            })}
-
-                            {filteredRecords.length === 0 && (
-                                <div className="px-4 py-8 text-center text-xs text-ink-muted-48">
-                                    {searchQuery ? 'No matching notes found' : 'No notes yet. Click new note to start.'}
-                                </div>
-                            )}
-                        </div>
-                    </aside>
-                )}
-
-                {/* Right Main Writing Canvas */}
-                <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-parchment">
-                    {/* Top Notepad Action Ribbon */}
-                    <header className="flex shrink-0 items-center justify-between border-b border-hairline bg-parchment px-4 py-2">
-                        <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={() => setSidebarOpen((open) => !open)}
-                                className="rounded-sm p-1.5 text-ink-muted transition-colors hover:bg-canvas hover:text-ink active:scale-95"
-                                title={isSidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
-                                aria-label="Toggle sidebar"
-                            >
-                                <PanelLeft className="h-4 w-4" />
-                            </button>
-                            <span className="text-xs text-ink-muted-48">
-                                {wordCount} {wordCount === 1 ? 'word' : 'words'} · {charCount} chars
-                            </span>
-                            <span aria-hidden="true" className="text-hairline">|</span>
-                            <span className="text-xs text-ink-muted-48">
-                                {editor.statusLabel}
-                            </span>
-                        </div>
-
-                        <div className="flex items-center gap-1">
-                            <button
-                                type="button"
-                                onClick={handleInsertChecklist}
-                                className="rounded-sm p-1.5 text-ink-muted transition-colors hover:bg-canvas hover:text-ink active:scale-95"
-                                title="Add checklist item"
-                                aria-label="Insert checklist"
-                            >
-                                <CheckSquare className="h-4 w-4" />
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleInsertBullet}
-                                className="rounded-sm p-1.5 text-ink-muted transition-colors hover:bg-canvas hover:text-ink active:scale-95"
-                                title="Add bullet list item"
-                                aria-label="Insert bullet list"
-                            >
-                                <List className="h-4 w-4" />
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleCopyAll}
-                                className="rounded-sm p-1.5 text-ink-muted transition-colors hover:bg-canvas hover:text-ink active:scale-95"
-                                title="Copy entire note"
-                                aria-label="Copy note"
-                            >
-                                {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleDownloadHost}
-                                className="rounded-sm p-1.5 text-ink-muted transition-colors hover:bg-canvas hover:text-ink active:scale-95"
-                                title="Download note to your computer (.md)"
-                                aria-label="Download note to computer"
-                            >
-                                <Download className="h-4 w-4" />
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleSaveToDocuments}
-                                className="rounded-sm p-1.5 text-ink-muted transition-colors hover:bg-canvas hover:text-ink active:scale-95"
-                                title="Save note to AetherOS Documents folder"
-                                aria-label="Save to AetherOS Documents"
-                            >
-                                <FolderDown className="h-4 w-4" />
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => importFileInputRef.current?.click()}
-                                className="rounded-sm p-1.5 text-ink-muted transition-colors hover:bg-canvas hover:text-ink active:scale-95"
-                                title="Import note file (.txt / .md)"
-                                aria-label="Import note"
-                            >
-                                <Upload className="h-4 w-4" />
-                            </button>
-                            <input
-                                ref={importFileInputRef}
-                                type="file"
-                                accept=".txt,.md,text/plain,text/markdown"
-                                className="hidden"
-                                onChange={handleImportFile}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowMetaPanel((open) => !open)}
-                                className={`rounded-sm p-1.5 transition-colors active:scale-95 ${
-                                    showMetaPanel || hasAttachmentsOrLinks
-                                        ? 'text-primary hover:bg-canvas'
-                                        : 'text-ink-muted hover:bg-canvas hover:text-ink'
-                                }`}
-                                title="Attachments & Cross-links"
-                                aria-label="Toggle attachments and links"
-                            >
-                                <Paperclip className="h-4 w-4" />
-                            </button>
-                        </div>
-                    </header>
-
-                    {/* Notepad Paper Area */}
-                    <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-8 sm:py-6">
-                        <div className="mx-auto flex min-h-full max-w-3xl flex-col rounded-lg border border-hairline bg-canvas p-6 shadow-[0_2px_12px_rgba(0,0,0,0.06)] sm:p-10">
-                            {/* Template Picker Drawer if open */}
-                            {isTemplatePickerOpen && (
-                                <div className="mb-6">
-                                    <TemplatePicker
-                                        appLabel="Notes"
-                                        templates={editor.templates}
-                                        variant="light"
-                                        onClose={() => setTemplatePickerOpen(false)}
-                                        onSelect={(templateId) => {
-                                            editor.createRecord(templateId)
-                                            setTemplatePickerOpen(false)
-                                        }}
+                            {/* Search */}
+                            <div className="border-b border-hairline px-2 py-1.5">
+                                <div className="relative">
+                                    <Search className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-ink-muted-48" />
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder="Search…"
+                                        className="w-full rounded border border-hairline bg-canvas-elevated py-1 pl-6 pr-2 text-[12px] text-ink outline-none placeholder:text-ink-muted-48 focus:border-primary-focus"
                                     />
                                 </div>
-                            )}
+                            </div>
 
-                            {/* Centered Classic Note Date */}
-                            <p className="text-center text-xs font-medium tracking-tight text-ink-muted-48">
-                                {formatFullDate(activeRecord?.updatedAt || activeRecord?.createdAt)}
-                            </p>
+                            {/* Notes list */}
+                            <div className="flex-1 overflow-y-auto">
+                                {filteredRecords.map((record) => {
+                                    const isSelected = editor.activeId === record.id
+                                    const snippet = record.body.replace(/\n+/g, ' ').trim() || 'No text'
+                                    return (
+                                        <button
+                                            key={record.id}
+                                            type="button"
+                                            onClick={() => editor.selectRecord(record.id)}
+                                            className={`block w-full border-b border-hairline px-2 py-2 text-left transition-colors ${
+                                                isSelected
+                                                    ? 'bg-primary text-white'
+                                                    : 'text-ink hover:bg-canvas-elevated'
+                                            }`}
+                                        >
+                                            <p className="truncate text-[12px] font-semibold">
+                                                {record.title || 'New Note'}
+                                            </p>
+                                            <p className={`mt-0.5 truncate text-[11px] ${isSelected ? 'text-white/70' : 'text-ink-muted'}`}>
+                                                {formatNoteDate(record.updatedAt || record.createdAt)}
+                                                &nbsp;·&nbsp;
+                                                {snippet}
+                                            </p>
+                                        </button>
+                                    )
+                                })}
 
-                            {/* Seamless Notepad Title */}
+                                {filteredRecords.length === 0 && (
+                                    <p className="px-3 py-6 text-center text-[12px] text-ink-muted-48">
+                                        {searchQuery ? 'No results' : 'No notes yet'}
+                                    </p>
+                                )}
+                            </div>
+                        </aside>
+                    )}
+
+                    {/* --- Editor Panel --- */}
+                    <div className="flex min-w-0 flex-1 flex-col bg-canvas">
+
+                        {/* Template picker */}
+                        {isTemplatePickerOpen && (
+                            <div className="border-b border-hairline">
+                                <TemplatePicker
+                                    appLabel="Notes"
+                                    templates={editor.templates}
+                                    variant="light"
+                                    onClose={() => setTemplatePickerOpen(false)}
+                                    onSelect={(templateId) => {
+                                        editor.createRecord(templateId)
+                                        setTemplatePickerOpen(false)
+                                    }}
+                                />
+                            </div>
+                        )}
+
+                        {/* Title bar (Notepad-style — inside the editor area) */}
+                        <div className="flex shrink-0 items-center border-b border-hairline bg-canvas px-2 py-1">
                             <input
                                 type="text"
                                 value={editor.title}
-                                onChange={(event) => editor.setTitle(event.target.value)}
-                                placeholder="Title"
-                                className="mt-4 w-full border-b border-hairline/60 bg-transparent pb-3 text-2xl font-semibold tracking-tight text-ink outline-none placeholder:text-ink-muted-48 sm:text-3xl"
+                                onChange={(e) => editor.setTitle(e.target.value)}
+                                placeholder="Untitled"
+                                className="min-w-0 flex-1 bg-transparent text-[13px] font-semibold text-ink outline-none placeholder:text-ink-muted-48"
+                                style={{ fontFamily: "'Segoe UI', system-ui, sans-serif" }}
                             />
+                            <span className="ml-3 shrink-0 text-[11px] text-ink-muted-48">
+                                {activeRecord
+                                    ? new Date(activeRecord.updatedAt || activeRecord.createdAt || Date.now()).toLocaleString('en-US', {
+                                        month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+                                    })
+                                    : ''}
+                            </span>
+                        </div>
 
-                            {/* Seamless Notepad Body */}
+                        {/* Textarea — full-bleed, Windows Notepad style */}
+                        <div className={`flex-1 overflow-auto`}>
                             <textarea
                                 ref={editorRef}
                                 value={editor.body}
-                                onChange={(event) => editor.setBody(event.target.value)}
+                                onChange={(e) => editor.setBody(e.target.value)}
                                 onKeyDown={handleClipboardShortcut}
-                                placeholder="Start writing your note here... Use [[docs:id]] or [[boards:id]] to link other records."
-                                className="mt-4 min-h-[360px] w-full flex-1 resize-none bg-transparent text-[17px] leading-[1.6] text-ink outline-none placeholder:text-ink-muted-48"
+                                placeholder="Start typing…"
+                                spellCheck
+                                className="h-full w-full resize-none bg-canvas p-3 text-ink outline-none placeholder:text-ink-muted-48"
+                                style={editorFontStyle}
                             />
-
-                            {/* Collapsible Attachments and Cross-links Tray */}
-                            {(showMetaPanel || hasAttachmentsOrLinks) && (
-                                <div className="mt-8 space-y-3 border-t border-hairline pt-5">
-                                    <div ref={linksRef} tabIndex={-1} className="outline-none focus:ring-2 focus:ring-primary-focus rounded-lg">
-                                        <LinkedRecordsPanel records={editor.linkedRecords} variant="light" />
-                                    </div>
-                                    <div ref={attachmentsRef} tabIndex={-1} className="outline-none focus:ring-2 focus:ring-primary-focus rounded-lg">
-                                        <AttachmentPanel
-                                            attachments={editor.attachments}
-                                            attachmentInput={editor.attachmentInput}
-                                            onAttachmentInputChange={editor.setAttachmentInput}
-                                            onAddAttachment={editor.addAttachment}
-                                            onRemoveAttachment={editor.removeAttachment}
-                                            variant="light"
-                                        />
-                                    </div>
-                                </div>
-                            )}
                         </div>
+
+                        {/* Attachments / links tray */}
+                        {(showMetaPanel || hasAttachmentsOrLinks) && (
+                            <div className="border-t border-hairline bg-canvas p-3 space-y-3">
+                                <div ref={linksRef} tabIndex={-1} className="outline-none">
+                                    <LinkedRecordsPanel records={editor.linkedRecords} variant="light" />
+                                </div>
+                                <div ref={attachmentsRef} tabIndex={-1} className="outline-none">
+                                    <AttachmentPanel
+                                        attachments={editor.attachments}
+                                        attachmentInput={editor.attachmentInput}
+                                        onAttachmentInputChange={editor.setAttachmentInput}
+                                        onAddAttachment={editor.addAttachment}
+                                        onRemoveAttachment={editor.removeAttachment}
+                                        variant="light"
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
-                </main>
+                </div>
+
+                {/* === STATUS BAR (Windows Notepad style) === */}
+                <div className="flex shrink-0 items-center justify-between border-t border-hairline bg-canvas px-3 py-px">
+                    <span className="text-[11px] text-ink-muted-48">{editor.statusLabel}</span>
+                    <div className="flex items-center gap-3 text-[11px] text-ink-muted-48">
+                        <span>Ln {lineCount}, Col 1</span>
+                        <span>|</span>
+                        <span>{wordCount} words</span>
+                        <span>|</span>
+                        <span>{charCount} chars</span>
+                        <span>|</span>
+                        <span>{fontFamily === 'mono' ? 'Monospace' : 'Sans-serif'}</span>
+                        <span>|</span>
+                        <span>UTF-8</span>
+                    </div>
+                </div>
             </div>
         </Window>
     )
