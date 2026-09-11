@@ -3,14 +3,19 @@ import {
     Check,
     CheckSquare,
     Copy,
+    Download,
+    FolderDown,
     List,
     PanelLeft,
     Paperclip,
     PenSquare,
     Search,
     Sparkles,
+    Upload,
 } from 'lucide-react'
 import Window from '../../components/system/Window'
+import { fsService } from '../../vfs/vfsService'
+import { VfsNodeType } from '../../vfs/types'
 import { clipboardService } from '../../features/clipboard'
 import AttachmentPanel from '../productivity/components/AttachmentPanel'
 import LinkedRecordsPanel from '../productivity/components/LinkedRecordsPanel'
@@ -178,6 +183,65 @@ export default function NotesApp({ id }: { id: string }) {
         setTimeout(() => setCopied(false), 2000)
     }
 
+    const importFileInputRef = useRef<HTMLInputElement>(null)
+
+    const handleDownloadHost = () => {
+        const titleText = editor.title.trim() || 'Untitled'
+        const safeName = titleText.replace(/[/\\?%*:|"<>]/g, '_').slice(0, 50)
+        const content = `${editor.title ? `# ${editor.title}\n\n` : ''}${editor.body}`
+        const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' })
+        const url = URL.createObjectURL(blob)
+        const anchor = document.createElement('a')
+        anchor.href = url
+        anchor.download = `${safeName}.md`
+        document.body.appendChild(anchor)
+        anchor.click()
+        document.body.removeChild(anchor)
+        URL.revokeObjectURL(url)
+        editor.setStatusLabel(`Downloaded ${safeName}.md to computer`)
+    }
+
+    const handleSaveToDocuments = () => {
+        const titleText = editor.title.trim() || 'Untitled'
+        const safeName = titleText.replace(/[/\\?%*:|"<>]/g, '_').slice(0, 50)
+        const filename = `${safeName}.md`
+        const targetDir = '/home/user/Documents'
+        const targetFile = `${targetDir}/${filename}`
+        const content = `${editor.title ? `# ${editor.title}\n\n` : ''}${editor.body}`
+
+        try {
+            fsService.resolvePath(targetFile)
+            fsService.writeFile(targetFile, content)
+            editor.setStatusLabel(`Updated Documents/${filename}`)
+        } catch {
+            try {
+                fsService.createNode(targetDir, filename, VfsNodeType.FILE, content, 'text/markdown')
+                editor.setStatusLabel(`Saved to Documents/${filename}`)
+            } catch (err) {
+                editor.setStatusLabel('Failed to save to Documents')
+            }
+        }
+    }
+
+    const handleImportFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+        if (!file) return
+
+        const reader = new FileReader()
+        reader.onload = (e) => {
+            const text = (e.target?.result as string) || ''
+            const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '').slice(0, 50) || 'Imported Note'
+            editor.createRecord()
+            window.requestAnimationFrame(() => {
+                editor.setTitle(nameWithoutExt)
+                editor.setBody(text)
+                editor.setStatusLabel(`Imported ${file.name}`)
+            })
+        }
+        reader.readAsText(file)
+        event.target.value = ''
+    }
+
     const totalNotesCount = editor.records.length
     const hasAttachmentsOrLinks = editor.attachments.length > 0 || editor.linkedRecords.length > 0
 
@@ -323,6 +387,40 @@ export default function NotesApp({ id }: { id: string }) {
                             >
                                 {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
                             </button>
+                            <button
+                                type="button"
+                                onClick={handleDownloadHost}
+                                className="rounded-sm p-1.5 text-ink-muted transition-colors hover:bg-canvas hover:text-ink active:scale-95"
+                                title="Download note to your computer (.md)"
+                                aria-label="Download note to computer"
+                            >
+                                <Download className="h-4 w-4" />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleSaveToDocuments}
+                                className="rounded-sm p-1.5 text-ink-muted transition-colors hover:bg-canvas hover:text-ink active:scale-95"
+                                title="Save note to AetherOS Documents folder"
+                                aria-label="Save to AetherOS Documents"
+                            >
+                                <FolderDown className="h-4 w-4" />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => importFileInputRef.current?.click()}
+                                className="rounded-sm p-1.5 text-ink-muted transition-colors hover:bg-canvas hover:text-ink active:scale-95"
+                                title="Import note file (.txt / .md)"
+                                aria-label="Import note"
+                            >
+                                <Upload className="h-4 w-4" />
+                            </button>
+                            <input
+                                ref={importFileInputRef}
+                                type="file"
+                                accept=".txt,.md,text/plain,text/markdown"
+                                className="hidden"
+                                onChange={handleImportFile}
+                            />
                             <button
                                 type="button"
                                 onClick={() => setShowMetaPanel((open) => !open)}

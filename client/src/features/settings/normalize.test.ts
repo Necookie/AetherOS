@@ -38,4 +38,14 @@ describe('normalizeSettingsState', () => {
         expect(normalized.accessibility.fontScale).toBe(0.85)
         expect(normalized.accessibility.density).toBe('compact')
     })
+
+    it('preserves custom wallpaper IDs prefixed with custom-', () => {
+        const normalized = normalizeSettingsState({
+            appearance: {
+                wallpaperId: 'custom-abc12345',
+            },
+        })
+
+        expect(normalized.appearance.wallpaperId).toBe('custom-abc12345')
+    })
 })

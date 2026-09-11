@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Palette, Monitor, Accessibility, SlidersHorizontal, RotateCcw, Keyboard, Shield } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Palette, Monitor, Accessibility, SlidersHorizontal, RotateCcw, Keyboard, Shield, Upload, Trash2 } from 'lucide-react'
 import Window from '../../components/system/Window'
 import { getActiveAccount } from '../../features/accounts/services/sessionSelectors'
 import { WALLPAPER_OPTIONS } from '../../features/settings/defaults'
@@ -144,6 +144,9 @@ export default function SettingsApp({ id }: { id: string }) {
         setShortcutOverride,
         clearShortcutOverride,
         resetSettings,
+        customWallpapers,
+        addCustomWallpaper,
+        removeCustomWallpaper,
     } = useSettingsStore((state) => state)
     const activeAccount = getActiveAccount({
         activeUserId,
@@ -166,6 +169,31 @@ export default function SettingsApp({ id }: { id: string }) {
 
         return permissionService.listPermissionStatuses(activeUserId)
     }, [activeUserId, permissionsVersion])
+
+    const fileInputRef = useRef<HTMLInputElement>(null)
+    const [uploadError, setUploadError] = useState<string | null>(null)
+    const [isUploading, setIsUploading] = useState(false)
+
+    const handleWallpaperUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+        if (!file) return
+        if (!file.type.startsWith('image/')) {
+            setUploadError('Please select a valid image file (PNG, JPG, WebP).')
+            return
+        }
+        setUploadError(null)
+        setIsUploading(true)
+        try {
+            await addCustomWallpaper(file)
+        } catch (err) {
+            setUploadError((err as Error).message || 'Failed to upload wallpaper.')
+        } finally {
+            setIsUploading(false)
+            if (event.target) {
+                event.target.value = ''
+            }
+        }
+    }
 
     useEffect(() => {
         const drafts: Record<string, string> = {}
@@ -265,26 +293,85 @@ export default function SettingsApp({ id }: { id: string }) {
                                 </div>
                             )}
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-ink">Wallpaper</label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {WALLPAPER_OPTIONS.map((option) => (
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-semibold text-ink">Wallpaper</label>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={handleWallpaperUpload}
+                                        />
                                         <button
-                                            key={option.id}
-                                            onClick={() => setWallpaper(option.id)}
-                                            className={`overflow-hidden rounded-md border text-left ${appearance.wallpaperId === option.id ? 'border-primary-focus' : 'border-hairline'}`}
+                                            type="button"
+                                            onClick={() => fileInputRef.current?.click()}
+                                            disabled={isUploading}
+                                            className="flex items-center gap-1.5 rounded-md border border-hairline bg-canvas px-2.5 py-1 text-xs font-medium text-ink transition-colors hover:bg-parchment active:scale-95 disabled:opacity-50"
                                         >
-                                            <div
-                                                className="h-16"
-                                                style={{
-                                                    background: option.kind === 'image'
-                                                        ? `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url('${option.value}') center/cover no-repeat`
-                                                        : option.value,
-                                                }}
-                                            />
-                                            <div className="bg-parchment px-2 py-1 text-xs text-ink-muted">{option.label}</div>
+                                            <Upload className="h-3.5 w-3.5" />
+                                            {isUploading ? 'Uploading...' : 'Upload Wallpaper'}
                                         </button>
-                                    ))}
+                                    </div>
+                                </div>
+
+                                {uploadError && (
+                                    <p className="text-xs text-danger">{uploadError}</p>
+                                )}
+
+                                <div className="grid grid-cols-3 gap-2.5">
+                                    {[...WALLPAPER_OPTIONS, ...customWallpapers].map((option) => {
+                                        const isCustom = option.id.startsWith('custom-')
+                                        const isSelected = appearance.wallpaperId === option.id
+
+                                        return (
+                                            <div
+                                                key={option.id}
+                                                className={`group relative overflow-hidden rounded-md border text-left transition-all ${
+                                                    isSelected ? 'border-primary-focus ring-1 ring-primary-focus' : 'border-hairline hover:border-ink-muted/50'
+                                                }`}
+                                            >
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setWallpaper(option.id)}
+                                                    className="block w-full text-left"
+                                                >
+                                                    <div
+                                                        className="h-16 w-full"
+                                                        style={{
+                                                            background: option.kind === 'image'
+                                                                ? `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url('${option.value}') center/cover no-repeat`
+                                                                : option.value,
+                                                        }}
+                                                    />
+                                                    <div className="flex items-center justify-between bg-parchment px-2 py-1 text-xs text-ink-muted">
+                                                        <span className="truncate">{option.label}</span>
+                                                        {isCustom && (
+                                                            <span className="ml-1 rounded bg-canvas px-1 text-[10px] text-ink-muted-48 border border-hairline">
+                                                                Custom
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </button>
+
+                                                {isCustom && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            void removeCustomWallpaper(option.id)
+                                                        }}
+                                                        className="absolute right-1.5 top-1.5 rounded bg-black/60 p-1 text-white opacity-0 transition-opacity hover:bg-danger group-hover:opacity-100"
+                                                        title="Delete custom wallpaper"
+                                                        aria-label="Delete custom wallpaper"
+                                                    >
+                                                        <Trash2 className="h-3 w-3" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )
+                                    })}
                                 </div>
                                 <p className="text-xs text-ink-muted">Selected: {selectedWallpaper.label}</p>
                             </div>
