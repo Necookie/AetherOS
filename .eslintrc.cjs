@@ -58,5 +58,19 @@ module.exports = {
         '@typescript-eslint/no-explicit-any': 'off',
       },
     },
+    {
+      files: ['functions/**/*.ts'],
+      env: {
+        browser: true,
+        node: false,
+      },
+      parserOptions: {
+        project: './functions/tsconfig.json',
+        tsconfigRootDir: __dirname,
+      },
+      rules: {
+        '@typescript-eslint/no-floating-promises': 'error',
+      },
+    },
   ],
 }

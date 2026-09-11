@@ -1,6 +1,6 @@
 # AetherOS Server
 
-Backend API workspace for AetherOS.
+Local-development API adapter and shared service layer for AetherOS. Production imports the same service logic into Cloudflare Pages Functions in the repository's root `functions/` directory.
 
 ## Stack
 
@@ -11,9 +11,8 @@ Backend API workspace for AetherOS.
 
 ## Current Responsibilities
 
-- Health endpoint for runtime checks
-- AI proxy endpoint used by the client
-- Search endpoint used by the browser app
+- Local equivalents of the production health, AI, and search endpoints
+- Shared AI and search service logic imported by Cloudflare Pages Functions
 - Mock response fallback when OpenAI key is not set
 
 ## Endpoints

@@ -1,5 +1,3 @@
-import { env } from '../config/env'
-
 export interface SearchResult {
     id: string
     title: string
@@ -56,13 +54,13 @@ function createMockResults(query: string): SearchResult[] {
     })
 }
 
-async function fetchTavilyResults(query: string): Promise<SearchResult[]> {
+async function fetchTavilyResults(query: string, apiKey: string): Promise<SearchResult[]> {
     const response = await fetch('https://api.tavily.com/search', {
         method: 'POST',
         headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${env.tavilySearchApiKey!}`,
+            Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
             query,
@@ -100,7 +98,7 @@ async function fetchTavilyResults(query: string): Promise<SearchResult[]> {
         }))
 }
 
-export async function searchWeb(query: string): Promise<SearchResponse> {
+export async function searchWeb(query: string, tavilySearchApiKey?: string): Promise<SearchResponse> {
     const normalizedQuery = query.trim()
     if (!normalizedQuery) {
         return {
@@ -110,7 +108,7 @@ export async function searchWeb(query: string): Promise<SearchResponse> {
         }
     }
 
-    if (!env.tavilySearchApiKey) {
+    if (!tavilySearchApiKey) {
         return {
             query: normalizedQuery,
             mode: 'mock',
@@ -119,7 +117,7 @@ export async function searchWeb(query: string): Promise<SearchResponse> {
     }
 
     try {
-        const results = await fetchTavilyResults(normalizedQuery)
+        const results = await fetchTavilyResults(normalizedQuery, tavilySearchApiKey)
         if (results.length > 0) {
             return {
                 query: normalizedQuery,
