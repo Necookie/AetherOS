@@ -351,7 +351,11 @@ export default function SettingsApp({ id }: { id: string }) {
                                 )}
 
                                 <div className="grid grid-cols-3 gap-2.5">
-                                    {[...WALLPAPER_OPTIONS, ...customWallpapers].map((option) => {
+                                    {[
+                                        ...WALLPAPER_OPTIONS.filter((option) => option.theme === appearance.themeMode),
+                                        ...WALLPAPER_OPTIONS.filter((option) => option.theme !== appearance.themeMode),
+                                        ...customWallpapers,
+                                    ].map((option) => {
                                         const isCustom = option.id.startsWith('custom-')
                                         const isSelected = appearance.wallpaperId === option.id
 
@@ -377,9 +381,9 @@ export default function SettingsApp({ id }: { id: string }) {
                                                     />
                                                     <div className="flex items-center justify-between bg-parchment px-2 py-1 text-xs text-ink-muted">
                                                         <span className="truncate">{option.label}</span>
-                                                        {isCustom && (
+                                                        {(isCustom || option.theme) && (
                                                             <span className="ml-1 rounded bg-canvas px-1 text-[10px] text-ink-muted-48 border border-hairline">
-                                                                Custom
+                                                                {isCustom ? 'Custom' : option.theme}
                                                             </span>
                                                         )}
                                                     </div>

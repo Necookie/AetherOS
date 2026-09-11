@@ -84,4 +84,7 @@ export interface WallpaperOption {
     label: string
     kind: 'image' | 'gradient' | 'solid'
     value: string
+    theme?: ThemeMode
+    desktopText?: 'light' | 'dark'
+    scrim?: number
 }

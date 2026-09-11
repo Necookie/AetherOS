@@ -1,4 +1,4 @@
-import type { OsSettingsState, ThemePalette, WallpaperOption } from './types'
+import type { OsSettingsState, ThemeMode, ThemePalette, WallpaperOption } from './types'
 
 // Apple design-system palette (see design.md). One accent, flat surfaces,
 // hairline borders. textMuted uses Apple's real secondary gray (#6e6e73)
@@ -38,30 +38,97 @@ export const DARK_THEME: ThemePalette = {
 
 export const WALLPAPER_OPTIONS: WallpaperOption[] = [
     {
+        id: 'aether-daybreak',
+        label: 'Aether Daybreak',
+        kind: 'image',
+        value: '/assets/wallpapers/aether-daybreak.webp',
+        theme: 'light',
+        desktopText: 'dark',
+        scrim: 0,
+    },
+    {
+        id: 'aether-cirrus',
+        label: 'Aether Cirrus',
+        kind: 'image',
+        value: '/assets/wallpapers/aether-cirrus.webp',
+        theme: 'light',
+        desktopText: 'dark',
+        scrim: 0,
+    },
+    {
+        id: 'aether-midnight',
+        label: 'Aether Midnight',
+        kind: 'image',
+        value: '/assets/wallpapers/aether-midnight.webp',
+        theme: 'dark',
+        desktopText: 'light',
+        scrim: 0,
+    },
+    {
+        id: 'aether-eclipse',
+        label: 'Aether Eclipse',
+        kind: 'image',
+        value: '/assets/wallpapers/aether-eclipse.webp',
+        theme: 'dark',
+        desktopText: 'light',
+        scrim: 0,
+    },
+    {
+        id: 'aether-bloom',
+        label: 'Aether Bloom',
+        kind: 'image',
+        value: '/assets/wallpapers/aether-bloom.webp',
+        theme: 'custom',
+        desktopText: 'dark',
+        scrim: 0.08,
+    },
+    {
+        id: 'aether-topology',
+        label: 'Signal Topology',
+        kind: 'image',
+        value: '/assets/wallpapers/aether-topology.webp',
+        theme: 'custom',
+        desktopText: 'light',
+        scrim: 0.08,
+    },
+    {
         id: 'urban-night',
         label: 'Urban Night',
         kind: 'image',
         value: '/assets/wallpapers/urban-night-street.jpg',
+        theme: 'dark',
+        desktopText: 'light',
+        scrim: 0.35,
     },
     {
         id: 'parchment',
         label: 'Parchment',
         kind: 'solid',
         value: '#f5f5f7',
+        theme: 'light',
+        desktopText: 'dark',
     },
     {
         id: 'studio-black',
         label: 'Studio Black',
         kind: 'solid',
         value: '#1d1d1f',
+        theme: 'dark',
+        desktopText: 'light',
     },
 ]
+
+export const DEFAULT_WALLPAPER_BY_THEME: Record<ThemeMode, string> = {
+    light: 'aether-daybreak',
+    dark: 'aether-midnight',
+    custom: 'aether-bloom',
+}
 
 export const DEFAULT_SETTINGS: OsSettingsState = {
     appearance: {
         themeMode: 'light',
         customPalette: { ...LIGHT_THEME },
-        wallpaperId: WALLPAPER_OPTIONS[0].id,
+        wallpaperId: DEFAULT_WALLPAPER_BY_THEME.light,
     },
     desktop: {
         iconScale: 1,

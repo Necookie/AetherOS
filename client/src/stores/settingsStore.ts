@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { DEFAULT_SETTINGS } from '../features/settings/defaults'
+import { DEFAULT_SETTINGS, DEFAULT_WALLPAPER_BY_THEME, WALLPAPER_OPTIONS } from '../features/settings/defaults'
 import { normalizeSettingsState } from '../features/settings/normalize'
 import { settingsStorage } from '../features/settings/storage'
 import {
@@ -130,11 +130,16 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
         if (!canMutateSettings()) {
             return state
         }
+        const currentWallpaper = WALLPAPER_OPTIONS.find((option) => option.id === state.appearance.wallpaperId)
+        const wallpaperId = currentWallpaper && currentWallpaper.theme !== themeMode
+            ? DEFAULT_WALLPAPER_BY_THEME[themeMode]
+            : state.appearance.wallpaperId
         const next: OsSettingsState = {
             ...state,
             appearance: {
                 ...state.appearance,
                 themeMode,
+                wallpaperId,
             },
         }
         persist(next)
