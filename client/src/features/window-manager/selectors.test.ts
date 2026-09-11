@@ -35,6 +35,7 @@ describe('window selectors', () => {
             cycleFocus: () => undefined,
             getZIndex: () => 0,
             resetWindows: () => undefined,
+            syncViewport: () => undefined,
         })
 
         expect(selected?.id).toBe('term')
@@ -62,6 +63,7 @@ describe('window selectors', () => {
             cycleFocus: () => undefined,
             getZIndex: () => 1,
             resetWindows: () => undefined,
+            syncViewport: () => undefined,
         }
 
         expect(selectWindowOrder(storeLike)).toEqual(['term'])

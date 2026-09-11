@@ -1,4 +1,21 @@
+import type { WindowBounds } from '../../types/windowManager'
 import type { SnapContext, WorkspaceInsets, WorkspaceRect } from './types'
+
+export function getMaximizedBounds(context: SnapContext): WindowBounds {
+    const baseTop = context.taskbarPosition === 'top'
+        ? context.shellTopbarHeight + context.shellDockHeight + context.shellEdgeGap * 2
+        : context.shellTopbarHeight
+    const baseBottom = context.taskbarPosition === 'bottom'
+        ? context.shellDockHeight + context.shellEdgeGap * 2
+        : 0
+
+    return {
+        x: 0,
+        y: baseTop,
+        width: context.viewport.width,
+        height: Math.max(context.minWindowHeight, context.viewport.height - baseTop - baseBottom),
+    }
+}
 
 export function getWorkspaceInsets(context: SnapContext): WorkspaceInsets {
     const baseTop = context.taskbarPosition === 'top'
@@ -29,3 +46,4 @@ export function getWorkspaceRect(context: SnapContext): WorkspaceRect {
         height,
     }
 }
+

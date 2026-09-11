@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useEffect } from 'react'
 import { selectSnapPreview, selectWindowById, selectWindowComponentById, selectWindowOrder } from '../../features/window-manager/selectors'
 import { useWindowShortcuts } from '../../features/window-manager/useWindowShortcuts'
 import { useWindowStore } from '../../stores/windowStore'
@@ -30,6 +30,28 @@ export default function DesktopWindows() {
     const windowOrder = useWindowStore(selectWindowOrder)
     const snapPreview = useWindowStore(selectSnapPreview)
     useWindowShortcuts()
+
+    useEffect(() => {
+        let rafId: number | null = null
+        const handleResize = () => {
+            if (rafId !== null) return
+            rafId = window.requestAnimationFrame(() => {
+                rafId = null
+                useWindowStore.getState().syncViewport()
+            })
+        }
+
+        window.addEventListener('resize', handleResize)
+        document.addEventListener('fullscreenchange', handleResize)
+        document.addEventListener('webkitfullscreenchange', handleResize)
+
+        return () => {
+            if (rafId !== null) window.cancelAnimationFrame(rafId)
+            window.removeEventListener('resize', handleResize)
+            document.removeEventListener('fullscreenchange', handleResize)
+            document.removeEventListener('webkitfullscreenchange', handleResize)
+        }
+    }, [])
 
     return (
         <div className="pointer-events-none relative z-20 h-full w-full">

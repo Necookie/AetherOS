@@ -1,5 +1,6 @@
 import type { SnapMode } from '../../types/windowManager'
 import type { PointerPosition, SnapContext, SnapRegionMetadata, WorkspaceRect } from './types'
+import { getMaximizedBounds } from './workspace'
 
 const SNAP_ACTIVATION_DISTANCE = 56
 
@@ -37,8 +38,9 @@ function buildRegion(
 export function getSnapRegion(
     mode: SnapMode,
     workspace: WorkspaceRect,
-    context: Pick<SnapContext, 'minWindowWidth' | 'minWindowHeight'>,
+    context: SnapContext,
 ): SnapRegionMetadata {
+
     const halfWidth = Math.floor(workspace.width / 2)
     const halfHeight = Math.floor(workspace.height / 2)
     const rightX = workspace.x + halfWidth
@@ -88,12 +90,10 @@ export function getSnapRegion(
             height: workspace.height - halfHeight,
         }, context.minWindowWidth, context.minWindowHeight)
     case 'maximize':
-        return buildRegion(mode, workspace, {
-            x: workspace.x,
-            y: workspace.y,
-            width: workspace.width,
-            height: workspace.height,
-        }, context.minWindowWidth, context.minWindowHeight)
+        return {
+            mode,
+            bounds: getMaximizedBounds(context),
+        }
     }
 }
 
