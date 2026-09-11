@@ -21,6 +21,7 @@ import DateTimeFlyout from './DateTimeFlyout'
 import Dock from './Dock'
 import QuickSettingsFlyout from './QuickSettingsFlyout'
 import TopBar from './TopBar'
+import AboutModal from '../../../components/system/AboutModal'
 import { useSessionStore } from '../../../stores/useSessionStore'
 import { getActiveAccount } from '../../accounts/services/sessionSelectors'
 import { SHORTCUT_EVENT_LAUNCHER_TOGGLE } from '../../shortcuts/shortcutEvents'
@@ -70,12 +71,13 @@ function useClickOutside(
 }
 
 export default function ShellFrame() {
-    const { focusedWindowId, openWindow, toggleMinimize, restoreWindow, lastGuardError } = useWindowStore((state) => ({
+    const { focusedWindowId, openWindow, toggleMinimize, restoreWindow, lastGuardError, resetWindows } = useWindowStore((state) => ({
         focusedWindowId: state.focusedWindowId,
         openWindow: state.openWindow,
         toggleMinimize: state.toggleMinimize,
         restoreWindow: state.restoreWindow,
         lastGuardError: state.lastGuardError,
+        resetWindows: state.resetWindows,
     }), shallow)
     const wallpaperId = useSettingsStore((state) => state.appearance.wallpaperId)
     const iconScale = useSettingsStore((state) => state.desktop.iconScale)
@@ -92,6 +94,9 @@ export default function ShellFrame() {
     const [isQuickSettingsOpen, setQuickSettingsOpen] = useState(false)
     const [isDateTimeOpen, setDateTimeOpen] = useState(false)
     const [isNotificationCenterOpen, setNotificationCenterOpen] = useState(false)
+    const [isAboutOpen, setAboutOpen] = useState(false)
+    const [brightness, setBrightness] = useState(100)
+    const [volume, setVolume] = useState(70)
     const now = useShellClock()
     const { unreadCount } = useNotificationSnapshot()
     const downloadSnapshot = useDownloadManagerSnapshot()
@@ -408,6 +413,7 @@ export default function ShellFrame() {
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',
+                filter: brightness < 100 ? `brightness(${brightness}%)` : undefined,
             }}
         >
             <TopBar
@@ -461,6 +467,34 @@ export default function ShellFrame() {
                 onSwitchUser={(userId) => {
                     selectLoginUser(userId)
                     lockSession()
+                }}
+                onOpenAbout={() => setAboutOpen(true)}
+                onOpenSettings={() => {
+                    const settingsApp = appLookup.get('settings')
+                    if (settingsApp) {
+                        handleLaunchOrToggle(settingsApp.id)
+                    }
+                }}
+                onOpenTaskMgr={() => {
+                    const taskmgrApp = appLookup.get('taskmgr')
+                    if (taskmgrApp) {
+                        handleLaunchOrToggle(taskmgrApp.id)
+                    }
+                }}
+                onOpenOsLab={() => {
+                    const oslabApp = appLookup.get('os-lab')
+                    if (oslabApp) {
+                        handleLaunchOrToggle(oslabApp.id)
+                    }
+                }}
+                onRestartShell={() => {
+                    resetWindows()
+                    notificationService.publish({
+                        title: 'Desktop Shell Restarted',
+                        message: 'Compositor surfaces and window layouts were refreshed.',
+                        source: 'System',
+                        priority: 'normal',
+                    })
                 }}
             />
 
@@ -516,7 +550,20 @@ export default function ShellFrame() {
 
             {isQuickSettingsOpen && (
                 <div ref={quickSettingsRef}>
-                    <QuickSettingsFlyout taskbarPosition={taskbarPosition} />
+                    <QuickSettingsFlyout
+                        taskbarPosition={taskbarPosition}
+                        brightness={brightness}
+                        onBrightnessChange={setBrightness}
+                        volume={volume}
+                        onVolumeChange={setVolume}
+                        onOpenSettings={() => {
+                            setQuickSettingsOpen(false)
+                            const settingsApp = appLookup.get('settings')
+                            if (settingsApp) {
+                                handleLaunchOrToggle(settingsApp.id)
+                            }
+                        }}
+                    />
                 </div>
             )}
 
@@ -539,6 +586,23 @@ export default function ShellFrame() {
                 </div>
             )}
             <DirtyGuardModal />
+            <AboutModal
+                isOpen={isAboutOpen}
+                onClose={() => setAboutOpen(false)}
+                activeAccount={activeAccount}
+                onOpenSettings={() => {
+                    const settingsApp = appLookup.get('settings')
+                    if (settingsApp) {
+                        handleLaunchOrToggle(settingsApp.id)
+                    }
+                }}
+                onOpenTaskMgr={() => {
+                    const taskmgrApp = appLookup.get('taskmgr')
+                    if (taskmgrApp) {
+                        handleLaunchOrToggle(taskmgrApp.id)
+                    }
+                }}
+            />
         </div>
     )
 }
