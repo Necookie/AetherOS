@@ -11,6 +11,7 @@ import {
     toggleMaximizeState,
     toggleMinimizeState,
     updateWindowBoundsState,
+    updateMultipleBoundsState,
 } from '../features/window-manager/windowState'
 import { getSnapContext } from '../features/window-manager/shellMetrics'
 import { getNextWindowInCycle } from '../features/window-manager/navigation'
@@ -41,6 +42,7 @@ export interface WindowStore {
     snapWindow: (id: string, mode: SnapMode) => void
     restoreWindow: (id: string) => void
     updateBounds: (id: string, bounds: Partial<WindowBounds>) => void
+    updateMultipleBounds: (updates: Record<string, { bounds: Partial<WindowBounds>; snapMode?: SnapMode }>) => void
     setSnapPreview: (preview: SnapPreview | null) => void
     clearSnapPreview: () => void
     cycleFocus: (step: 1 | -1) => void
@@ -195,6 +197,7 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
         }
     }),
     updateBounds: (id, bounds) => set((state) => updateWindowBoundsState(state, id, bounds, getViewport())),
+    updateMultipleBounds: (updates) => set((state) => updateMultipleBoundsState(state, updates, getViewport())),
     setSnapPreview: (preview) => set((state) => {
         if (
             state.snapPreview?.windowId === preview?.windowId &&
