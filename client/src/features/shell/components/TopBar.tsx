@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
-import { Apple, BatteryCharging, Bell, ChevronDown, Download, Search, UserCircle2, Volume2, Wifi } from 'lucide-react'
+import { BatteryCharging, Bell, ChevronDown, Download, Search, UserCircle2, Volume2, Wifi } from 'lucide-react'
 import type { AccountProfile } from '../../accounts/types'
+import AetherMark from '../../../components/brand/AetherMark'
 
 interface TopBarProps {
     now: Date
@@ -51,8 +52,8 @@ export default function TopBar({
             className="absolute left-0 right-0 top-0 z-[var(--ds-z-topbar)] flex h-[var(--shell-topbar-height)] items-center justify-between bg-void px-3 text-on-dark"
         >
             <div className="flex items-center gap-3 text-[12px]">
-                <button className="rounded px-1 py-0.5 transition-transform active:scale-95 hover:bg-tile-1" aria-label="Apple menu">
-                    <Apple className="h-4 w-4" />
+                <button className="rounded px-1 py-0.5 transition-transform active:scale-95 hover:bg-tile-1" aria-label="AetherOS system menu">
+                    <AetherMark className="h-4 w-4" />
                 </button>
                 <button className="rounded px-2 py-0.5 font-semibold transition-transform active:scale-95 hover:bg-tile-1">AetherOS</button>
                 <button onClick={onToggleLauncher} className="hidden rounded px-2 py-0.5 transition-transform active:scale-95 hover:bg-tile-1 md:block">Go</button>
