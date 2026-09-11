@@ -92,6 +92,13 @@ export function calculateTiledResize(
         (isLeftColumn && direction.includes('e')) ||
         (isRightColumn && direction.includes('w'))
 
+    // Corner handles (e.g. "se") carry both an "e"/"w" and an "n"/"s" component, so a
+    // quadrant tile must be able to co-resize its vertical AND horizontal seams in the
+    // same gesture instead of only whichever branch happened to run first.
+    const updates: Record<string, WindowBoundsUpdate> = {}
+    let handledVertical = false
+    let handledHorizontal = false
+
     if (isResizingVerticalDivider) {
         // Find left-side windows and right-side windows
         const leftWindows = visibleWindows.filter((w) =>
@@ -112,8 +119,6 @@ export function calculateTiledResize(
             const newLeftWidth = clamp(currentSplitX + deltaX, minWidth, maxLeftWidth)
             const newRightWidth = workspace.width - newLeftWidth
             const newRightX = workspace.x + newLeftWidth
-
-            const updates: Record<string, WindowBoundsUpdate> = {}
 
             leftWindows.forEach((win) => {
                 updates[win.id] = {
@@ -137,7 +142,7 @@ export function calculateTiledResize(
                 }
             })
 
-            return updates
+            handledVertical = true
         }
     }
 
@@ -164,12 +169,11 @@ export function calculateTiledResize(
             const newBottomHeight = workspace.height - newTopHeight
             const newBottomY = workspace.y + newTopHeight
 
-            const updates: Record<string, WindowBoundsUpdate> = {}
-
             topWindows.forEach((win) => {
+                const bounds = updates[win.id]?.bounds ?? win.bounds
                 updates[win.id] = {
                     bounds: {
-                        ...win.bounds,
+                        ...bounds,
                         y: workspace.y,
                         height: newTopHeight,
                     },
@@ -178,9 +182,10 @@ export function calculateTiledResize(
             })
 
             bottomWindows.forEach((win) => {
+                const bounds = updates[win.id]?.bounds ?? win.bounds
                 updates[win.id] = {
                     bounds: {
-                        ...win.bounds,
+                        ...bounds,
                         y: newBottomY,
                         height: newBottomHeight,
                     },
@@ -188,8 +193,12 @@ export function calculateTiledResize(
                 }
             })
 
-            return updates
+            handledHorizontal = true
         }
+    }
+
+    if (handledVertical || handledHorizontal) {
+        return updates
     }
 
     // --- CASE 3: Standard Floating Window Resize ---
