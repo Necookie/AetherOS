@@ -3,6 +3,7 @@ import { BatteryCharging, Bell, ChevronDown, Download, Maximize2, Minimize2, Sea
 import type { AccountProfile } from '../../accounts/types'
 import AetherMark from '../../../components/brand/AetherMark'
 import { toggleFullscreen, useFullscreen } from '../../../services/fullscreenService'
+import { useAppRegistryStore } from '../../../stores/appRegistryStore'
 
 interface TopBarProps {
     now: Date
@@ -54,6 +55,7 @@ export default function TopBar({
     const [menuOpen, setMenuOpen] = useState(false)
     const [systemMenuOpen, setSystemMenuOpen] = useState(false)
     const isFullscreenActive = useFullscreen()
+    const installed = useAppRegistryStore((state) => state.installed)
     const systemMenuRef = useRef<HTMLDivElement>(null)
     const accountMenuRef = useRef<HTMLDivElement>(null)
 
@@ -136,15 +138,17 @@ export default function TopBar({
                         >
                             Task Manager
                         </button>
-                        <button
-                            className="w-full rounded px-2.5 py-1.5 text-left transition-colors hover:bg-tile-2"
-                            onClick={() => {
-                                setSystemMenuOpen(false)
-                                onOpenOsLab?.()
-                            }}
-                        >
-                            OS Simulation Lab
-                        </button>
+                        {installed['os-lab'] && (
+                            <button
+                                className="w-full rounded px-2.5 py-1.5 text-left transition-colors hover:bg-tile-2"
+                                onClick={() => {
+                                    setSystemMenuOpen(false)
+                                    onOpenOsLab?.()
+                                }}
+                            >
+                                OS Simulation Lab
+                            </button>
+                        )}
                         <div className="my-1 border-b border-white/10" />
                         <button
                             className="w-full rounded px-2.5 py-1.5 text-left transition-colors hover:bg-tile-2"

@@ -17,6 +17,7 @@ import { DEFAULT_APPS } from '../../config/windows'
 import { registryService, useAppRegistryStore } from '../../stores/appRegistryStore'
 import type { PermissionId } from '../../features/permissions/types'
 import type { ThemePalette } from '../../features/settings/types'
+import { SYSTEM_APP_IDS } from '../../features/app-registry/catalog'
 import type { SettingsSection } from '../../features/deep-links/types'
 import {
     REMAPPABLE_SHORTCUTS,
@@ -24,8 +25,6 @@ import {
     SHORTCUT_ACTION_IDS,
     validateShortcutOverrides,
 } from '../../features/shortcuts/shortcutConfig'
-
-const SYSTEM_APP_IDS = new Set(['appstore', 'browser', 'explorer', 'taskmgr', 'settings'])
 
 const sectionMeta: Array<{ id: SettingsSection; label: string; icon: typeof Palette }> = [
     { id: 'appearance', label: 'Appearance', icon: Palette },
@@ -494,7 +493,7 @@ export default function SettingsApp({ id }: { id: string }) {
                                         {Object.keys(installed).length} Installed
                                     </span>
                                     <span className="rounded-pill border border-hairline bg-parchment px-2.5 py-1">
-                                        {SYSTEM_APP_IDS.size} System
+                                        {SYSTEM_APP_IDS.length} System
                                     </span>
                                 </div>
                             </div>
@@ -502,7 +501,7 @@ export default function SettingsApp({ id }: { id: string }) {
                             <div className="space-y-2.5">
                                 {filteredApps.map((app) => {
                                     const installedApp = installed[app.id]
-                                    const isSystem = SYSTEM_APP_IDS.has(app.id) || installedApp?.source === 'system' || app.category === 'system'
+                                    const isSystem = (SYSTEM_APP_IDS as readonly string[]).includes(app.id)
                                     const operation = operations[app.id]
                                     const isBusy = operation && ['installing', 'updating', 'removing'].includes(operation.state)
                                     const isConfirming = confirmUninstallId === app.id
