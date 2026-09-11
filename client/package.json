@@ -12,6 +12,14 @@
         "preview": "vite preview"
     },
     "dependencies": {
+        "@tiptap/extension-link": "^3.31.3",
+        "@tiptap/extension-task-item": "^3.31.3",
+        "@tiptap/extension-task-list": "^3.31.3",
+        "@tiptap/extension-text-align": "^3.31.3",
+        "@tiptap/extension-underline": "^3.31.3",
+        "@tiptap/pm": "^3.31.3",
+        "@tiptap/react": "^3.31.3",
+        "@tiptap/starter-kit": "^3.31.3",
         "lucide-react": "^0.300.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
