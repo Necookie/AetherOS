@@ -10,7 +10,7 @@ import { productivityRepository } from '../../productivity'
 import NotificationCenterFlyout from '../../notifications/components/NotificationCenterFlyout'
 import { notificationService, useNotificationSnapshot } from '../../notifications'
 import { downloadManagerService, useDownloadManagerSnapshot } from '../../downloads'
-import { getWallpaperCss } from '../../settings/themeEngine'
+import { getWallpaperCss, resolveWallpaper } from '../../settings/themeEngine'
 import WidgetBoard from '../../widgets/components/WidgetBoard'
 import DesktopIcons from '../../../components/desktop/DesktopIcons'
 import DesktopContextMenu from '../../../components/desktop/DesktopContextMenu'
@@ -81,6 +81,7 @@ export default function ShellFrame() {
         resetWindows: state.resetWindows,
     }), shallow)
     const wallpaperId = useSettingsStore((state) => state.appearance.wallpaperId)
+    const wallpaper = resolveWallpaper(wallpaperId)
     const iconScale = useSettingsStore((state) => state.desktop.iconScale)
     const taskbarPosition = useSettingsStore((state) => state.desktop.taskbarPosition)
     const showSecondsInClock = useSettingsStore((state) => state.behavior.showSecondsInClock)
@@ -545,7 +546,11 @@ export default function ShellFrame() {
                     bottom: taskbarPosition === 'bottom' ? 'calc(var(--shell-dock-height) + var(--shell-edge-gap) * 2)' : 'var(--shell-edge-gap)',
                 }}
             >
-                <DesktopIcons iconScale={iconScale} refreshKey={desktopRefreshKey} />
+                <DesktopIcons
+                    iconScale={iconScale}
+                    refreshKey={desktopRefreshKey}
+                    labelTone={wallpaper.desktopText}
+                />
                 <WidgetBoard />
             </main>
 

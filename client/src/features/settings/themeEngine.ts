@@ -129,10 +129,11 @@ export function resolveWallpaper(optionId: string): WallpaperOption {
 export function getWallpaperCss(optionId: string) {
     const wallpaper = resolveWallpaper(optionId)
     if (wallpaper.kind === 'image') {
-        // Flat single-tone scrim (no color stops) for legibility over the
-        // photo — expressed as a gradient purely because backgroundImage
-        // requires an <image> value; it produces no visible transition.
-        return `linear-gradient(rgb(0 0 0 / 0.35), rgb(0 0 0 / 0.35)), url('${wallpaper.value}')`
+        const scrim = wallpaper.scrim ?? 0.35
+        if (scrim > 0) {
+            return `linear-gradient(rgb(0 0 0 / ${scrim}), rgb(0 0 0 / ${scrim})), url('${wallpaper.value}')`
+        }
+        return `url('${wallpaper.value}')`
     }
 
     if (wallpaper.kind === 'solid') {

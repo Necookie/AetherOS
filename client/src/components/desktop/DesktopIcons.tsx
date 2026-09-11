@@ -27,6 +27,7 @@ const DESKTOP_PATH = '/home/user/Desktop'
 interface DesktopIconsProps {
     iconScale?: number
     refreshKey?: number
+    labelTone?: 'light' | 'dark'
 }
 
 interface DesktopItem {
@@ -37,7 +38,7 @@ interface DesktopItem {
     appId?: string
 }
 
-export default function DesktopIcons({ iconScale = 1, refreshKey = 0 }: DesktopIconsProps) {
+export default function DesktopIcons({ iconScale = 1, refreshKey = 0, labelTone = 'dark' }: DesktopIconsProps) {
     const { windows, openWindow, restoreWindow, focusWindow } = useWindowStore(
         (state) => ({
             windows: state.windows,
@@ -342,7 +343,9 @@ export default function DesktopIcons({ iconScale = 1, refreshKey = 0 }: DesktopI
                             </div>
                         )
                     })()}
-                    <span className="mt-1.5 line-clamp-2 max-w-full text-center text-[12px] leading-tight text-ink sm:text-[12px]">
+                    <span className={`mt-1.5 line-clamp-2 max-w-full rounded-xs px-1 py-0.5 text-center text-[12px] leading-tight sm:text-[12px] ${
+                        labelTone === 'light' ? 'bg-black/55 text-white' : 'text-ink'
+                    }`}>
                         {item.label}
                     </span>
                 </button>

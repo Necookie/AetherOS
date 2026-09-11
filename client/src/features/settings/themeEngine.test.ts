@@ -44,6 +44,10 @@ describe('createThemeTokens', () => {
 })
 
 describe('getWallpaperCss', () => {
+    it('uses the generated light default without muting its artwork', () => {
+        expect(getWallpaperCss('aether-daybreak')).toBe("url('/assets/wallpapers/aether-daybreak.webp')")
+    })
+
     it('returns an image layer stack for image wallpapers', () => {
         expect(getWallpaperCss('urban-night')).toContain("url('/assets/wallpapers/urban-night-street.jpg')")
     })
