@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Maximize2, Minimize2, Minus, X } from 'lucide-react'
 import { selectWindowById, selectWindowZIndex } from '../../features/window-manager/selectors'
 import { useWindowManager } from '../../hooks/useWindowManager'
@@ -19,7 +19,8 @@ export default function Window({ id, title, children }: WindowProps) {
     const toggleMinimize = useWindowStore((state) => state.toggleMinimize)
     const toggleMaximize = useWindowStore((state) => state.toggleMaximize)
     const updateBounds = useWindowStore((state) => state.updateBounds)
-    const { handlePointerDown, handlePointerMove, handlePointerUp, restoreWindow } = useWindowManager({ id })
+    const { handlePointerDown, handlePointerMove, handlePointerUp, isDragging, restoreWindow } = useWindowManager({ id })
+    const [isResizing, setIsResizing] = useState(false)
     const windowRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
@@ -70,6 +71,7 @@ export default function Window({ id, title, children }: WindowProps) {
     const startResize = (event: React.PointerEvent<HTMLDivElement>, axis: 'x' | 'y' | 'xy') => {
         event.stopPropagation()
         focusWindow(id)
+        setIsResizing(true)
         const initialBounds = bounds
         const startX = event.clientX
         const startY = event.clientY
@@ -86,6 +88,7 @@ export default function Window({ id, title, children }: WindowProps) {
         }
 
         const handleUp = (upEvent: PointerEvent) => {
+            setIsResizing(false)
             if (resizeHandle.hasPointerCapture(upEvent.pointerId)) {
                 resizeHandle.releasePointerCapture(upEvent.pointerId)
             }
@@ -97,6 +100,8 @@ export default function Window({ id, title, children }: WindowProps) {
         window.addEventListener('pointerup', handleUp)
     }
 
+    const isTransforming = isDragging || isResizing
+
     return (
         <div
             ref={windowRef}
@@ -104,8 +109,9 @@ export default function Window({ id, title, children }: WindowProps) {
             aria-modal={false}
             aria-label={title}
             tabIndex={0}
-            className={`pointer-events-auto os-window-motion absolute flex flex-col overflow-hidden border transition-[left,top,width,height,opacity,transform]
-                ${isMaximized ? 'rounded-none' : 'rounded-lg'}
+            className={`pointer-events-auto absolute flex flex-col overflow-hidden border
+                ${isTransforming ? 'os-window-dragging' : 'os-window-smooth-motion'}
+                ${isMaximized ? 'rounded-none' : 'rounded-xl'}
                 ${isMinimized ? 'pointer-events-none opacity-0 scale-[0.98]' : isEntering ? 'opacity-0 translate-y-2 scale-[0.985]' : isFocused ? 'brightness-100 opacity-100 translate-y-0 scale-100' : 'opacity-95 translate-y-0 scale-100'}
             `}
             style={{
@@ -128,12 +134,12 @@ export default function Window({ id, title, children }: WindowProps) {
             <div
                 className="flex h-10 select-none items-center justify-between border-b border-hairline bg-[rgba(245,245,247,0.8)] px-3 backdrop-blur-frosted"
                 style={{
-                    cursor: isMaximized ? 'default' : 'grab',
+                    cursor: isDragging ? 'grabbing' : isMaximized ? 'default' : 'grab',
                 }}
-                onPointerDown={isMaximized ? undefined : handlePointerDown}
-                onPointerMove={isMaximized ? undefined : handlePointerMove}
-                onPointerUp={isMaximized ? undefined : handlePointerUp}
-                onPointerCancel={isMaximized ? undefined : handlePointerUp}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerUp}
                 onDoubleClick={() => toggleMaximize(id)}
             >
                 <div className="group/controls flex items-center gap-2 pl-0.5" data-drag-handle="false">
