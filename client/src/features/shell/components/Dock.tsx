@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { LayoutGrid, Maximize2, Minimize2 } from 'lucide-react'
+import { Maximize2, Minimize2 } from 'lucide-react'
+import AetherLauncherMark from '../../../components/brand/AetherLauncherMark'
 import { SHELL_APPS } from '../model/appCatalog'
 import { ShellAppIcon } from '../model/appIcons'
 import { useWindowStore } from '../../../stores/windowStore'
@@ -27,7 +28,7 @@ export default function Dock({ taskbarPosition, onLaunchOrToggle, onToggleLaunch
                 className="flex h-10 w-10 items-center justify-center rounded-md bg-ink text-on-dark transition-transform active:scale-95"
                 aria-label="Open app launcher"
             >
-                <LayoutGrid className="h-4 w-4" />
+                <AetherLauncherMark className="h-6 w-6" />
             </button>
 
             <div className="mx-1 h-7 w-px bg-hairline" />
