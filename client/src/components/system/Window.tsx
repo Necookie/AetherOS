@@ -3,6 +3,7 @@ import { Maximize2, Minimize2, Minus, X } from 'lucide-react'
 import { selectWindowById, selectWindowZIndex } from '../../features/window-manager/selectors'
 import { useWindowManager } from '../../hooks/useWindowManager'
 import { useWindowStore } from '../../stores/windowStore'
+import { SnapLayoutPopover } from '../../features/window-manager/components/SnapLayoutPopover'
 
 interface WindowProps {
     id: string
@@ -21,7 +22,22 @@ export default function Window({ id, title, children }: WindowProps) {
     const updateBounds = useWindowStore((state) => state.updateBounds)
     const { handlePointerDown, handlePointerMove, handlePointerUp, isDragging, restoreWindow } = useWindowManager({ id })
     const [isResizing, setIsResizing] = useState(false)
+    const [snapPopoverOpen, setSnapPopoverOpen] = useState(false)
+    const popoverTimerRef = useRef<number | null>(null)
     const windowRef = useRef<HTMLDivElement>(null)
+
+    const handleMaximizeMouseEnter = () => {
+        popoverTimerRef.current = window.setTimeout(() => {
+            setSnapPopoverOpen(true)
+        }, 250)
+    }
+
+    const handleMaximizeMouseLeave = () => {
+        if (popoverTimerRef.current !== null) {
+            clearTimeout(popoverTimerRef.current)
+            popoverTimerRef.current = null
+        }
+    }
 
     useEffect(() => {
         if (!windowState) {
@@ -142,7 +158,7 @@ export default function Window({ id, title, children }: WindowProps) {
                 onPointerCancel={handlePointerUp}
                 onDoubleClick={() => toggleMaximize(id)}
             >
-                <div className="group/controls flex items-center gap-2 pl-0.5" data-drag-handle="false">
+                <div className="group/controls relative flex items-center gap-2 pl-0.5" data-drag-handle="false">
                     <button
                         onClick={(e) => { e.stopPropagation(); closeWindow(id) }}
                         className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#ff5f56] border border-[#e0443e] text-[#4d0000] transition-transform active:scale-90 hover:opacity-90 focus:outline-none"
@@ -160,8 +176,11 @@ export default function Window({ id, title, children }: WindowProps) {
                         <Minus className="h-2 w-2 stroke-[2.5] opacity-70 group-hover/controls:opacity-100 transition-opacity" />
                     </button>
                     <button
+                        onMouseEnter={handleMaximizeMouseEnter}
+                        onMouseLeave={handleMaximizeMouseLeave}
                         onClick={(e) => {
                             e.stopPropagation()
+                            setSnapPopoverOpen(false)
                             if (isMaximized) {
                                 restoreWindow()
                                 return
@@ -170,7 +189,7 @@ export default function Window({ id, title, children }: WindowProps) {
                             toggleMaximize(id)
                         }}
                         className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#28c840] border border-[#1aab29] text-[#004d11] transition-transform active:scale-90 hover:opacity-90 focus:outline-none"
-                        title={isMaximized ? 'Restore window' : 'Maximize window'}
+                        title={isMaximized ? 'Restore window' : 'Maximize window (hover for snap layouts)'}
                         aria-label={isMaximized ? 'Restore window' : 'Maximize window'}
                     >
                         {isMaximized ? (
@@ -179,6 +198,12 @@ export default function Window({ id, title, children }: WindowProps) {
                             <Maximize2 className="h-2 w-2 stroke-[2.5] opacity-70 group-hover/controls:opacity-100 transition-opacity" />
                         )}
                     </button>
+
+                    <SnapLayoutPopover
+                        windowId={id}
+                        isOpen={snapPopoverOpen}
+                        onClose={() => setSnapPopoverOpen(false)}
+                    />
                 </div>
 
                 <div className="pointer-events-none flex-1 truncate px-4 text-center text-sm font-semibold text-ink">
