@@ -1,6 +1,6 @@
 import type { BookmarkEntry, HistoryEntry } from '../../../types/browser'
 import type { BrowserSearchResponse, BrowserSearchResult } from '../../../services/searchClient'
-import { buildSimulationResultUrl } from './simulationUrls'
+import { buildSimulationResultUrl, isSimulationUrl } from './simulationUrls'
 
 export interface SimulatedSearchResult {
     id: string
@@ -128,11 +128,13 @@ export function generateSimulatedSearchResults(args: {
 
     const normalizedQuery = query.toLowerCase()
     const bookmarkMatches = args.bookmarks
+        .filter((bookmark) => !isSimulationUrl(bookmark.url))
         .filter((bookmark) => `${bookmark.title} ${bookmark.url}`.toLowerCase().includes(normalizedQuery))
         .slice(0, 2)
         .map(createBookmarkResult)
 
     const historyMatches = args.history
+        .filter((entry) => !isSimulationUrl(entry.url))
         .filter((entry) => `${entry.title} ${entry.url}`.toLowerCase().includes(normalizedQuery))
         .slice(0, 2)
         .map((entry, index) => createHistoryResult(entry, index))
@@ -172,11 +174,13 @@ export function mergeSearchResults(args: {
 
     const normalizedQuery = args.query.toLowerCase()
     const bookmarkMatches = args.bookmarks
+        .filter((bookmark) => !isSimulationUrl(bookmark.url))
         .filter((bookmark) => `${bookmark.title} ${bookmark.url}`.toLowerCase().includes(normalizedQuery))
         .slice(0, 2)
         .map(createBookmarkResult)
 
     const historyMatches = args.history
+        .filter((entry) => !isSimulationUrl(entry.url))
         .filter((entry) => `${entry.title} ${entry.url}`.toLowerCase().includes(normalizedQuery))
         .slice(0, 2)
         .map((entry, index) => createHistoryResult(entry, index))
