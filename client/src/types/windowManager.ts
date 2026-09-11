@@ -7,7 +7,7 @@ export interface WindowBounds {
     height: number
 }
 
-export type SnapMode = 'left-half' | 'right-half' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+export type SnapMode = 'left-half' | 'right-half' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'maximize'
 
 export interface WindowState {
     isMinimized: boolean

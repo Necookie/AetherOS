@@ -4,6 +4,8 @@ import { useWindowShortcuts } from '../../features/window-manager/useWindowShort
 import { useWindowStore } from '../../stores/windowStore'
 import { WindowRecoveryBoundaryInner } from '../system/WindowRecoveryBoundary'
 
+import { SnapPreviewOverlay } from '../../features/window-manager/components/SnapPreviewOverlay'
+
 const WindowRenderer = memo(function WindowRenderer({ id }: { id: string }) {
     const WindowComponent = useWindowStore(selectWindowComponentById(id))
     const windowData = useWindowStore(selectWindowById(id))
@@ -34,17 +36,7 @@ export default function DesktopWindows() {
             {windowOrder.map((windowId) => (
                 <WindowRenderer key={windowId} id={windowId} />
             ))}
-            {snapPreview && (
-                <div
-                    className="pointer-events-none absolute rounded-lg border-2 border-primary-focus bg-[rgba(0,102,204,0.1)]"
-                    style={{
-                        left: snapPreview.region.bounds.x,
-                        top: snapPreview.region.bounds.y,
-                        width: snapPreview.region.bounds.width,
-                        height: snapPreview.region.bounds.height,
-                    }}
-                />
-            )}
+            <SnapPreviewOverlay preview={snapPreview} />
         </div>
     )
 }

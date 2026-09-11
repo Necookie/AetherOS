@@ -291,7 +291,7 @@ export function applyWindowSnapState(
                     ...focusedWindow.state,
                     isFocused: true,
                     isMinimized: false,
-                    isMaximized: false,
+                    isMaximized: mode === 'maximize',
                     snapMode: mode,
                     previousBounds,
                 },

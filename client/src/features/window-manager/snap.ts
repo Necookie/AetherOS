@@ -87,6 +87,13 @@ export function getSnapRegion(
             width: workspace.width - halfWidth,
             height: workspace.height - halfHeight,
         }, context.minWindowWidth, context.minWindowHeight)
+    case 'maximize':
+        return buildRegion(mode, workspace, {
+            x: workspace.x,
+            y: workspace.y,
+            width: workspace.width,
+            height: workspace.height,
+        }, context.minWindowWidth, context.minWindowHeight)
     }
 }
 
@@ -111,6 +118,9 @@ export function resolveSnapModeFromPointer(
     }
     if (nearRight && nearBottom) {
         return 'bottom-right'
+    }
+    if (nearTop) {
+        return 'maximize'
     }
     if (nearLeft) {
         return 'left-half'
