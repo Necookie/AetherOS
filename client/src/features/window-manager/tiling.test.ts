@@ -122,6 +122,21 @@ describe('calculateTiledResize (Tiling manager co-resizing)', () => {
         expect(updates.winA.bounds.width + updates.winB.bounds.width).toBe(workspace.width)
     })
 
+    it('co-resizes when dragging West edge of right-half window to the right', () => {
+        const halfWidth = 600
+        const winA = createWindow('winA', { x: 0, y: 32, width: halfWidth, height: 700 }, 'left-half')
+        const winB = createWindow('winB', { x: halfWidth, y: 32, width: halfWidth, height: 700 }, 'right-half')
+
+        const windows = { winA, winB }
+
+        // User drags left edge of winB by +50px (moves seam to the right)
+        const updates = calculateTiledResize('winB', 'w', 50, 0, windows, workspace)
+
+        expect(updates.winA.bounds.width).toBe(650)
+        expect(updates.winB.bounds.x).toBe(650)
+        expect(updates.winB.bounds.width).toBe(550)
+    })
+
     it('enforces minWidth constraint on both sides during tiled co-resize', () => {
         const halfWidth = 600
         const winA = createWindow('winA', { x: 0, y: 32, width: halfWidth, height: 700 }, 'left-half')
@@ -151,5 +166,21 @@ describe('calculateTiledResize (Tiling manager co-resizing)', () => {
         expect(updates.winBottom.bounds.y).toBe(32 + 390)
         expect(updates.winBottom.bounds.height).toBe(700 - 390)
         expect(updates.winTop.bounds.height + updates.winBottom.bounds.height).toBe(workspace.height)
+    })
+
+    it('co-resizes top and bottom quadrant tiles when dragging North edge of bottom window', () => {
+        const halfWidth = 600
+        const halfHeight = 350
+        const winTop = createWindow('winTop', { x: 0, y: 32, width: halfWidth, height: halfHeight }, 'top-left')
+        const winBottom = createWindow('winBottom', { x: 0, y: 382, width: halfWidth, height: halfHeight }, 'bottom-left')
+
+        const windows = { winTop, winBottom }
+
+        // User drags top edge of winBottom down by 40px (+deltaY)
+        const updates = calculateTiledResize('winBottom', 'n', 0, 40, windows, workspace)
+
+        expect(updates.winTop.bounds.height).toBe(390)
+        expect(updates.winBottom.bounds.y).toBe(32 + 390)
+        expect(updates.winBottom.bounds.height).toBe(700 - 390)
     })
 })
