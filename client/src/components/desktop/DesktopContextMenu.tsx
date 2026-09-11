@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import {
+    Columns,
     FilePlus,
     Folder,
     FolderPlus,
@@ -15,6 +16,7 @@ import { toggleFullscreen, useFullscreen } from '../../services/fullscreenServic
 import { fsService } from '../../vfs/vfsService'
 import { VfsNodeType } from '../../vfs/types'
 import { useFsStore } from '../../stores/fsStore'
+import { useWindowStore } from '../../stores/windowStore'
 import { notificationService } from '../../features/notifications'
 
 export interface DesktopContextMenuProps {
@@ -144,6 +146,29 @@ export default function DesktopContextMenu({
         })
     }
 
+    const handleTileSideBySide = () => {
+        onClose()
+        const state = useWindowStore.getState()
+        const visibleIds = state.windowOrder.filter(
+            (id) => state.windows[id] && !state.windows[id].state.isMinimized
+        )
+        if (visibleIds.length === 0) return
+
+        if (visibleIds.length === 1) {
+            state.snapWindow(visibleIds[0], 'left-half')
+        } else {
+            state.snapWindow(visibleIds[0], 'left-half')
+            state.snapWindow(visibleIds[1], 'right-half')
+        }
+
+        notificationService.publish({
+            title: 'Windows Tiled',
+            message: 'Arranged visible windows side-by-side.',
+            source: 'System',
+            priority: 'low',
+        })
+    }
+
     return (
         <div
             ref={menuRef}
@@ -234,6 +259,14 @@ export default function DesktopContextMenu({
                 >
                     <RotateCw className="h-4 w-4 opacity-75" />
                     <span className="flex-1">Refresh Desktop</span>
+                </button>
+                <button
+                    role="menuitem"
+                    onClick={handleTileSideBySide}
+                    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition-colors hover:bg-tile-2 hover:text-ink focus:outline-none"
+                >
+                    <Columns className="h-4 w-4 text-primary" />
+                    <span className="flex-1">Tile Windows Side by Side</span>
                 </button>
                 <button
                     role="menuitem"
