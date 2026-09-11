@@ -18,6 +18,13 @@ function parseCssPixelValue(value: string, fallback: number) {
 }
 
 function readShellCssMetrics() {
+    if (typeof document === 'undefined' || typeof window === 'undefined' || !window.getComputedStyle) {
+        return {
+            shellTopbarHeight: DEFAULT_TOPBAR_HEIGHT,
+            shellDockHeight: DEFAULT_DOCK_HEIGHT,
+            shellEdgeGap: DEFAULT_EDGE_GAP,
+        }
+    }
     const root = document.documentElement
     const styles = window.getComputedStyle(root)
 
@@ -28,7 +35,7 @@ function readShellCssMetrics() {
     }
 }
 
-export function getSnapContext(viewport = { width: window.innerWidth, height: window.innerHeight }): SnapContext {
+export function getSnapContext(viewport = { width: typeof window !== 'undefined' ? window.innerWidth : 1280, height: typeof window !== 'undefined' ? window.innerHeight : 800 }): SnapContext {
     const desktopSettings = useSettingsStore.getState().desktop
     const shellMetrics = readShellCssMetrics()
 

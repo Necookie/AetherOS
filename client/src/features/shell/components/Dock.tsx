@@ -4,6 +4,7 @@ import AetherLauncherMark from '../../../components/brand/AetherLauncherMark'
 import { SHELL_APPS } from '../model/appCatalog'
 import { ShellAppIcon } from '../model/appIcons'
 import { useWindowStore } from '../../../stores/windowStore'
+import { useAppRegistryStore } from '../../../stores/appRegistryStore'
 
 interface DockProps {
     taskbarPosition: 'bottom' | 'top'
@@ -13,10 +14,15 @@ interface DockProps {
 
 export default function Dock({ taskbarPosition, onLaunchOrToggle, onToggleLauncher }: DockProps) {
     const windows = useWindowStore((state) => state.windows)
+    const installed = useAppRegistryStore((state) => state.installed)
     const [previewAppId, setPreviewAppId] = useState<string | null>(null)
     const previewWindow = useMemo(() => (
         previewAppId ? windows[previewAppId] : undefined
     ), [previewAppId, windows])
+
+    const visibleApps = useMemo(() => {
+        return SHELL_APPS.filter((app) => Boolean(installed[app.id]) || Boolean(windows[app.id]))
+    }, [installed, windows])
 
     return (
         <nav
@@ -35,9 +41,9 @@ export default function Dock({ taskbarPosition, onLaunchOrToggle, onToggleLaunch
 
             <div
                 className="grid flex-1 gap-1"
-                style={{ gridTemplateColumns: `repeat(${SHELL_APPS.length}, minmax(0, 1fr))` }}
+                style={{ gridTemplateColumns: `repeat(${visibleApps.length}, minmax(0, 1fr))` }}
             >
-                {SHELL_APPS.map((app) => {
+                {visibleApps.map((app) => {
                     const isOpen = Boolean(windows[app.id])
                     const isFocused = windows[app.id]?.state.isFocused
                     const isMinimized = windows[app.id]?.state.isMinimized

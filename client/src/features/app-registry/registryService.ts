@@ -1,4 +1,4 @@
-import { APP_REGISTRY_CATALOG, PREINSTALLED_APP_IDS } from './catalog'
+import { APP_REGISTRY_CATALOG, PREINSTALLED_APP_IDS, SYSTEM_APP_IDS } from './catalog'
 import { validateDependencies, validateRemoval } from './dependencyValidator'
 import { createAppLifecycleService } from './lifecycle'
 import type { AppRelease, InstalledApp, RegistryAppMetadata } from './types'
@@ -28,11 +28,13 @@ function createInitialInstalledMap(catalog: RegistryAppMetadata[]): Record<strin
             return acc
         }
 
+        const isSystem = (SYSTEM_APP_IDS as readonly string[]).includes(app.id)
+
         acc[app.id] = {
             id: app.id,
             version: pickInitialVersion(app),
             installedAt: new Date(0).toISOString(),
-            source: 'system',
+            source: isSystem ? 'system' : 'store',
         }
 
         return acc

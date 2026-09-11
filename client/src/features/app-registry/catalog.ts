@@ -238,4 +238,6 @@ export const APP_REGISTRY_CATALOG: RegistryAppMetadata[] = [
     },
 ]
 
-export const PREINSTALLED_APP_IDS = ['appstore', 'browser', 'explorer', 'notes', 'docs', 'boards', 'os-lab', 'term', 'taskmgr', 'settings'] as const
+export const SYSTEM_APP_IDS = ['appstore', 'browser', 'explorer', 'term', 'taskmgr', 'settings'] as const
+
+export const PREINSTALLED_APP_IDS = ['appstore', 'browser', 'explorer', 'notes', 'docs', 'boards', 'term', 'taskmgr', 'settings'] as const
