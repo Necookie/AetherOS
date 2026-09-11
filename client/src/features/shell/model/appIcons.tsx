@@ -103,43 +103,47 @@ export const APP_ICON_STYLES: Record<string, AppIconStyle> = {
     },
 }
 
-const TILE_SIZES = {
-    sm: { container: 'h-8 w-8 rounded-md', iconSize: 16 },
-    md: { container: 'h-10 w-10 rounded-lg', iconSize: 20 },
-    lg: { container: 'h-12 w-12 rounded-xl', iconSize: 24 },
-    xl: { container: 'h-14 w-14 rounded-2xl', iconSize: 28 },
-} as const
+import { APP_ICON_COMPONENTS, GenericAppIcon } from '../components/icons/AppIcons'
+
+export type ShellAppIconSize = 'xs' | 'sm' | 'md' | 'dock' | 'lg' | 'xl'
+
+const SIZES: Record<ShellAppIconSize, string> = {
+    xs: 'h-5 w-5',
+    sm: 'h-6 w-6',
+    md: 'h-8 w-8',
+    dock: 'h-9 w-9',
+    lg: 'h-12 w-12',
+    xl: 'h-16 w-16',
+}
 
 export function ShellAppIcon({
     appId,
     className,
-    variant = 'glyph',
+    variant = 'tile',
     size = 'md',
 }: {
     appId: string
     className?: string
     variant?: 'glyph' | 'tile'
-    size?: 'sm' | 'md' | 'lg' | 'xl'
+    size?: ShellAppIconSize
 }) {
-    const style = APP_ICON_STYLES[appId] ?? {
-        icon: Settings,
-        bg: 'bg-[#636366]',
-        text: 'text-white',
-        border: 'border-[#48484a]',
-    }
-    const Icon = style.icon
-
-    if (variant === 'tile') {
-        const sizing = TILE_SIZES[size]
-        return (
-            <div
-                className={`relative flex shrink-0 items-center justify-center border shadow-xs select-none ${sizing.container} ${style.bg} ${style.text} ${style.border ?? 'border-black/10'} ${className ?? ''}`}
-                aria-hidden
-            >
-                <Icon size={sizing.iconSize} strokeWidth={2} />
-            </div>
-        )
+    if (variant === 'glyph') {
+        const style = APP_ICON_STYLES[appId] ?? {
+            icon: Settings,
+            bg: 'bg-[#636366]',
+            text: 'text-white',
+            border: 'border-[#48484a]',
+        }
+        const Icon = style.icon
+        return <Icon className={className} strokeWidth={1.75} aria-hidden />
     }
 
-    return <Icon className={className} strokeWidth={1.75} aria-hidden />
+    const AppIconComponent = APP_ICON_COMPONENTS[appId] ?? GenericAppIcon
+    const sizeClass = SIZES[size] ?? SIZES.md
+
+    return (
+        <div className={`relative shrink-0 select-none flex items-center justify-center ${sizeClass} ${className ?? ''}`} aria-hidden>
+            <AppIconComponent className="w-full h-full" />
+        </div>
+    )
 }

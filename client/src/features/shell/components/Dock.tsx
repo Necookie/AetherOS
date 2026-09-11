@@ -57,42 +57,41 @@ export default function Dock({ taskbarPosition, onLaunchOrToggle, onToggleLaunch
                         >
                             <button
                                 onClick={() => onLaunchOrToggle(app.id)}
-                                className={`group relative flex h-10 w-12 flex-col items-center justify-center rounded-md text-ink transition-all active:scale-95 ${
-                                    isFocused
-                                        ? 'bg-surface shadow-xs'
-                                        : isMinimized
-                                            ? 'hover:bg-surface/80'
-                                            : 'hover:bg-surface'
+                                className={`group relative flex h-11 w-11 flex-col items-center justify-center rounded-xl text-ink transition-all active:scale-95 hover:bg-black/5 ${
+                                    isFocused ? 'bg-black/5' : ''
                                 }`}
                                 aria-label={isMinimized ? `${app.title} (Minimized)` : `Open ${app.title}`}
                                 title={isMinimized ? `${app.title} (Minimized — Click to restore)` : app.title}
                             >
-                                <div className={`transition-all duration-150 ${isMinimized ? 'opacity-70 scale-95' : 'opacity-100'}`}>
-                                    <ShellAppIcon appId={app.id} className="h-6 w-6" />
+                                <div className={`transition-all duration-200 ${isMinimized ? 'opacity-60 scale-90' : 'group-hover:-translate-y-1 group-hover:scale-105'}`}>
+                                    <ShellAppIcon appId={app.id} size="dock" />
                                 </div>
                                 {isOpen && (
                                     <span
                                         className={`absolute bottom-0.5 h-[3px] rounded-full transition-all duration-200 ${
                                             isFocused
-                                                ? 'w-5 bg-primary shadow-[0_1px_4px_rgba(0,102,204,0.4)]'
+                                                ? 'w-4 bg-primary shadow-[0_1px_4px_rgba(0,102,204,0.5)]'
                                                 : isMinimized
-                                                    ? 'w-3.5 bg-ink-muted-48/80'
-                                                    : 'w-3.5 bg-ink-muted-48/60'
+                                                    ? 'w-2 bg-amber-500/80'
+                                                    : 'w-2 bg-ink-muted-48/60'
                                         }`}
                                     />
                                 )}
                             </button>
 
                             {isPreviewing && previewWindow && (
-                                <div className="pointer-events-none absolute bottom-12 left-1/2 z-[var(--ds-z-flyout)] w-56 -translate-x-1/2 rounded-lg border border-hairline bg-canvas p-2 text-left shadow-lg">
-                                    <div className="mb-1 flex items-center justify-between text-[12px] font-semibold text-ink-muted-48">
-                                        <span>{previewWindow.title}</span>
+                                <div className="pointer-events-none absolute bottom-14 left-1/2 z-[var(--ds-z-flyout)] w-60 -translate-x-1/2 rounded-lg border border-hairline bg-canvas p-2.5 text-left shadow-lg">
+                                    <div className="mb-2 flex items-center justify-between text-[12px] font-semibold text-ink-muted-48">
+                                        <div className="flex items-center gap-1.5 min-w-0">
+                                            <ShellAppIcon appId={app.id} size="xs" />
+                                            <span className="truncate font-semibold text-ink">{previewWindow.title}</span>
+                                        </div>
                                         {previewWindow.state.isMinimized ? (
-                                            <span className="flex items-center gap-1 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
+                                            <span className="flex shrink-0 items-center gap-1 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
                                                 <Minimize2 className="h-2.5 w-2.5" /> Minimized
                                             </span>
                                         ) : previewWindow.state.isMaximized ? (
-                                            <Maximize2 className="h-3 w-3" />
+                                            <Maximize2 className="h-3 w-3 shrink-0 text-ink-muted" />
                                         ) : null}
                                     </div>
                                     <div className="rounded-md border border-hairline bg-parchment p-2">
