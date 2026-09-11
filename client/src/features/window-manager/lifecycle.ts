@@ -1,9 +1,9 @@
 import type { AppDefinition, SnapMode, WindowBounds, WindowData } from '../../types/windowManager'
 import { bringWindowToFront, clearFocusedWindow, focusWindow } from './focus'
-import { DEFAULT_WINDOW_BOUNDS, clampBoundsToViewport, getCenteredBounds, mergeWindowBounds } from './geometry'
+import { DEFAULT_WINDOW_BOUNDS, clampBoundsToViewport, getCenteredBounds, getCenteredBoundsInWorkspace, mergeWindowBounds } from './geometry'
 import { getVisibleWindowIds } from './navigation'
 import { getSnapRegion } from './snap'
-import type { SnapContext, Viewport, WindowSnapshot } from './types'
+import type { SnapContext, Viewport, WindowSnapshot, WorkspaceRect } from './types'
 import { getMaximizedBounds, getWorkspaceRect } from './workspace'
 
 export function createWindowSnapshot(): WindowSnapshot {
@@ -14,7 +14,12 @@ export function createWindowSnapshot(): WindowSnapshot {
     }
 }
 
-export function openWindowState(state: WindowSnapshot, app: AppDefinition, viewport: Viewport): WindowSnapshot {
+export function openWindowState(
+    state: WindowSnapshot,
+    app: AppDefinition,
+    viewport: Viewport,
+    workspace?: WorkspaceRect,
+): WindowSnapshot {
     if (state.windows[app.id]) {
         const focused = focusWindow(state.windows, state.focusedWindowId, app.id)
         return {
@@ -25,11 +30,16 @@ export function openWindowState(state: WindowSnapshot, app: AppDefinition, viewp
     }
 
     const defaultBounds = app.defaultBounds || DEFAULT_WINDOW_BOUNDS
+    // Center within the usable workspace (below the topbar, above the dock) when
+    // available, so tall default windows never spawn clipped under shell chrome.
+    const centeredBounds = workspace
+        ? getCenteredBoundsInWorkspace(defaultBounds, workspace)
+        : getCenteredBounds(defaultBounds, viewport)
     const newWindow: WindowData = {
         id: app.id,
         title: app.title,
         component: app.component,
-        bounds: getCenteredBounds(defaultBounds, viewport),
+        bounds: centeredBounds,
         state: {
             isEntering: true,
             isMinimized: false,

@@ -44,6 +44,22 @@ export function getCenteredBounds(bounds: WindowBounds, viewport: Viewport): Win
     )
 }
 
+/**
+ * Same as getCenteredBounds, but centers within the usable workspace area
+ * (i.e. excluding the topbar/dock insets) instead of the raw viewport, so
+ * newly opened windows never spawn underneath shell chrome.
+ */
+export function getCenteredBoundsInWorkspace(bounds: WindowBounds, workspace: WorkspaceRect): WindowBounds {
+    return clampBoundsToWorkspace(
+        {
+            ...bounds,
+            x: workspace.x + Math.max(0, Math.floor((workspace.width - bounds.width) / 2)),
+            y: workspace.y + Math.max(0, Math.floor((workspace.height - bounds.height) / 2)),
+        },
+        workspace,
+    )
+}
+
 export function mergeWindowBounds(bounds: WindowBounds, update: Partial<WindowBounds>) {
     return {
         ...bounds,
