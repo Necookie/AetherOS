@@ -103,7 +103,9 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
         }
 
         const wasOpen = Boolean(state.windows[app.id])
-        const nextState = openWindowState(state, app, getViewport())
+        const viewport = getViewport()
+        const workspace = getWorkspaceRect(getSnapContext(viewport))
+        const nextState = openWindowState(state, app, viewport, workspace)
 
         if (!wasOpen) {
             useKernelStore.getState().spawnAppProcess(app.id, app.title)

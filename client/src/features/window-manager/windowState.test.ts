@@ -10,6 +10,7 @@ import {
     toggleMinimizeState,
     updateWindowBoundsState,
 } from './windowState'
+import { getWorkspaceRect } from './workspace'
 import type { SnapContext } from './types'
 
 const viewport = { width: 1280, height: 720 }
@@ -97,6 +98,29 @@ describe('window manager lifecycle', () => {
         })
         expect(restored.windows[browserApp.id].state.snapMode).toBeUndefined()
         expect(restored.windows[browserApp.id].bounds).toEqual(opened.windows[browserApp.id].bounds)
+    })
+})
+
+describe('window manager open placement', () => {
+    it('centers a tall default window within the workspace, not underneath the topbar/dock', () => {
+        // A short viewport (e.g. a laptop screen) where a tall default window would
+        // otherwise center to a y-offset smaller than the topbar height.
+        const shortViewport = { width: 1280, height: 768 }
+        const shortSnapContext: SnapContext = { ...snapContext, viewport: shortViewport }
+        const workspace = getWorkspaceRect(shortSnapContext)
+
+        const tallApp = {
+            id: 'docs',
+            title: 'Docs',
+            component: Dummy,
+            defaultBounds: { x: 210, y: 95, width: 1080, height: 710 },
+        }
+
+        const opened = openWindowState(createWindowSnapshot(), tallApp, shortViewport, workspace)
+        const bounds = opened.windows[tallApp.id].bounds
+
+        expect(bounds.y).toBeGreaterThanOrEqual(workspace.y)
+        expect(bounds.y + bounds.height).toBeLessThanOrEqual(workspace.y + workspace.height)
     })
 })
 
