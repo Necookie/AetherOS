@@ -1,4 +1,5 @@
 import { DARK_THEME, LIGHT_THEME, WALLPAPER_OPTIONS } from './defaults'
+import { getCachedCustomWallpaper } from './wallpaperStorage'
 import type { OsSettingsState, ThemePalette, ThemeTokens, WallpaperOption } from './types'
 
 interface Rgb {
@@ -118,6 +119,10 @@ function scaledRem(baseRem: number, scale: number) {
 }
 
 export function resolveWallpaper(optionId: string): WallpaperOption {
+    const custom = getCachedCustomWallpaper(optionId)
+    if (custom) {
+        return custom
+    }
     return WALLPAPER_OPTIONS.find((option) => option.id === optionId) ?? WALLPAPER_OPTIONS[0]
 }
 

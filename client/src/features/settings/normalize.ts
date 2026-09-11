@@ -104,7 +104,8 @@ export function normalizeSettingsState(value: unknown): OsSettingsState {
 
     const source = value as Partial<OsSettingsState>
     const normalizedWallpaperId = typeof source.appearance?.wallpaperId === 'string'
-        && WALLPAPER_OPTIONS.some((option) => option.id === source.appearance?.wallpaperId)
+        && (WALLPAPER_OPTIONS.some((option) => option.id === source.appearance?.wallpaperId)
+            || source.appearance?.wallpaperId.startsWith('custom-'))
         ? source.appearance.wallpaperId
         : DEFAULT_SETTINGS.appearance.wallpaperId
 

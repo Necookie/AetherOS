@@ -2,7 +2,12 @@ import { create } from 'zustand'
 import { DEFAULT_SETTINGS } from '../features/settings/defaults'
 import { normalizeSettingsState } from '../features/settings/normalize'
 import { settingsStorage } from '../features/settings/storage'
-import type { DensityMode, OsSettingsState, TaskbarPosition, ThemeMode, ThemePalette } from '../features/settings/types'
+import {
+    deleteCustomWallpaper,
+    loadCustomWallpapersFromStorage,
+    saveCustomWallpaper,
+} from '../features/settings/wallpaperStorage'
+import type { DensityMode, OsSettingsState, TaskbarPosition, ThemeMode, ThemePalette, WallpaperOption } from '../features/settings/types'
 import type { ShortcutRemapAction } from '../features/settings/types'
 import { validateShortcutOverrides } from '../features/shortcuts/shortcutConfig'
 import { useSessionStore } from './useSessionStore'
@@ -31,6 +36,10 @@ interface SettingsActions {
     setShortcutOverride: (actionId: ShortcutRemapAction, combo: string) => boolean
     clearShortcutOverride: (actionId: ShortcutRemapAction) => void
     resetSettings: () => void
+    customWallpapers: WallpaperOption[]
+    loadCustomWallpapers: () => Promise<void>
+    addCustomWallpaper: (file: File) => Promise<WallpaperOption>
+    removeCustomWallpaper: (id: string) => Promise<void>
 }
 
 export type SettingsStore = OsSettingsState & SettingsActions
@@ -369,7 +378,57 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
         persist(next)
         return next
     }),
+    customWallpapers: [],
+    loadCustomWallpapers: async () => {
+        const wallpapers = await loadCustomWallpapersFromStorage()
+        set({ customWallpapers: wallpapers })
+    },
+    addCustomWallpaper: async (file: File) => {
+        if (!canMutateSettings()) {
+            throw new Error('Permission denied to change settings')
+        }
+        const wallpaper = await saveCustomWallpaper(file)
+        set((state) => {
+            const next = {
+                ...state,
+                customWallpapers: [...state.customWallpapers, wallpaper],
+                appearance: {
+                    ...state.appearance,
+                    wallpaperId: wallpaper.id,
+                },
+            }
+            persist(next)
+            return next
+        })
+        return wallpaper
+    },
+    removeCustomWallpaper: async (id: string) => {
+        if (!canMutateSettings()) {
+            return
+        }
+        await deleteCustomWallpaper(id)
+        set((state) => {
+            const nextCustom = state.customWallpapers.filter((w) => w.id !== id)
+            const nextWallpaperId = state.appearance.wallpaperId === id
+                ? DEFAULT_SETTINGS.appearance.wallpaperId
+                : state.appearance.wallpaperId
+            const next = {
+                ...state,
+                customWallpapers: nextCustom,
+                appearance: {
+                    ...state.appearance,
+                    wallpaperId: nextWallpaperId,
+                },
+            }
+            persist(next)
+            return next
+        })
+    },
 }))
+
+if (typeof window !== 'undefined') {
+    void useSettingsStore.getState().loadCustomWallpapers()
+}
 
 export function selectSettingsState(state: SettingsStore): OsSettingsState {
     return {

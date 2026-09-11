@@ -53,4 +53,16 @@ describe('getWallpaperCss', () => {
         expect(value).toBe('linear-gradient(#f5f5f7, #f5f5f7)')
         expect(value).not.toContain('url(')
     })
+
+    it('resolves custom cached wallpapers properly', async () => {
+        const { registerCustomWallpaperInMemory } = await import('./wallpaperStorage')
+        registerCustomWallpaperInMemory({
+            id: 'custom-mywall',
+            label: 'My Upload',
+            kind: 'image',
+            value: 'data:image/png;base64,sample123',
+        })
+
+        expect(getWallpaperCss('custom-mywall')).toContain("url('data:image/png;base64,sample123')")
+    })
 })
