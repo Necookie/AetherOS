@@ -183,4 +183,36 @@ describe('calculateTiledResize (Tiling manager co-resizing)', () => {
         expect(updates.winBottom.bounds.y).toBe(32 + 390)
         expect(updates.winBottom.bounds.height).toBe(700 - 390)
     })
+
+    it('co-resizes both the column AND row seams when dragging a quadrant corner handle', () => {
+        // A full 4-way split, all four quadrants present.
+        const halfWidth = 600
+        const halfHeight = 350
+        const topLeft = createWindow('topLeft', { x: 0, y: 32, width: halfWidth, height: halfHeight }, 'top-left')
+        const topRight = createWindow('topRight', { x: halfWidth, y: 32, width: halfWidth, height: halfHeight }, 'top-right')
+        const bottomLeft = createWindow('bottomLeft', { x: 0, y: 382, width: halfWidth, height: halfHeight }, 'bottom-left')
+        const bottomRight = createWindow('bottomRight', { x: halfWidth, y: 382, width: halfWidth, height: halfHeight }, 'bottom-right')
+
+        const windows = { topLeft, topRight, bottomLeft, bottomRight }
+
+        // User drags the SE corner handle of topLeft by (+50, +40) — both the vertical
+        // seam (column widths) and horizontal seam (row heights) should move together.
+        const updates = calculateTiledResize('topLeft', 'se', 50, 40, windows, workspace)
+
+        // Vertical seam (width) moved for every window
+        expect(updates.topLeft.bounds.width).toBe(650)
+        expect(updates.topRight.bounds.x).toBe(650)
+        expect(updates.topRight.bounds.width).toBe(550)
+        expect(updates.bottomLeft.bounds.width).toBe(650)
+        expect(updates.bottomRight.bounds.x).toBe(650)
+        expect(updates.bottomRight.bounds.width).toBe(550)
+
+        // Horizontal seam (height) also moved for every window in the same gesture
+        expect(updates.topLeft.bounds.height).toBe(390)
+        expect(updates.topRight.bounds.height).toBe(390)
+        expect(updates.bottomLeft.bounds.y).toBe(32 + 390)
+        expect(updates.bottomLeft.bounds.height).toBe(700 - 390)
+        expect(updates.bottomRight.bounds.y).toBe(32 + 390)
+        expect(updates.bottomRight.bounds.height).toBe(700 - 390)
+    })
 })
