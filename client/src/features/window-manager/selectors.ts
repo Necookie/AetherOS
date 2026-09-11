@@ -5,7 +5,10 @@ export function selectWindowById(id: string) {
 }
 
 export function selectWindowZIndex(id: string) {
-    return (state: WindowStore) => state.getZIndex(id)
+    return (state: WindowStore) => {
+        const orderIndex = state.windowOrder.indexOf(id)
+        return orderIndex === -1 ? 10 : 10 + orderIndex
+    }
 }
 
 export function selectWindowOrder(state: WindowStore): string[] {
