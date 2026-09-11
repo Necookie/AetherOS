@@ -1,89 +1,196 @@
 import { DESKTOP_ICONS } from '../../config/desktop'
-import { Folder, Monitor, Settings, type LucideIcon } from 'lucide-react'
+import { FileText, Folder, Monitor, Settings, type LucideIcon } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { shallow } from 'zustand/shallow'
 import { DEFAULT_APPS } from '../../config/windows'
 import { useWindowStore } from '../../stores/windowStore'
-import { createSelectionRect, rectFromDomRect, rectIntersects, resolveClickSelection, resolveMarqueeSelection, type MarqueeSelectionMode, type SelectionRect } from '../../features/selection'
+import {
+    createSelectionRect,
+    rectFromDomRect,
+    rectIntersects,
+    resolveClickSelection,
+    resolveMarqueeSelection,
+    type MarqueeSelectionMode,
+    type SelectionRect,
+} from '../../features/selection'
+import { fsService } from '../../vfs/vfsService'
+import { VfsNodeType, type VfsNode } from '../../vfs/types'
+import { useFsStore } from '../../stores/fsStore'
 
-// Flat lucide glyphs (currentColor) — no gradient icon assets.
 const ICON_MAP: Record<string, LucideIcon> = {
     pc: Monitor,
     settings: Settings,
 }
 
-export default function DesktopIcons({ iconScale = 1 }: { iconScale?: number }) {
-    const { windows, openWindow, restoreWindow, focusWindow } = useWindowStore((state) => ({
-        windows: state.windows,
-        openWindow: state.openWindow,
-        restoreWindow: state.restoreWindow,
-        focusWindow: state.focusWindow,
-    }), shallow)
+const DESKTOP_PATH = '/home/user/Desktop'
+
+interface DesktopIconsProps {
+    iconScale?: number
+    refreshKey?: number
+}
+
+interface DesktopItem {
+    id: string
+    label: string
+    isVfs: boolean
+    node?: VfsNode
+    appId?: string
+}
+
+export default function DesktopIcons({ iconScale = 1, refreshKey = 0 }: DesktopIconsProps) {
+    const { windows, openWindow, restoreWindow, focusWindow } = useWindowStore(
+        (state) => ({
+            windows: state.windows,
+            openWindow: state.openWindow,
+            restoreWindow: state.restoreWindow,
+            focusWindow: state.focusWindow,
+        }),
+        shallow,
+    )
+    const fsStoreRefreshTrigger = useFsStore((state) => state.items)
     const containerRef = useRef<HTMLDivElement>(null)
     const dragRef = useRef<{
-        startX: number;
-        startY: number;
-        mode: MarqueeSelectionMode;
-        baseSelection: string[];
+        startX: number
+        startY: number
+        mode: MarqueeSelectionMode
+        baseSelection: string[]
     } | null>(null)
     const [selectionRect, setSelectionRect] = useState<SelectionRect | null>(null)
     const [selectedIconIds, setSelectedIconIds] = useState<string[]>([])
     const [selectionAnchorId, setSelectionAnchorId] = useState<string | null>(null)
+    const [desktopNodes, setDesktopNodes] = useState<VfsNode[]>([])
 
     const appLookup = useMemo(() => new Map(DEFAULT_APPS.map((app) => [app.id, app])), [])
 
-    const launchFromIcon = useCallback((iconId: string) => {
-        const icon = DESKTOP_ICONS.find((entry) => entry.id === iconId)
-        const appId = icon?.appId
-        if (!appId) {
-            return
+    // Load nodes from /home/user/Desktop
+    useEffect(() => {
+        try {
+            const nodes = fsService.readDir(DESKTOP_PATH)
+            setDesktopNodes(nodes)
+        } catch {
+            setDesktopNodes([])
         }
+    }, [refreshKey, fsStoreRefreshTrigger])
 
-        const app = appLookup.get(appId)
-        if (!app) {
-            return
-        }
+    const allItems = useMemo<DesktopItem[]>(() => {
+        const staticItems: DesktopItem[] = DESKTOP_ICONS.map((icon) => ({
+            id: icon.id,
+            label: icon.label,
+            isVfs: false,
+            appId: icon.appId,
+        }))
 
-        const windowData = windows[appId]
-        if (!windowData) {
-            openWindow(app)
-            return
-        }
+        const dynamicItems: DesktopItem[] = desktopNodes.map((node) => ({
+            id: `vfs-${node.id}`,
+            label: node.name,
+            isVfs: true,
+            node,
+        }))
 
-        if (windowData.state.isMinimized) {
-            restoreWindow(appId)
-            return
-        }
+        return [...staticItems, ...dynamicItems]
+    }, [desktopNodes])
 
-        focusWindow(appId)
-    }, [appLookup, focusWindow, openWindow, restoreWindow, windows])
+    const launchItem = useCallback(
+        (item: DesktopItem) => {
+            if (!item.isVfs) {
+                const appId = item.appId
+                if (!appId) return
+                const app = appLookup.get(appId)
+                if (!app) return
 
-    const selectIcon = useCallback((event: MouseEvent<HTMLButtonElement>, iconId: string) => {
-        event.stopPropagation()
-        const nextSelection = resolveClickSelection({
-            currentSelection: selectedIconIds,
-            orderedIds: DESKTOP_ICONS.map((desktopIcon) => desktopIcon.id),
-            clickedId: iconId,
-            anchorId: selectionAnchorId,
-            multi: event.ctrlKey || event.metaKey,
-            range: event.shiftKey,
-        })
-        setSelectedIconIds(nextSelection.selectedIds)
-        setSelectionAnchorId(nextSelection.anchorId)
-        return nextSelection.selectedIds
-    }, [selectedIconIds, selectionAnchorId])
+                const windowData = windows[appId]
+                if (!windowData) {
+                    openWindow(app)
+                    return
+                }
 
-    const handleIconKeyDown = useCallback((event: KeyboardEvent<HTMLButtonElement>, iconId: string) => {
-        if (event.key !== 'Enter' && event.key !== ' ') {
-            return
-        }
+                if (windowData.state.isMinimized) {
+                    restoreWindow(appId)
+                    return
+                }
 
-        event.preventDefault()
-        event.stopPropagation()
-        setSelectedIconIds([iconId])
-        setSelectionAnchorId(iconId)
-        launchFromIcon(iconId)
-    }, [launchFromIcon])
+                focusWindow(appId)
+                return
+            }
+
+            // Dynamic VFS Node
+            if (!item.node) return
+
+            if (item.node.type === VfsNodeType.DIR) {
+                // Open File Explorer to this folder
+                useFsStore.getState().navigate(`${DESKTOP_PATH}/${item.node.name}`)
+                const explorerApp = appLookup.get('explorer')
+                if (explorerApp) {
+                    const windowData = windows.explorer
+                    if (!windowData) {
+                        openWindow(explorerApp)
+                    } else if (windowData.state.isMinimized) {
+                        restoreWindow('explorer')
+                    } else {
+                        focusWindow('explorer')
+                    }
+                }
+            } else {
+                // Open text files in Notes
+                const notesApp = appLookup.get('notes')
+                if (notesApp) {
+                    const windowData = windows.notes
+                    if (!windowData) {
+                        openWindow(notesApp)
+                    } else if (windowData.state.isMinimized) {
+                        restoreWindow('notes')
+                    } else {
+                        focusWindow('notes')
+                    }
+                }
+            }
+        },
+        [appLookup, focusWindow, openWindow, restoreWindow, windows],
+    )
+
+    const selectIcon = useCallback(
+        (event: MouseEvent<HTMLButtonElement>, itemId: string) => {
+            event.stopPropagation()
+            const nextSelection = resolveClickSelection({
+                currentSelection: selectedIconIds,
+                orderedIds: allItems.map((item) => item.id),
+                clickedId: itemId,
+                anchorId: selectionAnchorId,
+                multi: event.ctrlKey || event.metaKey,
+                range: event.shiftKey,
+            })
+            setSelectedIconIds(nextSelection.selectedIds)
+            setSelectionAnchorId(nextSelection.anchorId)
+            return nextSelection.selectedIds
+        },
+        [allItems, selectedIconIds, selectionAnchorId],
+    )
+
+    const handleIconKeyDown = useCallback(
+        (event: KeyboardEvent<HTMLButtonElement>, item: DesktopItem) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                event.stopPropagation()
+                setSelectedIconIds([item.id])
+                setSelectionAnchorId(item.id)
+                launchItem(item)
+                return
+            }
+
+            // Handle Delete / Backspace for VFS desktop items
+            if ((event.key === 'Delete' || event.key === 'Backspace') && item.isVfs && item.node) {
+                event.preventDefault()
+                try {
+                    fsService.delete(`${DESKTOP_PATH}/${item.node.name}`)
+                    useFsStore.getState().refresh()
+                    setSelectedIconIds([])
+                } catch (err) {
+                    console.warn('Failed to delete desktop item:', err)
+                }
+            }
+        },
+        [launchItem],
+    )
 
     const updateMarqueeSelection = useCallback((nextRect: SelectionRect) => {
         const container = containerRef.current
@@ -104,23 +211,28 @@ export default function DesktopIcons({ iconScale = 1 }: { iconScale?: number }) 
             }
         })
 
-        setSelectedIconIds(resolveMarqueeSelection({
-            currentSelection: dragState.baseSelection,
-            hitIds,
-            mode: dragState.mode,
-        }))
+        setSelectedIconIds(
+            resolveMarqueeSelection({
+                currentSelection: dragState.baseSelection,
+                hitIds,
+                mode: dragState.mode,
+            }),
+        )
     }, [])
 
-    const handleMouseMove = useCallback((event: globalThis.MouseEvent) => {
-        const dragState = dragRef.current
-        if (!dragState) {
-            return
-        }
+    const handleMouseMove = useCallback(
+        (event: globalThis.MouseEvent) => {
+            const dragState = dragRef.current
+            if (!dragState) {
+                return
+            }
 
-        const nextRect = createSelectionRect(dragState.startX, dragState.startY, event.clientX, event.clientY)
-        setSelectionRect(nextRect)
-        updateMarqueeSelection(nextRect)
-    }, [updateMarqueeSelection])
+            const nextRect = createSelectionRect(dragState.startX, dragState.startY, event.clientX, event.clientY)
+            setSelectionRect(nextRect)
+            updateMarqueeSelection(nextRect)
+        },
+        [updateMarqueeSelection],
+    )
 
     const endDrag = useCallback(() => {
         dragRef.current = null
@@ -150,9 +262,14 @@ export default function DesktopIcons({ iconScale = 1 }: { iconScale?: number }) 
             return
         }
 
-        const mode: MarqueeSelectionMode = event.ctrlKey || event.metaKey
-            ? (event.shiftKey ? 'toggle' : 'subtract')
-            : (event.shiftKey ? 'add' : 'replace')
+        const mode: MarqueeSelectionMode =
+            event.ctrlKey || event.metaKey
+                ? event.shiftKey
+                    ? 'toggle'
+                    : 'subtract'
+                : event.shiftKey
+                  ? 'add'
+                  : 'replace'
 
         dragRef.current = {
             startX: event.clientX,
@@ -188,33 +305,45 @@ export default function DesktopIcons({ iconScale = 1 }: { iconScale?: number }) 
             className="absolute left-3 top-2 z-20 grid grid-cols-1 gap-2 sm:left-5 sm:top-5 sm:gap-3"
             style={{ transform: `scale(${iconScale})`, transformOrigin: 'top left' }}
         >
-            {DESKTOP_ICONS.map(icon => (
+            {allItems.map((item) => (
                 <button
-                    key={icon.id}
-                    data-selectable-id={icon.id}
+                    key={item.id}
+                    data-selectable-id={item.id}
                     onClick={(event) => {
-                        selectIcon(event, icon.id)
+                        selectIcon(event, item.id)
                     }}
                     onDoubleClick={(event) => {
                         event.stopPropagation()
-                        setSelectedIconIds([icon.id])
-                        setSelectionAnchorId(icon.id)
-                        launchFromIcon(icon.id)
+                        setSelectedIconIds([item.id])
+                        setSelectionAnchorId(item.id)
+                        launchItem(item)
                     }}
-                    onKeyDown={(event) => handleIconKeyDown(event, icon.id)}
-                    className={`group flex w-20 flex-col items-center rounded-lg p-2 transition-colors sm:w-24 ${selectedIconIds.includes(icon.id) ? 'bg-[rgba(0,102,204,0.12)] outline outline-1 outline-primary-focus' : 'hover:bg-surface'}`}
-                    aria-label={`Open ${icon.label}`}
+                    onKeyDown={(event) => handleIconKeyDown(event, item)}
+                    className={`group flex w-20 flex-col items-center rounded-lg p-2 transition-colors sm:w-24 ${
+                        selectedIconIds.includes(item.id)
+                            ? 'bg-[rgba(0,102,204,0.12)] outline outline-1 outline-primary-focus'
+                            : 'hover:bg-surface'
+                    }`}
+                    aria-label={`Open ${item.label}`}
                 >
                     {(() => {
-                        const Icon = ICON_MAP[icon.id] ?? Folder
+                        let Icon: LucideIcon = Folder
+                        if (!item.isVfs) {
+                            Icon = ICON_MAP[item.id] ?? Folder
+                        } else if (item.node?.type === VfsNodeType.FILE) {
+                            Icon = FileText
+                        } else {
+                            Icon = Folder
+                        }
+
                         return (
-                            <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-hairline bg-surface text-ink">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-hairline bg-surface text-ink shadow-sm">
                                 <Icon className="h-6 w-6" strokeWidth={1.75} />
                             </div>
                         )
                     })()}
-                    <span className="mt-1.5 text-center text-[12px] text-ink sm:text-[12px]">
-                        {icon.label}
+                    <span className="mt-1.5 line-clamp-2 max-w-full text-center text-[12px] leading-tight text-ink sm:text-[12px]">
+                        {item.label}
                     </span>
                 </button>
             ))}
