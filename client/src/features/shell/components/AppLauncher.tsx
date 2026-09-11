@@ -109,13 +109,21 @@ export default function AppLauncher({
 
     const renderResultIcon = (item: CommandPaletteMatch) => {
         if (item.iconAppId) {
-            return <ShellAppIcon appId={item.iconAppId ?? item.id} className="h-6 w-6" />
+            return <ShellAppIcon appId={item.iconAppId ?? item.id} size="dock" />
         }
 
         if (item.action.kind === 'lock-session') {
-            return <Lock className="h-5 w-5 text-ink-muted-48" />
+            return (
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-parchment text-ink-muted-48">
+                    <Lock className="h-4 w-4" />
+                </div>
+            )
         }
-        return <Search className="h-5 w-5 text-ink-muted-48" />
+        return (
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-parchment text-ink-muted-48">
+                <Search className="h-4 w-4" />
+            </div>
+        )
     }
 
     return (
@@ -182,7 +190,7 @@ export default function AppLauncher({
                                     : 'border-hairline bg-canvas hover:bg-parchment'
                             }`}
                         >
-                            <div className="flex h-11 w-11 items-center justify-center rounded-md bg-parchment text-ink">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center">
                                 {renderResultIcon(item)}
                             </div>
                             <div className="min-w-0 flex-1">
