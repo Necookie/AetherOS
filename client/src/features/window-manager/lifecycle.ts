@@ -4,7 +4,7 @@ import { DEFAULT_WINDOW_BOUNDS, clampBoundsToViewport, getCenteredBounds, mergeW
 import { getVisibleWindowIds } from './navigation'
 import { getSnapRegion } from './snap'
 import type { SnapContext, Viewport, WindowSnapshot } from './types'
-import { getWorkspaceRect } from './workspace'
+import { getMaximizedBounds, getWorkspaceRect } from './workspace'
 
 export function createWindowSnapshot(): WindowSnapshot {
     return {
@@ -116,7 +116,12 @@ export function toggleMinimizeState(state: WindowSnapshot, id: string): WindowSn
     }
 }
 
-export function toggleMaximizeState(state: WindowSnapshot, id: string, viewport: Viewport): WindowSnapshot {
+export function toggleMaximizeState(
+    state: WindowSnapshot,
+    id: string,
+    viewport: Viewport,
+    context?: SnapContext,
+): WindowSnapshot {
     const targetWindow = state.windows[id]
     if (!targetWindow) {
         return state
@@ -124,8 +129,16 @@ export function toggleMaximizeState(state: WindowSnapshot, id: string, viewport:
 
     const isMaximizing = !targetWindow.state.isMaximized
     const restoredBounds = targetWindow.state.previousBounds || targetWindow.bounds
+    const maximizedBounds = context
+        ? getMaximizedBounds(context)
+        : {
+            x: 0,
+            y: 32,
+            width: viewport.width,
+            height: Math.max(220, viewport.height - 32 - 80),
+        }
     const nextBounds = isMaximizing
-        ? { x: 0, y: 0, width: viewport.width, height: viewport.height }
+        ? maximizedBounds
         : clampBoundsToViewport(restoredBounds, viewport)
 
     const focusedState = focusWindowState(state, id)
@@ -218,6 +231,7 @@ export function restoreWindowState(
                     state: {
                         ...focusedWindow.state,
                         isMaximized: false,
+                        snapMode: undefined,
                         isFocused: true,
                     },
                 },

@@ -56,7 +56,12 @@ describe('window manager lifecycle', () => {
         const restored = restoreWindowState(maximized, browserApp.id, viewport)
 
         expect(maximized.windows[browserApp.id].state.isMaximized).toBe(true)
-        expect(maximized.windows[browserApp.id].bounds).toEqual({ x: 0, y: 0, width: viewport.width, height: viewport.height })
+        expect(maximized.windows[browserApp.id].bounds).toEqual({
+            x: 0,
+            y: 32,
+            width: viewport.width,
+            height: viewport.height - 32 - 80,
+        })
         expect(restored.windows[browserApp.id].state.isMaximized).toBe(false)
         expect(restored.windows[browserApp.id].bounds).toEqual(opened.windows[browserApp.id].bounds)
     })

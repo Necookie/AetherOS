@@ -15,6 +15,9 @@ import {
 } from '../features/window-manager/windowState'
 import { getSnapContext } from '../features/window-manager/shellMetrics'
 import { getNextWindowInCycle } from '../features/window-manager/navigation'
+import { getMaximizedBounds, getWorkspaceRect } from '../features/window-manager/workspace'
+import { getSnapRegion } from '../features/window-manager/snap'
+import { clampBoundsToViewport } from '../features/window-manager/geometry'
 import type { AppDefinition, SnapMode, WindowBounds, WindowData } from '../types/windowManager'
 import type { SnapPreview } from '../features/window-manager/types'
 import { useKernelStore } from './useKernelStore'
@@ -48,6 +51,7 @@ export interface WindowStore {
     cycleFocus: (step: 1 | -1) => void
     getZIndex: (id: string) => number
     resetWindows: () => void
+    syncViewport: () => void
 }
 
 const initialState = createWindowSnapshot()
@@ -178,7 +182,7 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
             })
         })()
     },
-    toggleMaximize: (id) => set((state) => toggleMaximizeState(state, id, getViewport())),
+    toggleMaximize: (id) => set((state) => toggleMaximizeState(state, id, getViewport(), getSnapContext(getViewport()))),
     snapWindow: (id, mode) => set((state) => {
         const nextState = applyWindowSnapState(state, id, mode, getSnapContext(getViewport()))
         return {
@@ -246,6 +250,68 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
             focusedWindowId: null,
             snapPreview: null,
             lastGuardError: null,
+        }
+    }),
+    syncViewport: () => set((state) => {
+        const viewport = getViewport()
+        const context = getSnapContext(viewport)
+        const workspace = getWorkspaceRect(context)
+        let hasChanges = false
+        const updatedWindows = { ...state.windows }
+
+        for (const [id, win] of Object.entries(state.windows)) {
+            if (win.state.isMaximized) {
+                const maxBounds = getMaximizedBounds(context)
+                if (
+                    win.bounds.x !== maxBounds.x ||
+                    win.bounds.y !== maxBounds.y ||
+                    win.bounds.width !== maxBounds.width ||
+                    win.bounds.height !== maxBounds.height
+                ) {
+                    updatedWindows[id] = {
+                        ...win,
+                        bounds: maxBounds,
+                    }
+                    hasChanges = true
+                }
+            } else if (win.state.snapMode) {
+                const snapRegion = getSnapRegion(win.state.snapMode, workspace, context)
+                if (
+                    win.bounds.x !== snapRegion.bounds.x ||
+                    win.bounds.y !== snapRegion.bounds.y ||
+                    win.bounds.width !== snapRegion.bounds.width ||
+                    win.bounds.height !== snapRegion.bounds.height
+                ) {
+                    updatedWindows[id] = {
+                        ...win,
+                        bounds: snapRegion.bounds,
+                    }
+                    hasChanges = true
+                }
+            } else {
+                const clamped = clampBoundsToViewport(win.bounds, viewport)
+                if (
+                    win.bounds.x !== clamped.x ||
+                    win.bounds.y !== clamped.y ||
+                    win.bounds.width !== clamped.width ||
+                    win.bounds.height !== clamped.height
+                ) {
+                    updatedWindows[id] = {
+                        ...win,
+                        bounds: clamped,
+                    }
+                    hasChanges = true
+                }
+            }
+        }
+
+        if (!hasChanges) {
+            return state
+        }
+
+        return {
+            ...state,
+            windows: updatedWindows,
         }
     }),
 }))
