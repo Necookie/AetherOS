@@ -142,6 +142,33 @@ export function useWindowShortcuts() {
                 event.preventDefault()
                 return
             }
+
+            // Keyboard Tiling shortcuts (Ctrl+Alt+Left / Right / Up / Down)
+            if ((event.ctrlKey || event.metaKey) && event.altKey) {
+                const { focusedWindowId, snapWindow, toggleMaximize, restoreWindow } = useWindowStore.getState()
+                if (focusedWindowId) {
+                    if (event.key === 'ArrowLeft') {
+                        event.preventDefault()
+                        snapWindow(focusedWindowId, 'left-half')
+                        return
+                    }
+                    if (event.key === 'ArrowRight') {
+                        event.preventDefault()
+                        snapWindow(focusedWindowId, 'right-half')
+                        return
+                    }
+                    if (event.key === 'ArrowUp') {
+                        event.preventDefault()
+                        toggleMaximize(focusedWindowId)
+                        return
+                    }
+                    if (event.key === 'ArrowDown') {
+                        event.preventDefault()
+                        restoreWindow(focusedWindowId)
+                        return
+                    }
+                }
+            }
         }
 
         window.addEventListener('keydown', onKeyDown)
