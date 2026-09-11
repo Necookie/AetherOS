@@ -1,3 +1,5 @@
+import { createApiUrl } from './apiUrl'
+
 export interface BrowserSearchResult {
     id: string
     title: string
@@ -14,7 +16,7 @@ export interface BrowserSearchResponse {
 }
 
 export async function querySearch(query: string): Promise<BrowserSearchResponse> {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/search?q=${encodeURIComponent(query)}`)
+    const response = await fetch(createApiUrl(`/api/search?q=${encodeURIComponent(query)}`))
 
     if (!response.ok) {
         throw new Error(`Search request failed: ${response.status}`)

@@ -1,6 +1,6 @@
 # AetherOS
 
-AetherOS is a web-based OS simulator for OS/HCI coursework, built as a TypeScript monorepo.
+AetherOS is a web-based OS simulator for OS/HCI coursework, built as a TypeScript monorepo. In production, Cloudflare Pages serves the application and Pages Functions provide its same-origin API. The Fastify workspace provides an equivalent local-development server.
 
 ## Current Scope
 
@@ -104,12 +104,13 @@ client/
     stores/                # Zustand orchestration stores
     vfs/                   # virtual filesystem core + service
     worker/                # kernel.worker.ts metrics/process simulation
-server/
+server/                      # local-development API adapter + shared services
   src/
     config/                # env loader
     plugins/               # cors/rate-limit
     routes/                # /health and /api/ai
-    services/              # OpenAI wrapper + ai service
+    services/              # shared OpenAI, AI, and search services
+functions/                   # Cloudflare Pages Functions under /api/*
 docs/
   architecture-map-phase12.md
   brand.md
@@ -120,9 +121,11 @@ feature_plan.md            # new functional roadmap checklist
 supabase_plan.md           # deferred persistence/auth roadmap (out of scope now)
 ```
 
-## Backend API
+## API
 
-- `GET /health` -> health + timestamp
+Production requests use the same AetherOS origin and are handled by the Pages Functions in `functions/api/`. The Fastify workspace exposes the same behavior during local development.
+
+- `GET /api/health` -> health + timestamp
 - `POST /api/ai` -> `{ reply, mode }`
   - `mode: "mock"` when `OPENAI_API_KEY` is missing
   - `mode: "live"` when key is configured
@@ -150,6 +153,8 @@ cp client/.env.example client/.env
 cp server/.env.example server/.env
 ```
 
+`client/.env` is only needed for the two-process local development workflow. Production uses same-origin `/api/*` routes and does not require `VITE_API_URL`.
+
 Run both workspaces:
 
 ```bash
@@ -169,6 +174,33 @@ npm run typecheck
 npm run test
 npm run build
 ```
+
+## Cloudflare Deployment
+
+The Vite build is deployed to the existing `aetheros` Cloudflare Pages project. Files in `functions/api/` are bundled as same-origin Pages Functions.
+
+Store production credentials as encrypted Pages secrets:
+
+```bash
+npx wrangler pages secret put TAVILY_SEARCH_API_KEY --project-name aetheros
+npx wrangler pages secret put OPENAI_API_KEY --project-name aetheros
+```
+
+- `TAVILY_SEARCH_API_KEY` for live browser search; mock results are used when omitted.
+- `OPENAI_API_KEY` for live AI replies; mock replies are used when omitted.
+
+Production builds always call the same-origin `/api/*` functions. `VITE_API_URL` is read only in development.
+
+Useful commands:
+
+```bash
+npm run dev:cloudflare
+npm run deploy:cloudflare
+```
+
+For Git-based Cloudflare builds, use `npm run build:cloudflare` as the build command and `client/dist` as the output directory. The existing `aetheros.necookie.dev` custom domain remains attached to the Pages project.
+
+Configure Cloudflare rate-limiting rules for `/api/search` and `/api/ai` to protect provider quotas. No request state is kept in the Pages Functions isolate.
 
 ## Notes for OS/HCI Scope
 

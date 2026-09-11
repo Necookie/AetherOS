@@ -35,9 +35,11 @@ npm install
 cp client/.env.example client/.env
 ```
 
-Default env:
+Optional local-development env:
 
 - `VITE_API_URL=http://localhost:3000`
+
+Production builds always use the same-origin Cloudflare Pages Functions under `/api`; `VITE_API_URL` is development-only.
 
 ## Run
 

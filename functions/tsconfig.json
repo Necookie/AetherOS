@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "lib": ["ES2022", "DOM"],
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "strict": true,
+        "noEmit": true,
+        "skipLibCheck": true,
+        "types": ["@cloudflare/workers-types"]
+    },
+    "include": [
+        "./**/*.ts",
+        "../server/src/services/aiService.ts",
+        "../server/src/services/openaiClient.ts",
+        "../server/src/services/searchService.ts"
+    ]
+}

@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify'
+import { env } from '../config/env'
 import { searchWeb } from '../services/searchService'
 
 export async function searchRoute(fastify: FastifyInstance) {
@@ -10,7 +11,7 @@ export async function searchRoute(fastify: FastifyInstance) {
         }
 
         try {
-            return reply.send(await searchWeb(q))
+            return reply.send(await searchWeb(q, env.tavilySearchApiKey))
         } catch (err: any) {
             fastify.log.error(err)
             return reply.status(500).send({ error: 'Failed to search.' })
