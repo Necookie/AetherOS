@@ -46,9 +46,11 @@ export function useWindowManager({ id }: UseWindowManagerProps) {
         // If maximized, smoothly un-maximize on drag
         if (win.state.isMaximized) {
             const restoredBounds = win.state.previousBounds || { width: 800, height: 500, x: 100, y: 100 }
+            const snapContext = getSnapContext()
+            const workspace = getWorkspaceRect(snapContext)
             const ratio = e.clientX / Math.max(1, window.innerWidth)
-            const newX = Math.max(10, Math.min(window.innerWidth - restoredBounds.width - 10, e.clientX - restoredBounds.width * ratio))
-            const newY = Math.max(10, e.clientY - 20)
+            const newX = Math.max(workspace.x, Math.min(workspace.x + workspace.width - restoredBounds.width, e.clientX - restoredBounds.width * ratio))
+            const newY = Math.max(workspace.y, e.clientY - 20)
 
             restoreWindow(id)
             updateBounds(id, { x: newX, y: newY, width: restoredBounds.width, height: restoredBounds.height })
@@ -111,8 +113,8 @@ export function useWindowManager({ id }: UseWindowManagerProps) {
                     if (dx > 8 || dy > 8) {
                         dragState.current.hasBrokenFromSnap = true
                         const restored = win.state.previousBounds || { width: 720, height: 480, x: 100, y: 100 }
-                        const newX = Math.max(10, clientX - restored.width / 2)
-                        const newY = Math.max(10, clientY - 20)
+                        const newX = Math.max(workspace.x, Math.min(workspace.x + workspace.width - restored.width, clientX - restored.width / 2))
+                        const newY = Math.max(workspace.y, clientY - 20)
 
                         dragState.current.startX = clientX
                         dragState.current.startY = clientY
