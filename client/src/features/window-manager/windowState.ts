@@ -11,4 +11,5 @@ export {
     toggleMaximizeState,
     toggleMinimizeState,
     updateWindowBoundsState,
+    updateMultipleBoundsState,
 } from './lifecycle'

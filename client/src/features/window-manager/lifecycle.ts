@@ -326,3 +326,38 @@ export function updateWindowBoundsState(
         },
     }
 }
+
+export function updateMultipleBoundsState(
+    state: WindowSnapshot,
+    updates: Record<string, { bounds: Partial<WindowBounds>; snapMode?: SnapMode }>,
+    viewport: Viewport,
+): WindowSnapshot {
+    let hasChanges = false
+    const nextWindows = { ...state.windows }
+
+    for (const [id, update] of Object.entries(updates)) {
+        const targetWindow = state.windows[id]
+        if (!targetWindow || targetWindow.state.isMaximized) {
+            continue
+        }
+
+        hasChanges = true
+        nextWindows[id] = {
+            ...targetWindow,
+            bounds: clampBoundsToViewport(mergeWindowBounds(targetWindow.bounds, update.bounds), viewport),
+            state: {
+                ...targetWindow.state,
+                snapMode: update.snapMode !== undefined ? update.snapMode : targetWindow.state.snapMode,
+            },
+        }
+    }
+
+    if (!hasChanges) {
+        return state
+    }
+
+    return {
+        ...state,
+        windows: nextWindows,
+    }
+}

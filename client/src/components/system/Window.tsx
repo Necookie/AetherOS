@@ -4,6 +4,9 @@ import { selectWindowById, selectWindowZIndex } from '../../features/window-mana
 import { useWindowManager } from '../../hooks/useWindowManager'
 import { useWindowStore } from '../../stores/windowStore'
 import { SnapLayoutPopover } from '../../features/window-manager/components/SnapLayoutPopover'
+import { calculateTiledResize, type ResizeDirection } from '../../features/window-manager/tiling'
+import { getSnapContext } from '../../features/window-manager/shellMetrics'
+import { getWorkspaceRect } from '../../features/window-manager/workspace'
 
 interface WindowProps {
     id: string
@@ -19,7 +22,7 @@ export default function Window({ id, title, children }: WindowProps) {
     const focusWindow = useWindowStore((state) => state.focusWindow)
     const toggleMinimize = useWindowStore((state) => state.toggleMinimize)
     const toggleMaximize = useWindowStore((state) => state.toggleMaximize)
-    const updateBounds = useWindowStore((state) => state.updateBounds)
+    const updateMultipleBounds = useWindowStore((state) => state.updateMultipleBounds)
     const { handlePointerDown, handlePointerMove, handlePointerUp, isDragging, restoreWindow } = useWindowManager({ id })
     const [isResizing, setIsResizing] = useState(false)
     const [snapPopoverOpen, setSnapPopoverOpen] = useState(false)
@@ -84,29 +87,61 @@ export default function Window({ id, title, children }: WindowProps) {
     const { bounds, state } = windowState
     const { isEntering, isFocused, isMaximized, isMinimized } = state
 
-    const startResize = (event: React.PointerEvent<HTMLDivElement>, axis: 'x' | 'y' | 'xy') => {
+    const startResize = (event: React.PointerEvent<HTMLDivElement>, direction: ResizeDirection) => {
         event.stopPropagation()
         focusWindow(id)
         setIsResizing(true)
-        const initialBounds = bounds
         const startX = event.clientX
         const startY = event.clientY
         const resizeHandle = event.currentTarget
         resizeHandle.setPointerCapture(event.pointerId)
 
+        const snapContext = getSnapContext()
+        const workspace = getWorkspaceRect(snapContext)
+
+        let pendingEvent: PointerEvent | null = null
+        let resizeRaf: number | null = null
+
         const handleMove = (moveEvent: PointerEvent) => {
-            const width = Math.max(320, initialBounds.width + (moveEvent.clientX - startX))
-            const height = Math.max(220, initialBounds.height + (moveEvent.clientY - startY))
-            updateBounds(id, {
-                ...(axis === 'x' || axis === 'xy' ? { width } : {}),
-                ...(axis === 'y' || axis === 'xy' ? { height } : {}),
-            })
+            pendingEvent = moveEvent
+
+            if (resizeRaf === null) {
+                resizeRaf = requestAnimationFrame(() => {
+                    resizeRaf = null
+                    if (!pendingEvent) return
+
+                    const deltaX = pendingEvent.clientX - startX
+                    const deltaY = pendingEvent.clientY - startY
+                    const allWindows = useWindowStore.getState().windows
+
+                    const updates = calculateTiledResize(
+                        id,
+                        direction,
+                        deltaX,
+                        deltaY,
+                        allWindows,
+                        workspace,
+                    )
+
+                    if (Object.keys(updates).length > 0) {
+                        updateMultipleBounds(updates)
+                    }
+                })
+            }
         }
 
         const handleUp = (upEvent: PointerEvent) => {
+            if (resizeRaf !== null) {
+                cancelAnimationFrame(resizeRaf)
+                resizeRaf = null
+            }
             setIsResizing(false)
             if (resizeHandle.hasPointerCapture(upEvent.pointerId)) {
-                resizeHandle.releasePointerCapture(upEvent.pointerId)
+                try {
+                    resizeHandle.releasePointerCapture(upEvent.pointerId)
+                } catch {
+                    // Ignore if already released
+                }
             }
             window.removeEventListener('pointermove', handleMove)
             window.removeEventListener('pointerup', handleUp)
@@ -215,32 +250,59 @@ export default function Window({ id, title, children }: WindowProps) {
 
             <div className="relative flex-1 overflow-hidden bg-surface">
                 {children}
+                {isTransforming && (
+                    <div className="absolute inset-0 z-30 select-none bg-transparent" />
+                )}
             </div>
 
             {!isMaximized && (
-                <div
-                    className="absolute bottom-0 right-0 h-4 w-4 cursor-se-resize z-50"
-                    data-drag-handle="false"
-                    onPointerDown={(event) => startResize(event, 'xy')}
-                >
-                    <div className="absolute bottom-1 right-1 h-2 w-2 rounded-br-[2px] border-b-2 border-r-2 border-ink-muted-48" />
-                </div>
-            )}
+                <>
+                    {/* Edge resize handles */}
+                    <div
+                        className="absolute -top-1 left-3 right-3 h-2 cursor-ns-resize z-40"
+                        data-drag-handle="false"
+                        onPointerDown={(event) => startResize(event, 'n')}
+                    />
+                    <div
+                        className="absolute -bottom-1 left-3 right-3 h-2 cursor-ns-resize z-40"
+                        data-drag-handle="false"
+                        onPointerDown={(event) => startResize(event, 's')}
+                    />
+                    <div
+                        className="absolute -left-1 top-3 bottom-3 w-2 cursor-ew-resize z-40"
+                        data-drag-handle="false"
+                        onPointerDown={(event) => startResize(event, 'w')}
+                    />
+                    <div
+                        className="absolute -right-1 top-3 bottom-3 w-2 cursor-ew-resize z-40"
+                        data-drag-handle="false"
+                        onPointerDown={(event) => startResize(event, 'e')}
+                    />
 
-            {!isMaximized && (
-                <div
-                    className="absolute right-0 top-10 z-40 h-[calc(100%-2.5rem)] w-2 cursor-ew-resize"
-                    data-drag-handle="false"
-                    onPointerDown={(event) => startResize(event, 'x')}
-                />
-            )}
-
-            {!isMaximized && (
-                <div
-                    className="absolute bottom-0 left-0 z-40 h-2 w-full cursor-ns-resize"
-                    data-drag-handle="false"
-                    onPointerDown={(event) => startResize(event, 'y')}
-                />
+                    {/* Corner resize handles */}
+                    <div
+                        className="absolute -top-1 -left-1 h-3.5 w-3.5 cursor-nwse-resize z-50"
+                        data-drag-handle="false"
+                        onPointerDown={(event) => startResize(event, 'nw')}
+                    />
+                    <div
+                        className="absolute -top-1 -right-1 h-3.5 w-3.5 cursor-nesw-resize z-50"
+                        data-drag-handle="false"
+                        onPointerDown={(event) => startResize(event, 'ne')}
+                    />
+                    <div
+                        className="absolute -bottom-1 -left-1 h-3.5 w-3.5 cursor-nesw-resize z-50"
+                        data-drag-handle="false"
+                        onPointerDown={(event) => startResize(event, 'sw')}
+                    />
+                    <div
+                        className="absolute -bottom-1 -right-1 h-4 w-4 cursor-nwse-resize z-50"
+                        data-drag-handle="false"
+                        onPointerDown={(event) => startResize(event, 'se')}
+                    >
+                        <div className="pointer-events-none absolute bottom-1 right-1 h-2 w-2 rounded-br-[2px] border-b-2 border-r-2 border-ink-muted-48" />
+                    </div>
+                </>
             )}
         </div>
     )
