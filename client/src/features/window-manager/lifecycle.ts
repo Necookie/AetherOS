@@ -143,9 +143,9 @@ export function toggleMaximizeState(
         ? getMaximizedBounds(context)
         : {
             x: 0,
-            y: 32,
+            y: 44,
             width: viewport.width,
-            height: Math.max(220, viewport.height - 32 - 80),
+            height: Math.max(220, viewport.height - 44 - 80),
         }
     const nextBounds = isMaximizing
         ? maximizedBounds
