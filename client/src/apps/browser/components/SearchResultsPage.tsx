@@ -67,34 +67,25 @@ export default function SearchResultsPage({
         <div className="h-full overflow-y-auto bg-canvas">
             <header className="border-b border-hairline bg-pearl">
                 <div className="mx-auto max-w-5xl px-5 pb-4 pt-6 sm:px-8">
-                    <div className="flex items-center gap-4">
-                        <div className="hidden shrink-0 items-center gap-2 sm:flex" aria-label="Aether Search">
-                            <span className="flex h-9 w-9 items-center justify-center rounded-sm bg-primary text-base font-semibold text-on-dark">
-                                A
-                            </span>
-                            <span className="text-sm font-semibold tracking-tight text-ink">Aether Search</span>
-                        </div>
-
-                        <form onSubmit={submitSearch} className="flex min-w-0 flex-1 items-center gap-2">
-                            <label className="group relative min-w-0 flex-1">
-                                <span className="sr-only">Search the web</span>
-                                <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted-48 group-focus-within:text-primary" />
-                                <input
-                                    value={draftQuery}
-                                    onChange={(event) => setDraftQuery(event.target.value)}
-                                    className="h-11 w-full rounded-pill border border-hairline bg-canvas pl-11 pr-4 text-sm text-ink outline-none transition-colors placeholder:text-ink-muted-48 focus:border-primary-focus focus:ring-1 focus:ring-primary-focus"
-                                    placeholder="Search the web"
-                                />
-                            </label>
-                            <button
-                                type="submit"
-                                disabled={!draftQuery.trim() || draftQuery.trim() === query}
-                                className="h-11 rounded-pill bg-primary px-5 text-sm font-semibold text-on-dark transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                                Search
-                            </button>
-                        </form>
-                    </div>
+                    <form onSubmit={submitSearch} className="flex max-w-3xl items-center gap-2">
+                        <label className="group relative min-w-0 flex-1">
+                            <span className="sr-only">Search the web</span>
+                            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted-48 group-focus-within:text-primary" />
+                            <input
+                                value={draftQuery}
+                                onChange={(event) => setDraftQuery(event.target.value)}
+                                className="h-11 w-full rounded-pill border border-hairline bg-canvas pl-11 pr-4 text-sm text-ink outline-none transition-colors placeholder:text-ink-muted-48 focus:border-primary-focus focus:ring-1 focus:ring-primary-focus"
+                                placeholder="Search the web"
+                            />
+                        </label>
+                        <button
+                            type="submit"
+                            disabled={!draftQuery.trim() || draftQuery.trim() === query}
+                            className="h-11 rounded-pill bg-primary px-5 text-sm font-semibold text-on-dark transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                            Search
+                        </button>
+                    </form>
 
                     <nav className="mt-5 flex items-center gap-1" aria-label="Search result filters">
                         {FILTERS.map((item) => (
