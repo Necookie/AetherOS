@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { BatteryCharging, Bell, ChevronDown, Download, Search, UserCircle2, Volume2, Wifi } from 'lucide-react'
+import { BatteryCharging, Bell, ChevronDown, Download, Maximize2, Minimize2, Search, UserCircle2, Volume2, Wifi } from 'lucide-react'
 import type { AccountProfile } from '../../accounts/types'
 import AetherMark from '../../../components/brand/AetherMark'
+import { toggleFullscreen, useFullscreen } from '../../../services/fullscreenService'
 
 interface TopBarProps {
     now: Date
@@ -52,6 +53,7 @@ export default function TopBar({
 }: TopBarProps) {
     const [menuOpen, setMenuOpen] = useState(false)
     const [systemMenuOpen, setSystemMenuOpen] = useState(false)
+    const isFullscreenActive = useFullscreen()
     const systemMenuRef = useRef<HTMLDivElement>(null)
     const accountMenuRef = useRef<HTMLDivElement>(null)
 
@@ -148,6 +150,16 @@ export default function TopBar({
                             className="w-full rounded px-2.5 py-1.5 text-left transition-colors hover:bg-tile-2"
                             onClick={() => {
                                 setSystemMenuOpen(false)
+                                toggleFullscreen()
+                            }}
+                        >
+                            {isFullscreenActive ? 'Exit Fullscreen' : 'Enter Fullscreen (F11)'}
+                        </button>
+                        <div className="my-1 border-b border-white/10" />
+                        <button
+                            className="w-full rounded px-2.5 py-1.5 text-left transition-colors hover:bg-tile-2"
+                            onClick={() => {
+                                setSystemMenuOpen(false)
                                 onLockSession()
                             }}
                         >
@@ -203,6 +215,18 @@ export default function TopBar({
                     aria-label="Search"
                 >
                     <Search className="h-3.5 w-3.5" />
+                </button>
+                <button
+                    className="rounded p-1 transition-transform active:scale-95 hover:bg-tile-1"
+                    onClick={() => toggleFullscreen()}
+                    aria-label={isFullscreenActive ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+                    title={isFullscreenActive ? 'Exit Fullscreen (F11 / Esc)' : 'Enter Fullscreen (F11)'}
+                >
+                    {isFullscreenActive ? (
+                        <Minimize2 className="h-3.5 w-3.5 text-primary-focus" />
+                    ) : (
+                        <Maximize2 className="h-3.5 w-3.5" />
+                    )}
                 </button>
                 <button
                     className="relative rounded p-1 transition-transform active:scale-95 hover:bg-tile-1"
