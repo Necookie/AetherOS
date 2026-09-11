@@ -57,6 +57,7 @@ export default function BrowserApp({ id }: { id: string }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [searchResponse, setSearchResponse] = useState<BrowserSearchResponse | null>(null)
     const [searchError, setSearchError] = useState<string | null>(null)
+    const [searchPending, setSearchPending] = useState(false)
 
     useEffect(() => {
         if (tabOrder.length === 0) {
@@ -111,10 +112,12 @@ export default function BrowserApp({ id }: { id: string }) {
         if (!simulationQuery) {
             setSearchResponse(null)
             setSearchError(null)
+            setSearchPending(false)
             return
         }
 
         let cancelled = false
+        setSearchPending(true)
         void querySearch(simulationQuery)
             .then((response) => {
                 if (!cancelled) {
@@ -126,6 +129,11 @@ export default function BrowserApp({ id }: { id: string }) {
                 if (!cancelled) {
                     setSearchResponse(null)
                     setSearchError(error instanceof Error ? error.message : 'Search request failed.')
+                }
+            })
+            .finally(() => {
+                if (!cancelled) {
+                    setSearchPending(false)
                 }
             })
 
@@ -153,24 +161,23 @@ export default function BrowserApp({ id }: { id: string }) {
                 {
                     if (simulationLocation?.kind === 'search') {
                         return (
-                            <>
-                                {searchError ? (
-                                    <div className="absolute right-4 top-4 z-40 rounded-md border border-hairline bg-canvas px-4 py-3 text-xs text-warning">
-                                        Search API unavailable. Showing fallback results.
-                                    </div>
-                                ) : null}
-                                <SearchResultsPage
-                                    query={simulationLocation.query}
-                                    mode={resolvedSearch.mode}
-                                    results={searchResults}
-                                    onOpenResult={(result) => handleOpenSimulatedResult(result, simulationLocation.query)}
-                                />
-                            </>
+                            <SearchResultsPage
+                                query={simulationLocation.query}
+                                mode={resolvedSearch.mode}
+                                results={searchResults}
+                                isLoading={searchPending}
+                                error={searchError}
+                                onSearch={handleNavigate}
+                                onOpenResult={(result) => handleOpenSimulatedResult(result, simulationLocation.query)}
+                            />
                         )
                     }
 
                     if (simulationLocation?.kind === 'result') {
-                        const selectedResult = getSimulatedResultById({
+                        const selectedResult = searchResults.find((result) => (
+                            result.id === simulationLocation.id
+                            && result.targetUrl === simulationLocation.targetUrl
+                        )) ?? getSimulatedResultById({
                             query: simulationLocation.query,
                             id: simulationLocation.id,
                             targetUrl: simulationLocation.targetUrl,
