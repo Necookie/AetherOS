@@ -1,5 +1,6 @@
 import { fsService } from '../../vfs/vfsService'
 import { VfsNodeType } from '../../vfs/types'
+import { safeRandomUUID } from '../../lib/uuid'
 import {
     getConflictFilePath,
     getDraftFilePath,
@@ -58,7 +59,7 @@ export class ProductivityRepository {
 
     public constructor(options: ProductivityRepositoryOptions = {}) {
         this.now = options.now ?? Date.now
-        this.generateId = options.generateId ?? (() => crypto.randomUUID().slice(0, 12))
+        this.generateId = options.generateId ?? (() => safeRandomUUID().slice(0, 12))
         this.ensureWorkspace()
     }
 

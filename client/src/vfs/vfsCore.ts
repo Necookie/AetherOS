@@ -1,4 +1,5 @@
 import { kernelClock } from '../lib/kernelClock';
+import { safeRandomUUID } from '../lib/uuid';
 import {
     ErrorCodes,
     VfsError,
@@ -816,7 +817,7 @@ export class AetherVFS {
     }
 
     private generateId(): string {
-        return crypto.randomUUID();
+        return safeRandomUUID();
     }
 
     private getByteLength(content: string): number {
