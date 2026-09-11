@@ -13,6 +13,7 @@ import { downloadManagerService, useDownloadManagerSnapshot } from '../../downlo
 import { getWallpaperCss } from '../../settings/themeEngine'
 import WidgetBoard from '../../widgets/components/WidgetBoard'
 import DesktopIcons from '../../../components/desktop/DesktopIcons'
+import DesktopContextMenu from '../../../components/desktop/DesktopContextMenu'
 import DesktopWindows from '../../../components/desktop/DesktopWindows'
 import { useShellClock } from '../hooks/useShellClock'
 import { registerShellJobs } from '../services/registerShellJobs'
@@ -97,6 +98,12 @@ export default function ShellFrame() {
     const [isAboutOpen, setAboutOpen] = useState(false)
     const [brightness, setBrightness] = useState(100)
     const [volume, setVolume] = useState(70)
+    const [contextMenu, setContextMenu] = useState<{
+        isOpen: boolean
+        x: number
+        y: number
+    }>({ isOpen: false, x: 0, y: 0 })
+    const [desktopRefreshKey, setDesktopRefreshKey] = useState(0)
     const now = useShellClock()
     const { unreadCount } = useNotificationSnapshot()
     const downloadSnapshot = useDownloadManagerSnapshot()
@@ -145,6 +152,36 @@ export default function ShellFrame() {
         window.addEventListener(SHORTCUT_EVENT_LAUNCHER_TOGGLE, onToggleLauncher)
         return () => window.removeEventListener(SHORTCUT_EVENT_LAUNCHER_TOGGLE, onToggleLauncher)
     }, [])
+
+    useEffect(() => {
+        const handleGlobalContextMenu = (event: MouseEvent) => {
+            const target = event.target as HTMLElement | null
+            if (target?.closest('input, textarea, [contenteditable="true"]')) {
+                return
+            }
+            if (target?.closest('[data-custom-context-menu]')) {
+                return
+            }
+            event.preventDefault()
+        }
+
+        window.addEventListener('contextmenu', handleGlobalContextMenu)
+        return () => window.removeEventListener('contextmenu', handleGlobalContextMenu)
+    }, [])
+
+    const handleDesktopContextMenu = (event: React.MouseEvent) => {
+        const target = event.target as HTMLElement
+        if (target.closest('[data-window-id], [role="dialog"], input, textarea, [contenteditable="true"], .os-window, header, [data-dock]')) {
+            return
+        }
+        event.preventDefault()
+        event.stopPropagation()
+        setContextMenu({
+            isOpen: true,
+            x: event.clientX,
+            y: event.clientY,
+        })
+    }
 
     useEffect(() => {
         registerNotificationDeepLinkExecutor((link) => executeNotificationDeepLink(link, notificationService.publish))
@@ -408,6 +445,7 @@ export default function ShellFrame() {
     return (
         <div
             className="os-desktop-bg relative h-full w-full overflow-hidden"
+            onContextMenu={handleDesktopContextMenu}
             style={{
                 backgroundImage: getWallpaperCss(wallpaperId),
                 backgroundSize: 'cover',
@@ -507,7 +545,7 @@ export default function ShellFrame() {
                     bottom: taskbarPosition === 'bottom' ? 'calc(var(--shell-dock-height) + var(--shell-edge-gap) * 2)' : 'var(--shell-edge-gap)',
                 }}
             >
-                <DesktopIcons iconScale={iconScale} />
+                <DesktopIcons iconScale={iconScale} refreshKey={desktopRefreshKey} />
                 <WidgetBoard />
                 <DesktopWindows />
             </main>
@@ -602,6 +640,15 @@ export default function ShellFrame() {
                         handleLaunchOrToggle(taskmgrApp.id)
                     }
                 }}
+            />
+            <DesktopContextMenu
+                isOpen={contextMenu.isOpen}
+                x={contextMenu.x}
+                y={contextMenu.y}
+                onClose={() => setContextMenu((prev) => ({ ...prev, isOpen: false }))}
+                onOpenApp={handleLaunchOrToggle}
+                onOpenAbout={() => setAboutOpen(true)}
+                onRefreshDesktop={() => setDesktopRefreshKey((k) => k + 1)}
             />
         </div>
     )
