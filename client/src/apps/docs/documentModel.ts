@@ -181,6 +181,171 @@ export function updateBlockType(block: DocsBlock, type: DocsBlockType, level?: 1
     })
 }
 
+export function markdownToHtml(source: string): string {
+    const normalized = source.replace(/\r\n/g, '\n').trim()
+    if (!normalized) {
+        return '<p></p>'
+    }
+
+    if (/^\s*<(p|h[1-6]|ul|ol|blockquote|div)\b/i.test(normalized)) {
+        return normalized
+    }
+
+    const rawBlocks = normalized.split(/\n{2,}/)
+    const htmlBlocks: string[] = []
+
+    for (const rawBlock of rawBlocks) {
+        const lines = rawBlock.split('\n')
+
+        const headingMatch = lines[0].match(/^(#{1,6})\s+(.+)$/)
+        if (headingMatch && lines.length === 1) {
+            const level = headingMatch[1].length
+            const content = formatInlineMarkdown(headingMatch[2].trim())
+            htmlBlocks.push(`<h${level}>${content}</h${level}>`)
+            continue
+        }
+
+        if (/^(-{3,}|\*{3,}|_{3,})$/.test(lines[0].trim()) && lines.length === 1) {
+            htmlBlocks.push('<hr>')
+            continue
+        }
+
+        const isChecklist = lines.every((line) => /^\s*-\s+\[([ xX])\]\s+(.*)$/.test(line))
+        if (isChecklist) {
+            const items = lines.map((line) => {
+                const match = line.match(/^\s*-\s+\[([ xX])\]\s*(.*)$/)
+                if (!match) return ''
+                const checked = match[1].toLowerCase() === 'x'
+                const content = formatInlineMarkdown(match[2].trim())
+                return `<li data-type="taskItem" data-checked="${checked}"><p>${content}</p></li>`
+            }).join('')
+            htmlBlocks.push(`<ul data-type="taskList">${items}</ul>`)
+            continue
+        }
+
+        const isBulletList = lines.every((line) => /^\s*[-*•]\s+(.*)$/.test(line))
+        if (isBulletList) {
+            const items = lines.map((line) => {
+                const match = line.match(/^\s*[-*•]\s*(.*)$/)
+                const content = formatInlineMarkdown(match ? match[1].trim() : line.trim())
+                return `<li><p>${content}</p></li>`
+            }).join('')
+            htmlBlocks.push(`<ul>${items}</ul>`)
+            continue
+        }
+
+        const isOrderedList = lines.every((line) => /^\s*\d+\.\s+(.*)$/.test(line))
+        if (isOrderedList) {
+            const items = lines.map((line) => {
+                const match = line.match(/^\s*\d+\.\s*(.*)$/)
+                const content = formatInlineMarkdown(match ? match[1].trim() : line.trim())
+                return `<li><p>${content}</p></li>`
+            }).join('')
+            htmlBlocks.push(`<ol>${items}</ol>`)
+            continue
+        }
+
+        const isBlockquote = lines.every((line) => /^\s*>\s*(.*)$/.test(line))
+        if (isBlockquote) {
+            const content = lines.map((line) => line.replace(/^\s*>\s*/, '')).join('<br>')
+            htmlBlocks.push(`<blockquote><p>${formatInlineMarkdown(content)}</p></blockquote>`)
+            continue
+        }
+
+        const formatted = lines.map((line) => formatInlineMarkdown(line)).join('<br>')
+        htmlBlocks.push(`<p>${formatted}</p>`)
+    }
+
+    return htmlBlocks.join('')
+}
+
+function formatInlineMarkdown(text: string): string {
+    return text
+        .replace(/&(?!(amp|lt|gt|quot|#39|nbsp);)/g, '&amp;')
+        .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2">$1</a>')
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/__([^_]+)__/g, '<strong>$1</strong>')
+        .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+        .replace(/_([^_]+)_/g, '<em>$1</em>')
+        .replace(/~~([^~]+)~~/g, '<s>$1</s>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+}
+
+export function htmlToMarkdown(html: string): string {
+    let text = html.replace(/\r\n/g, '\n')
+
+    text = text.replace(/<br\s*\/?>/gi, '\n')
+
+    text = text.replace(/<a\b[^>]*href=(['"])(.*?)\1[^>]*>([\s\S]*?)<\/a>/gi, (_, __, href: string, label: string) => {
+        const cleanedLabel = stripTags(label).trim() || href.trim()
+        return `[${cleanedLabel}](${decodeHtmlEntities(href.trim())})`
+    })
+
+    text = text.replace(/<(strong|b)\b[^>]*>([\s\S]*?)<\/\1>/gi, (_, __, content: string) => `**${stripTags(content)}**`)
+    text = text.replace(/<(em|i)\b[^>]*>([\s\S]*?)<\/\1>/gi, (_, __, content: string) => `*${stripTags(content)}*`)
+    text = text.replace(/<(s|del|strike)\b[^>]*>([\s\S]*?)<\/\1>/gi, (_, __, content: string) => `~~${stripTags(content)}~~`)
+    text = text.replace(/<code\b[^>]*>([\s\S]*?)<\/code>/gi, (_, content: string) => `\`${stripTags(content)}\``)
+
+    text = text.replace(/<li\b[^>]*data-type=(['"])taskItem\1[^>]*data-checked=(['"])(true|false)\2[^>]*>([\s\S]*?)<\/li>/gi, (_, __, ___, checked: string, content: string) => {
+        const marker = checked === 'true' ? 'x' : ' '
+        const inner = stripTags(content).trim()
+        return `\n- [${marker}] ${inner}`
+    })
+
+    text = text.replace(/<li\b[^>]*data-checked=(['"])(true|false)\1[^>]*>([\s\S]*?)<\/li>/gi, (_, __, checked: string, content: string) => {
+        const marker = checked === 'true' ? 'x' : ' '
+        const inner = stripTags(content).trim()
+        return `\n- [${marker}] ${inner}`
+    })
+
+    text = text.replace(/<ul\b[^>]*>([\s\S]*?)<\/ul>/gi, (_, content: string) => {
+        if (/data-type=["']taskItem["']|data-checked=/.test(content)) {
+            return `\n\n${content}\n\n`
+        }
+        const items = content.match(/<li\b[^>]*>([\s\S]*?)<\/li>/gi)
+        if (!items) return content
+        const parsed = items.map((li: string) => {
+            const inner = stripTags(li).trim()
+            return `- ${inner}`
+        }).join('\n')
+        return `\n\n${parsed}\n\n`
+    })
+
+    text = text.replace(/<ol\b[^>]*>([\s\S]*?)<\/ol>/gi, (_, content: string) => {
+        const items = content.match(/<li\b[^>]*>([\s\S]*?)<\/li>/gi)
+        if (!items) return content
+        let counter = 1
+        const parsed = items.map((li: string) => {
+            const inner = stripTags(li).trim()
+            return `${counter++}. ${inner}`
+        }).join('\n')
+        return `\n\n${parsed}\n\n`
+    })
+
+    text = text.replace(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi, (_, level: string, content: string) => {
+        const prefix = '#'.repeat(Number(level))
+        return `\n\n${prefix} ${stripTags(content).trim()}\n\n`
+    })
+
+    text = text.replace(/<blockquote\b[^>]*>([\s\S]*?)<\/blockquote>/gi, (_, content: string) => {
+        const inner = stripTags(content).trim()
+        return `\n\n> ${inner}\n\n`
+    })
+
+    text = text.replace(/<hr\s*\/?>/gi, '\n\n---\n\n')
+
+    text = text.replace(/<(p|div)\b[^>]*>([\s\S]*?)<\/\1>/gi, (_, __, content: string) => {
+        const inner = stripTags(content).trim()
+        return inner ? `\n\n${inner}\n\n` : '\n\n'
+    })
+
+    text = stripTags(text)
+
+    return decodeHtmlEntities(text)
+        .replace(/\n{3,}/g, '\n\n')
+        .trim()
+}
+
 export function extractMarkdownLinks(value: string) {
     const matches: Array<{ label: string; href: string }> = []
 
