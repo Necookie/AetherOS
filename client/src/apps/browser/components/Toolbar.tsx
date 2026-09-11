@@ -1,4 +1,4 @@
-import { Bookmark, ChevronLeft, ChevronRight, Cloud, CloudOff, History, RotateCw } from 'lucide-react';
+import { Bookmark, ChevronLeft, ChevronRight, Cloud, CloudOff, Download, History, RotateCw } from 'lucide-react';
 import { useBrowserStore } from '../../../stores/browserStore';
 import AddressBar from './AddressBar';
 
@@ -8,6 +8,9 @@ interface ToolbarProps {
     onNavigate: (input: string) => void;
     onToggleBookmarks: () => void;
     onToggleHistory: () => void;
+    onToggleDownloads?: () => void;
+    hasDownloads?: boolean;
+    isDownloadsOpen?: boolean;
 }
 
 export default function Toolbar({
@@ -16,6 +19,9 @@ export default function Toolbar({
     onNavigate,
     onToggleBookmarks,
     onToggleHistory,
+    onToggleDownloads,
+    hasDownloads,
+    isDownloadsOpen,
 }: ToolbarProps) {
     const tabsById = useBrowserStore((s) => s.tabsById);
     const bookmarks = useBrowserStore((s) => s.bookmarks);
@@ -71,6 +77,17 @@ export default function Toolbar({
             <button className={iconBtnClass} onClick={onToggleHistory} title="History">
                 <History className="h-3.5 w-3.5" />
             </button>
+
+            {hasDownloads && onToggleDownloads && (
+                <button
+                    className={`${iconBtnClass} ${isDownloadsOpen ? 'text-primary hover:text-primary' : ''}`}
+                    onClick={onToggleDownloads}
+                    title={isDownloadsOpen ? 'Hide downloads' : 'Show downloads'}
+                    aria-label="Downloads"
+                >
+                    <Download className="h-3.5 w-3.5" />
+                </button>
+            )}
 
             <button
                 className={`${iconBtnClass} ${connectivity.online ? 'text-success' : 'text-danger'}`}

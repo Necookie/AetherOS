@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, CheckCircle2, Copy, Download, FolderOpen } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AlertTriangle, CheckCircle2, ChevronDown, Copy, Download, FolderOpen, Minus, X } from 'lucide-react'
 import Window from '../../components/system/Window';
 import { DEFAULT_APPS } from '../../config/windows'
 import { useFsStore } from '../../stores/fsStore'
@@ -93,6 +93,19 @@ export default function BrowserApp({ id }: { id: string }) {
     const browserDownloads = downloadSnapshot.items
         .filter((item) => item.source === 'browser' && item.status !== 'canceled')
         .slice(0, 3)
+
+    const [downloadsDismissed, setDownloadsDismissed] = useState(false);
+    const [downloadsMinimized, setDownloadsMinimized] = useState(false);
+    const prevDownloadsCountRef = useRef(browserDownloads.length);
+
+    useEffect(() => {
+        if (browserDownloads.length > prevDownloadsCountRef.current) {
+            setDownloadsDismissed(false);
+            setDownloadsMinimized(false);
+        }
+        prevDownloadsCountRef.current = browserDownloads.length;
+    }, [browserDownloads.length]);
+
     const simulationLocation = activeTab ? parseSimulationUrl(activeTab.url) : null
     const simulationQuery = simulationLocation?.query ?? ''
 
@@ -242,6 +255,16 @@ export default function BrowserApp({ id }: { id: string }) {
                         setSidebarMode('history');
                         setSidebarOpen((open) => (sidebarMode === 'history' ? !open : true));
                     }}
+                    hasDownloads={browserDownloads.length > 0}
+                    isDownloadsOpen={!downloadsDismissed}
+                    onToggleDownloads={() => {
+                        if (downloadsDismissed) {
+                            setDownloadsDismissed(false);
+                            setDownloadsMinimized(false);
+                        } else {
+                            setDownloadsDismissed(true);
+                        }
+                    }}
                 />
                 <div className="relative flex-1 overflow-hidden">
                     {activeTab?.isLoading && (
@@ -249,27 +272,92 @@ export default function BrowserApp({ id }: { id: string }) {
                             <div className="h-full animate-pulse rounded-r bg-primary" style={{ width: '60%' }} />
                         </div>
                     )}
-                    {browserDownloads.length > 0 && (
+                    {browserDownloads.length > 0 && !downloadsDismissed && downloadsMinimized && (
+                        <div className="pointer-events-none absolute right-4 top-4 z-40">
+                            <div className="pointer-events-auto flex items-center gap-2 rounded-lg border border-white/10 bg-tile-1 px-3 py-1.5 text-on-dark shadow-xl backdrop-blur-md">
+                                <button
+                                    type="button"
+                                    onClick={() => setDownloadsMinimized(false)}
+                                    className="flex items-center gap-2 text-xs font-medium text-on-dark transition-opacity hover:opacity-80"
+                                    title="Click to expand transfers"
+                                >
+                                    <div className="rounded bg-tile-2 p-1 text-primary-on-dark">
+                                        <Download className="h-3.5 w-3.5" />
+                                    </div>
+                                    <span>
+                                        {browserDownloads.length} {browserDownloads.length === 1 ? 'transfer' : 'transfers'}
+                                    </span>
+                                </button>
+                                <div className="h-3 w-[1px] bg-white/10" />
+                                <div className="flex items-center gap-0.5">
+                                    <button
+                                        type="button"
+                                        onClick={() => setDownloadsMinimized(false)}
+                                        className="rounded p-1 text-on-dark-muted transition-colors hover:bg-tile-2 hover:text-on-dark"
+                                        title="Expand"
+                                        aria-label="Expand transfers"
+                                    >
+                                        <ChevronDown className="h-3 w-3" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setDownloadsDismissed(true)}
+                                        className="rounded p-1 text-on-dark-muted transition-colors hover:bg-tile-2 hover:text-on-dark"
+                                        title="Close"
+                                        aria-label="Close transfers"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    {browserDownloads.length > 0 && !downloadsDismissed && !downloadsMinimized && (
                         <div className="pointer-events-none absolute right-4 top-4 z-40 w-[min(24rem,calc(100%-2rem))]">
-                            <div className="pointer-events-auto rounded-lg border border-white/10 bg-tile-1 p-3 text-on-dark">
+                            <div className="pointer-events-auto rounded-lg border border-white/10 bg-tile-1 p-3 text-on-dark shadow-xl">
                                 <div className="flex items-center justify-between gap-3">
-                                    <div className="flex items-center gap-2">
-                                        <div className="rounded-lg bg-tile-2 p-2 text-primary-on-dark">
+                                    <div className="flex min-w-0 items-center gap-2">
+                                        <div className="rounded-lg bg-tile-2 p-2 text-primary-on-dark shrink-0">
                                             <Download className="h-4 w-4" />
                                         </div>
-                                        <div>
+                                        <div className="min-w-0">
                                             <p className="text-xs uppercase tracking-[0.18em] text-on-dark-muted">Browser transfers</p>
-                                            <p className="text-sm font-semibold text-on-dark">Downloads in progress</p>
+                                            <p className="truncate text-sm font-semibold text-on-dark">
+                                                {browserDownloads.some((d) => d.status === 'downloading' || d.status === 'queued')
+                                                    ? 'Downloads in progress'
+                                                    : 'Downloads completed'}
+                                            </p>
                                         </div>
                                     </div>
-                                    {downloadsApp ? (
+                                    <div className="flex shrink-0 items-center gap-1">
+                                        {downloadsApp ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => openWindow(downloadsApp)}
+                                                className="rounded-pill border border-white/10 bg-tile-2 px-2.5 py-1 text-[11px] font-semibold text-on-dark transition-transform hover:bg-tile-3 active:scale-95"
+                                            >
+                                                Open manager
+                                            </button>
+                                        ) : null}
                                         <button
-                                            onClick={() => openWindow(downloadsApp)}
-                                            className="rounded-pill border border-white/10 bg-tile-2 px-3 py-1 text-[12px] font-semibold text-on-dark transition-transform active:scale-95"
+                                            type="button"
+                                            onClick={() => setDownloadsMinimized(true)}
+                                            className="rounded-sm p-1 text-on-dark-muted transition-colors hover:bg-tile-2 hover:text-on-dark active:scale-90"
+                                            title="Minimize"
+                                            aria-label="Minimize transfers"
                                         >
-                                            Open manager
+                                            <Minus className="h-3.5 w-3.5" />
                                         </button>
-                                    ) : null}
+                                        <button
+                                            type="button"
+                                            onClick={() => setDownloadsDismissed(true)}
+                                            className="rounded-sm p-1 text-on-dark-muted transition-colors hover:bg-tile-2 hover:text-on-dark active:scale-90"
+                                            title="Close"
+                                            aria-label="Close transfers"
+                                        >
+                                            <X className="h-3.5 w-3.5" />
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="mt-3 space-y-2">
