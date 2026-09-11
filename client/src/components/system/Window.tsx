@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react'
+import { Maximize2, Minimize2, Minus, X } from 'lucide-react'
 import { selectWindowById, selectWindowZIndex } from '../../features/window-manager/selectors'
 import { useWindowManager } from '../../hooks/useWindowManager'
 import { useWindowStore } from '../../stores/windowStore'
@@ -135,19 +136,23 @@ export default function Window({ id, title, children }: WindowProps) {
                 onPointerCancel={isMaximized ? undefined : handlePointerUp}
                 onDoubleClick={() => toggleMaximize(id)}
             >
-                <div className="flex items-center gap-2 pl-0.5" data-drag-handle="false">
+                <div className="group/controls flex items-center gap-2 pl-0.5" data-drag-handle="false">
                     <button
                         onClick={(e) => { e.stopPropagation(); closeWindow(id) }}
-                        className="h-3 w-3 rounded-full bg-ink-muted-48 transition-colors hover:bg-primary"
+                        className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#ff5f56] border border-[#e0443e] text-[#4d0000] transition-transform active:scale-90 hover:opacity-90 focus:outline-none"
                         title="Close window"
                         aria-label="Close window"
-                    />
+                    >
+                        <X className="h-2 w-2 stroke-[2.5] opacity-70 group-hover/controls:opacity-100 transition-opacity" />
+                    </button>
                     <button
                         onClick={(e) => { e.stopPropagation(); toggleMinimize(id) }}
-                        className="h-3 w-3 rounded-full bg-ink-muted-48 transition-colors hover:bg-primary"
+                        className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#febc2e] border border-[#d89e24] text-[#5c3e00] transition-transform active:scale-90 hover:opacity-90 focus:outline-none"
                         title="Minimize window"
                         aria-label="Minimize window"
-                    />
+                    >
+                        <Minus className="h-2 w-2 stroke-[2.5] opacity-70 group-hover/controls:opacity-100 transition-opacity" />
+                    </button>
                     <button
                         onClick={(e) => {
                             e.stopPropagation()
@@ -158,10 +163,16 @@ export default function Window({ id, title, children }: WindowProps) {
 
                             toggleMaximize(id)
                         }}
-                        className="h-3 w-3 rounded-full bg-ink-muted-48 transition-colors hover:bg-primary"
+                        className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#28c840] border border-[#1aab29] text-[#004d11] transition-transform active:scale-90 hover:opacity-90 focus:outline-none"
                         title={isMaximized ? 'Restore window' : 'Maximize window'}
                         aria-label={isMaximized ? 'Restore window' : 'Maximize window'}
-                    />
+                    >
+                        {isMaximized ? (
+                            <Minimize2 className="h-2 w-2 stroke-[2.5] opacity-70 group-hover/controls:opacity-100 transition-opacity" />
+                        ) : (
+                            <Maximize2 className="h-2 w-2 stroke-[2.5] opacity-70 group-hover/controls:opacity-100 transition-opacity" />
+                        )}
+                    </button>
                 </div>
 
                 <div className="pointer-events-none flex-1 truncate px-4 text-center text-sm font-semibold text-ink">
