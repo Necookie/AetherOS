@@ -9,6 +9,7 @@ import {
     SHORTCUT_ACTION_IDS,
 } from '../shortcuts/shortcutConfig'
 import { createShortcutKeydownHandler } from '../shortcuts/shortcutRegistry'
+import { toggleFullscreen } from '../../services/fullscreenService'
 
 const APP_BY_ID = new Map(DEFAULT_APPS.map((app) => [app.id, app]))
 
@@ -121,7 +122,33 @@ export function useWindowShortcuts() {
             }
         ])
 
+        const onGlobalShieldKeyDown = (event: KeyboardEvent) => {
+            // Shield F11 for seamless immersive OS fullscreen
+            if (event.key === 'F11') {
+                event.preventDefault()
+                toggleFullscreen()
+                return
+            }
+
+            // Shield Ctrl+S / Cmd+S from popping browser "Save webpage as HTML"
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+                event.preventDefault()
+                window.dispatchEvent(new CustomEvent('aether:save'))
+                return
+            }
+
+            // Shield Ctrl+P / Cmd+P from opening browser print preview
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'p') {
+                event.preventDefault()
+                return
+            }
+        }
+
         window.addEventListener('keydown', onKeyDown)
-        return () => window.removeEventListener('keydown', onKeyDown)
+        window.addEventListener('keydown', onGlobalShieldKeyDown)
+        return () => {
+            window.removeEventListener('keydown', onKeyDown)
+            window.removeEventListener('keydown', onGlobalShieldKeyDown)
+        }
     }, [overrides])
 }
