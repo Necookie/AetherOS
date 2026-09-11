@@ -159,6 +159,7 @@ export default function SettingsApp({ id }: { id: string }) {
     const resolvedShortcutKeymap = useMemo(() => resolveShortcutKeymap(shortcuts.overrides), [shortcuts.overrides])
     const shortcutValidation = useMemo(() => validateShortcutOverrides(shortcuts.overrides), [shortcuts.overrides])
     const permissionStatuses = useMemo(() => {
+        void permissionsVersion
         if (!activeUserId) {
             return []
         }

@@ -98,8 +98,6 @@ export function createDownloadManagerService(options: DownloadManagerOptions = {
 
     const getItem = (id: string) => items.find((item) => item.id === id)
 
-    let service: DownloadManagerService
-
     const publish = (event: DownloadManagerEvent) => {
         publishEvent?.({
             ...event,
