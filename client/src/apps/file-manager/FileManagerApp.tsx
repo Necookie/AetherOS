@@ -6,6 +6,8 @@ import { useFsStore } from '../../stores/fsStore';
 import FilePane from './components/FilePane';
 import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
+import FileManagerDialog from './components/FileManagerDialog';
+import { fileManagerDialogs } from './dialogStore';
 
 export default function FileManagerApp({ id }: { id: string }) {
     const {
@@ -86,11 +88,13 @@ export default function FileManagerApp({ id }: { id: string }) {
             if (event.key === 'Delete' && !isInput && selectedIds.length > 0) {
                 event.preventDefault();
                 if (inTrash) {
-                    if (confirm(`Permanently delete ${selectedIds.length} item(s)? This cannot be undone.`)) {
+                    fileManagerDialogs.confirmPermanentDelete(selectedIds.length, () => {
                         permanentlyDeleteItems(selectedIds);
-                    }
-                } else if (confirm(`Move ${selectedIds.length} item(s) to Trash?`)) {
-                    deleteItems(selectedIds);
+                    });
+                } else {
+                    fileManagerDialogs.confirmTrash(selectedIds.length, () => {
+                        deleteItems(selectedIds);
+                    });
                 }
             }
             if (modifier && event.key.toLowerCase() === 'r' && !isInput && selectedIds.length > 0 && inTrash) {
@@ -99,33 +103,33 @@ export default function FileManagerApp({ id }: { id: string }) {
             }
             if (modifier && event.shiftKey && event.key.toLowerCase() === 'delete' && !isInput && inTrash) {
                 event.preventDefault();
-                if (confirm('Empty Trash permanently? This cannot be undone.')) {
+                fileManagerDialogs.confirmEmptyTrash(() => {
                     emptyTrash();
-                }
+                });
             }
             if (event.key === 'F2' && !isInput && selectedIds.length === 1 && !inTrash) {
                 event.preventDefault();
-                const newName = prompt('Enter new name:');
-                if (newName) {
+                const targetNode = items.find((it) => it.id === selectedIds[0]);
+                const currentName = targetNode?.name ?? 'item';
+                fileManagerDialogs.promptRename(currentName, (newName) => {
                     renameItem(selectedIds[0], newName);
-                }
+                });
             }
             if (modifier && event.shiftKey && event.key.toLowerCase() === 'm' && !isInput && selectedIds.length > 0 && !inTrash) {
                 event.preventDefault();
-                const destination = prompt('Move selected items to:', '/home/user');
-                if (destination) {
+                fileManagerDialogs.promptMove(selectedIds.length, (destination) => {
                     moveItems(selectedIds, destination);
-                }
+                });
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [copyItemsToClipboard, cutItemsToClipboard, deleteItems, emptyTrash, inTrash, moveItems, pasteClipboard, permanentlyDeleteItems, renameItem, restoreItems, selectedIds, setViewMode, toggleHidden]);
+    }, [copyItemsToClipboard, cutItemsToClipboard, deleteItems, emptyTrash, inTrash, items, moveItems, pasteClipboard, permanentlyDeleteItems, renameItem, restoreItems, selectedIds, setViewMode, toggleHidden]);
 
     return (
         <Window id={id} title="File Manager">
-            <div className="flex h-full w-full select-none flex-col overflow-hidden bg-canvas text-sm text-ink">
+            <div className="relative flex h-full w-full select-none flex-col overflow-hidden bg-canvas text-sm text-ink">
                 <TopBar />
                 <div className="relative flex flex-1 overflow-hidden">
                     <Sidebar />
@@ -140,6 +144,9 @@ export default function FileManagerApp({ id }: { id: string }) {
                         {statusMessage ?? clipboardStatus ?? (inTrash ? 'Ctrl+R restore, Del permanent delete' : 'Ctrl+C / Ctrl+X / Ctrl+V for clipboard actions')}
                     </span>
                 </div>
+
+                {/* Native In-Window Card Dialog */}
+                <FileManagerDialog />
             </div>
         </Window>
     );

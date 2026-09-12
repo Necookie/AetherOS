@@ -19,6 +19,7 @@ import {
 import { useClipboardSnapshot } from '../../../features/clipboard';
 import { useFsStore } from '../../../stores/fsStore';
 import AddressBar from './AddressBar';
+import { fileManagerDialogs } from '../dialogStore';
 
 export default function TopBar() {
     const {
@@ -225,9 +226,9 @@ export default function TopBar() {
                             type="button"
                             onClick={() => {
                                 if (selectedIds.length === 0) return;
-                                if (confirm(`Permanently delete ${selectedIds.length} item(s)? This cannot be undone.`)) {
+                                fileManagerDialogs.confirmPermanentDelete(selectedIds.length, () => {
                                     permanentlyDeleteItems(selectedIds);
-                                }
+                                });
                             }}
                             disabled={isMutating || selectedIds.length === 0}
                             className="flex h-7 items-center gap-1.5 rounded-md border border-hairline/70 bg-canvas/80 px-2 text-xs font-medium text-danger transition-all hover:bg-danger/10 hover:border-danger/30 disabled:opacity-40 disabled:pointer-events-none active:scale-95 shadow-2xs"
@@ -240,9 +241,9 @@ export default function TopBar() {
                         <button
                             type="button"
                             onClick={() => {
-                                if (confirm('Empty Trash permanently? This cannot be undone.')) {
+                                fileManagerDialogs.confirmEmptyTrash(() => {
                                     emptyTrash();
-                                }
+                                });
                             }}
                             disabled={isMutating}
                             className="flex h-7 items-center gap-1.5 rounded-md border border-hairline/70 bg-canvas/80 px-2 text-xs font-medium text-danger transition-all hover:bg-danger/10 hover:border-danger/30 disabled:opacity-40 disabled:pointer-events-none active:scale-95 shadow-2xs"
