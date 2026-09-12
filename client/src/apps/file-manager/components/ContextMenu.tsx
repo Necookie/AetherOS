@@ -17,6 +17,7 @@ import { useClipboardSnapshot } from '../../../features/clipboard';
 import { useFsStore } from '../../../stores/fsStore';
 import { fsService } from '../../../vfs/vfsService';
 import { VfsNodeType } from '../../../vfs/types';
+import { fileManagerDialogs } from '../dialogStore';
 
 interface Point {
     x: number;
@@ -57,6 +58,7 @@ const Separator = () => <div className="mx-2 my-1 h-px bg-hairline" />;
 
 export default function ContextMenu({ onClose, position, targetId }: ContextMenuProps) {
     const {
+        items,
         selectedIds,
         currentPath,
         viewMode,
@@ -111,26 +113,26 @@ export default function ContextMenu({ onClose, position, targetId }: ContextMenu
     };
 
     const handleNewFolder = () => {
-        const name = prompt('New Folder Name:', 'New Folder');
-        if (name) {
-            createFolder(name);
-        }
         onClose();
+        fileManagerDialogs.promptNewFolder((name) => {
+            createFolder(name);
+        });
     };
 
     const handleNewFile = () => {
-        const name = prompt('New File Name:', 'New Text Document.txt');
-        if (name) {
-            createFile(name, '');
-        }
         onClose();
+        fileManagerDialogs.promptNewFile((name) => {
+            createFile(name, '');
+        });
     };
 
     const handleDelete = () => {
-        if (selectedIds.length > 0 && confirm(`Move ${selectedIds.length} item(s) to Trash?`)) {
-            deleteItems(selectedIds);
-        }
         onClose();
+        if (selectedIds.length > 0) {
+            fileManagerDialogs.confirmTrash(selectedIds.length, () => {
+                deleteItems(selectedIds);
+            });
+        }
     };
 
     const handleRestore = () => {
@@ -141,33 +143,33 @@ export default function ContextMenu({ onClose, position, targetId }: ContextMenu
     };
 
     const handlePermanentDelete = () => {
-        if (selectedIds.length > 0 && confirm(`Permanently delete ${selectedIds.length} item(s)? This cannot be undone.`)) {
-            permanentlyDeleteItems(selectedIds);
-        }
         onClose();
+        if (selectedIds.length > 0) {
+            fileManagerDialogs.confirmPermanentDelete(selectedIds.length, () => {
+                permanentlyDeleteItems(selectedIds);
+            });
+        }
     };
 
     const handleRename = () => {
-        if (selectedIds.length === 1) {
-            const newName = prompt('Enter new name:');
-            if (newName) {
-                renameItem(selectedIds[0], newName);
-            }
-        }
         onClose();
+        if (selectedIds.length === 1) {
+            const node = items.find((it) => it.id === selectedIds[0]) ?? (targetId ? fsService.getNodeById(targetId) : null);
+            const currentName = node?.name ?? 'item';
+            fileManagerDialogs.promptRename(currentName, (newName) => {
+                renameItem(selectedIds[0], newName);
+            });
+        }
     };
 
     const handleMove = () => {
+        onClose();
         if (selectedIds.length === 0) {
-            onClose();
             return;
         }
-
-        const destination = prompt('Move to path:', '/home/user');
-        if (destination) {
+        fileManagerDialogs.promptMove(selectedIds.length, (destination) => {
             moveItems(selectedIds, destination);
-        }
-        onClose();
+        });
     };
 
     const onEmptySpace = !targetId;
@@ -193,10 +195,10 @@ export default function ContextMenu({ onClose, position, targetId }: ContextMenu
                     {inTrash && (
                         <>
                             <MenuItem icon={<Trash2 size={14} />} label="Empty Trash" onClick={() => {
-                                if (confirm('Empty Trash permanently? This cannot be undone.')) {
-                                    emptyTrash();
-                                }
                                 onClose();
+                                fileManagerDialogs.confirmEmptyTrash(() => {
+                                    emptyTrash();
+                                });
                             }} disabled={isMutating} />
                             <Separator />
                         </>
