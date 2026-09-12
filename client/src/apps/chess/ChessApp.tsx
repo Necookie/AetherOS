@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Crown, RotateCcw, RotateCw, Swords } from 'lucide-react'
 import Window from '../../components/system/Window'
+import './ChessApp.css'
 
 type Color = 'white' | 'black'
 type Kind = 'king' | 'queen' | 'rook' | 'bishop' | 'knight' | 'pawn'
@@ -8,7 +9,7 @@ type Piece = { color: Color; kind: Kind }
 type Board = Record<string, Piece>
 
 const GLYPHS: Record<Color, Record<Kind, string>> = {
-    white: { king: '♔', queen: '♕', rook: '♖', bishop: '♗', knight: '♘', pawn: '♙' },
+    white: { king: '♚', queen: '♛', rook: '♜', bishop: '♝', knight: '♞', pawn: '♟' },
     black: { king: '♚', queen: '♛', rook: '♜', bishop: '♝', knight: '♞', pawn: '♟' },
 }
 
@@ -112,6 +113,29 @@ function moveLabel(piece: Piece, from: string, to: string, captured?: Piece) {
     return `${name} ${from.toUpperCase()}${captured ? ' × ' : ' → '}${to.toUpperCase()}`
 }
 
+function ChessPiece({ piece }: { piece: Piece }) {
+    const isWhite = piece.color === 'white'
+    const glyph = GLYPHS[piece.color][piece.kind]
+
+    return (
+        <span
+            className="relative z-20 flex h-[78%] w-[78%] select-none items-center justify-center font-serif text-[clamp(30px,4vw,58px)] leading-none transition-transform duration-150 [transform:translateZ(26px)_rotateX(-8deg)] group-active:scale-95"
+            aria-hidden
+        >
+            <span
+                className={`absolute translate-y-[5px] scale-[1.015] ${isWhite ? 'text-[#81796c]' : 'text-[#080b0a]'}`}
+            >
+                {glyph}
+            </span>
+            <span
+                className={`relative [filter:drop-shadow(0_3px_3px_rgba(10,12,11,0.28))] ${isWhite ? 'text-[#f2ece0]' : 'text-[#242928]'}`}
+            >
+                {glyph}
+            </span>
+        </span>
+    )
+}
+
 export default function ChessApp({ id }: { id: string }) {
     const [board, setBoard] = useState<Board>(initialBoard)
     const [turn, setTurn] = useState<Color>('white')
@@ -162,13 +186,16 @@ export default function ChessApp({ id }: { id: string }) {
 
     return (
         <Window id={id} title="Obsidian Chess">
-            <div className="flex h-full min-h-0 bg-[#ede9df] text-[#20201f]">
-                <main className="relative flex min-w-0 flex-1 items-center justify-center overflow-hidden px-6 py-5 [perspective:1200px]">
-                    <div className="absolute inset-x-0 top-0 h-20 bg-[#ded8ca]" />
-                    <div className="absolute bottom-[8%] h-10 w-[68%] max-w-[620px] rounded-[50%] bg-black/15 blur-2xl" />
-                    <div className="relative w-[min(82%,620px)] max-h-full aspect-square [transform-style:preserve-3d] [transform:rotateX(44deg)_rotateZ(-1deg)]">
-                        <div className="absolute -inset-3 translate-y-5 bg-[#292722] [transform:translateZ(-18px)]" />
-                        <div className="grid h-full w-full grid-cols-8 border-[10px] border-[#35312b] bg-[#35312b] shadow-[0_24px_45px_rgba(30,25,18,0.26)]">
+            <div className="chess-app h-full min-h-0 overflow-hidden bg-[#e8e5dc] text-[#20201f]">
+                <div className="chess-layout flex h-full min-h-0">
+                <main className="chess-board-area relative flex min-w-0 flex-1 items-center justify-center overflow-hidden px-8 py-6 [perspective:1600px]">
+                    <div className="absolute bottom-[7%] h-8 w-[64%] max-w-[620px] rounded-[50%] bg-[#272b29]/15 blur-2xl" />
+                    <div className="relative aspect-square w-[min(88%,660px)] max-h-[92%] [transform-style:preserve-3d] [transform:rotateX(12deg)]">
+                        <div className="absolute -inset-[14px] translate-y-[18px] bg-[#121614] [transform:translateZ(-22px)]" />
+                        <div className="absolute -inset-[14px] bg-[#242a27] p-2 [transform:translateZ(-4px)]">
+                            <div className="h-full w-full border border-[#60675f]" />
+                        </div>
+                        <div className="grid h-full w-full grid-cols-8 overflow-hidden border border-[#151a18] bg-[#242a27] shadow-[0_18px_38px_rgba(27,30,28,0.22)] [transform:translateZ(0px)]">
                             {ranks.flatMap((rank, row) => files.map((file, column) => {
                                 const squareId = `${file}${rank}`
                                 const piece = board[squareId]
@@ -179,19 +206,13 @@ export default function ChessApp({ id }: { id: string }) {
                                     <button
                                         key={squareId}
                                         onClick={() => chooseSquare(squareId)}
-                                        className={`group relative flex items-center justify-center transition-colors duration-150 ${isLight ? 'bg-[#d8cfbb]' : 'bg-[#6b7766]'} ${isSelected ? '!bg-[#8fa9b8]' : ''}`}
+                                        className={`group relative flex items-center justify-center transition-colors duration-150 focus:z-30 ${isLight ? 'bg-[#d9d6cb]' : 'bg-[#69766f]'} ${isSelected ? '!bg-[#76a8cf]' : ''}`}
                                         aria-label={`${squareId}${piece ? ` ${piece.color} ${piece.kind}` : ''}`}
                                     >
-                                        {row === 7 && <span className={`absolute bottom-0.5 right-1 text-[8px] font-semibold ${isLight ? 'text-[#6b7766]' : 'text-[#d8cfbb]'}`}>{file}</span>}
-                                        {column === 0 && <span className={`absolute left-1 top-0.5 text-[8px] font-semibold ${isLight ? 'text-[#6b7766]' : 'text-[#d8cfbb]'}`}>{rank}</span>}
-                                        {isTarget && <span className={`absolute z-10 rounded-full ${piece ? 'inset-1.5 border-[3px] border-[#a64e42]/70' : 'h-[18%] w-[18%] bg-[#233a43]/40'}`} />}
-                                        {piece && (
-                                            <span
-                                                className={`relative z-20 select-none font-serif text-[clamp(26px,4.4vw,58px)] leading-none transition-transform duration-150 [transform:translateZ(22px)_rotateX(-28deg)] group-active:scale-95 ${piece.color === 'white' ? 'text-[#f8f3e8] [text-shadow:0_2px_0_#a69d8b,0_5px_8px_rgba(0,0,0,0.38)]' : 'text-[#232522] [text-shadow:0_2px_0_#8a8e82,0_5px_8px_rgba(0,0,0,0.45)]'}`}
-                                            >
-                                                {GLYPHS[piece.color][piece.kind]}
-                                            </span>
-                                        )}
+                                        {row === 7 && <span className={`absolute bottom-1 right-1.5 text-[8px] font-semibold uppercase ${isLight ? 'text-[#69766f]' : 'text-[#d9d6cb]'}`}>{file}</span>}
+                                        {column === 0 && <span className={`absolute left-1.5 top-1 text-[8px] font-semibold ${isLight ? 'text-[#69766f]' : 'text-[#d9d6cb]'}`}>{rank}</span>}
+                                        {isTarget && <span className={`absolute z-10 rounded-full ${piece ? 'inset-1.5 border-[3px] border-[#0066cc]/70' : 'h-[16%] w-[16%] bg-[#0066cc]/55'}`} />}
+                                        {piece && <ChessPiece piece={piece} />}
                                     </button>
                                 )
                             }))}
@@ -199,7 +220,7 @@ export default function ChessApp({ id }: { id: string }) {
                     </div>
                 </main>
 
-                <aside className="flex w-64 shrink-0 flex-col border-l border-[#cbc4b5] bg-[#f5f1e8]">
+                <aside className="chess-sidebar flex w-64 shrink-0 flex-col border-l border-[#cbc4b5] bg-[#f5f1e8]">
                     <div className="p-5">
                         <div className="flex items-start justify-between gap-3">
                             <div>
@@ -233,6 +254,7 @@ export default function ChessApp({ id }: { id: string }) {
                         </div>
                     </div>
                 </aside>
+                </div>
             </div>
         </Window>
     )
