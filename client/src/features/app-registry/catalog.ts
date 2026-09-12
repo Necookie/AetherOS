@@ -208,6 +208,21 @@ export const APP_REGISTRY_CATALOG: RegistryAppMetadata[] = [
         ],
     },
     {
+        id: 'chess',
+        title: 'Obsidian Chess',
+        summary: 'A dimensional chess room with guided legal moves, captures, and a tactile board.',
+        category: 'utility',
+        iconId: 'chess',
+        launchable: true,
+        releases: [
+            {
+                version: '1.0.0',
+                dependencies: [],
+                changelog: 'Interactive 3D board, legal move guidance, capture ledger, and board rotation.',
+            },
+        ],
+    },
+    {
         id: 'mail',
         title: 'Mail',
         summary: 'Unified inbox with offline queue simulation.',

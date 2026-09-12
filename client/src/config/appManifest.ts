@@ -67,4 +67,9 @@ export const APP_MANIFEST: AppManifestEntry[] = [
         title: 'Falling Light',
         defaultBounds: { x: 210, y: 70, width: 820, height: 720 },
     },
+    {
+        id: 'chess',
+        title: 'Obsidian Chess',
+        defaultBounds: { x: 130, y: 70, width: 1050, height: 700 },
+    },
 ]

@@ -15,6 +15,7 @@ const APP_COMPONENTS: Record<string, AppDefinition['component']> = {
     downloads: createRecoverableLazyWindow('Download Manager', () => import('../apps/downloads/DownloadManagerApp')),
     'os-lab': createRecoverableLazyWindow('OS Simulation Lab', () => import('../apps/os-lab/OSLabApp')),
     tetris: createRecoverableLazyWindow('Falling Light', () => import('../apps/tetris/TetrisApp')),
+    chess: createRecoverableLazyWindow('Obsidian Chess', () => import('../apps/chess/ChessApp')),
 }
 
 export const DEFAULT_APPS: AppDefinition[] = APP_MANIFEST.map((entry) => ({
