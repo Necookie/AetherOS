@@ -611,6 +611,19 @@ export function TetrisIcon({ className, style }: AppIconSvgProps) {
     )
 }
 
+export function ChessIcon({ className, style }: AppIconSvgProps) {
+    return (
+        <BaseSquircle id="chess" gradientStops={['#6B7766', '#262720']} className={className} style={style}>
+            <path d="M14 46H50L46 51H18L14 46Z" fill="#171915" fillOpacity="0.8" />
+            <g filter="drop-shadow(0 3px 3px rgba(0,0,0,0.35))">
+                <path d="M24 45H42C42 41.5 39.8 39.5 36.5 38.5C38.8 34.5 38.2 30.5 34.5 27.5L40 20L31 13L24 19L31 24C24.5 28 23.2 35 28.2 38.7C25.5 40 24 42 24 45Z" fill="#F5F1E8" />
+                <path d="M31 13L40 20L34.5 27.5L31 24L24 19L31 13Z" fill="#D8CFBB" />
+                <circle cx="33" cy="18.5" r="1.4" fill="#262720" />
+            </g>
+        </BaseSquircle>
+    )
+}
+
 /** 14. Fallback Generic App Icon — "Aether Application Prism" */
 export function GenericAppIcon({ className, style }: AppIconSvgProps) {
     return (
@@ -673,6 +686,7 @@ export const APP_ICON_COMPONENTS: Record<string, React.FC<AppIconSvgProps>> = {
     mail: MailIcon,
     devtools: DevToolsIcon,
     tetris: TetrisIcon,
+    chess: ChessIcon,
     pc: SystemPcIcon,
     folder: FolderIcon,
     file: FileDocumentIcon,

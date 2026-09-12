@@ -13,6 +13,7 @@ import {
     Store,
     Terminal,
     Blocks,
+    Crown,
     type LucideIcon,
 } from 'lucide-react'
 
@@ -107,6 +108,12 @@ export const APP_ICON_STYLES: Record<string, AppIconStyle> = {
         bg: 'bg-[#172333]',
         text: 'text-[#48c6e8]',
         border: 'border-[#2a3d52]',
+    },
+    chess: {
+        icon: Crown,
+        bg: 'bg-[#35312b]',
+        text: 'text-[#f5f1e8]',
+        border: 'border-[#6b7766]',
     },
 }
 
