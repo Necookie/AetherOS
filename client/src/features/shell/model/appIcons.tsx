@@ -115,6 +115,12 @@ export const APP_ICON_STYLES: Record<string, AppIconStyle> = {
         text: 'text-[#f5f1e8]',
         border: 'border-[#6b7766]',
     },
+    studio: {
+        icon: Code2,
+        bg: 'bg-[#20242a]',
+        text: 'text-[#70b7f1]',
+        border: 'border-[#3c444e]',
+    },
 }
 
 import { APP_ICON_COMPONENTS, GenericAppIcon } from '../components/icons/AppIcons'

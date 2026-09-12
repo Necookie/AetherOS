@@ -223,6 +223,21 @@ export const APP_REGISTRY_CATALOG: RegistryAppMetadata[] = [
         ],
     },
     {
+        id: 'studio',
+        title: 'Aether Studio',
+        summary: 'A focused code workspace with project navigation, diagnostics, and an integrated build console.',
+        category: 'developer',
+        iconId: 'studio',
+        launchable: true,
+        releases: [
+            {
+                version: '1.0.0',
+                dependencies: [],
+                changelog: 'Multi-file editing, tabs, workspace search, diagnostics, keyboard save, and build runner.',
+            },
+        ],
+    },
+    {
         id: 'mail',
         title: 'Mail',
         summary: 'Unified inbox with offline queue simulation.',
