@@ -62,4 +62,9 @@ export const APP_MANIFEST: AppManifestEntry[] = [
         title: 'OS Simulation Lab',
         defaultBounds: { x: 150, y: 100, width: 900, height: 600 },
     },
+    {
+        id: 'tetris',
+        title: 'Falling Light',
+        defaultBounds: { x: 210, y: 70, width: 820, height: 720 },
+    },
 ]
