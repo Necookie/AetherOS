@@ -188,6 +188,9 @@ export default function DesktopIcons({ iconScale = 1, refreshKey = 0, labelTone 
         [launchItem],
     )
 
+    const desktopSurfaceRef = useRef<HTMLDivElement>(null)
+    const hasDraggedRef = useRef(false)
+
     const updateMarqueeSelection = useCallback((nextRect: SelectionRect) => {
         const container = containerRef.current
         const dragState = dragRef.current
@@ -223,9 +226,17 @@ export default function DesktopIcons({ iconScale = 1, refreshKey = 0, labelTone 
                 return
             }
 
-            const nextRect = createSelectionRect(dragState.startX, dragState.startY, event.clientX, event.clientY)
-            setSelectionRect(nextRect)
-            updateMarqueeSelection(nextRect)
+            const dx = Math.abs(event.clientX - dragState.startX)
+            const dy = Math.abs(event.clientY - dragState.startY)
+            if (!hasDraggedRef.current && (dx > 3 || dy > 3)) {
+                hasDraggedRef.current = true
+            }
+
+            if (hasDraggedRef.current) {
+                const nextRect = createSelectionRect(dragState.startX, dragState.startY, event.clientX, event.clientY)
+                setSelectionRect(nextRect)
+                updateMarqueeSelection(nextRect)
+            }
         },
         [updateMarqueeSelection],
     )
@@ -234,6 +245,9 @@ export default function DesktopIcons({ iconScale = 1, refreshKey = 0, labelTone 
         dragRef.current = null
         setSelectionRect(null)
         window.removeEventListener('mousemove', handleMouseMove)
+        window.setTimeout(() => {
+            hasDraggedRef.current = false
+        }, 80)
     }, [handleMouseMove])
 
     const handleMouseUp = useCallback(() => {
@@ -254,7 +268,13 @@ export default function DesktopIcons({ iconScale = 1, refreshKey = 0, labelTone 
         }
 
         const target = event.target as HTMLElement
-        if (target.closest('[data-selectable-id]')) {
+        if (
+            target.closest('[data-selectable-id]') ||
+            target.closest('button') ||
+            target.closest('input') ||
+            target.closest('aside') ||
+            target.closest('[data-disable-marquee="true"]')
+        ) {
             return
         }
 
@@ -267,6 +287,7 @@ export default function DesktopIcons({ iconScale = 1, refreshKey = 0, labelTone 
                   ? 'add'
                   : 'replace'
 
+        hasDraggedRef.current = false
         dragRef.current = {
             startX: event.clientX,
             startY: event.clientY,
@@ -274,15 +295,12 @@ export default function DesktopIcons({ iconScale = 1, refreshKey = 0, labelTone 
             baseSelection: [...selectedIconIds],
         }
 
-        const startRect = createSelectionRect(event.clientX, event.clientY, event.clientX, event.clientY)
-        setSelectionRect(startRect)
-        updateMarqueeSelection(startRect)
         window.addEventListener('mousemove', handleMouseMove)
         window.addEventListener('mouseup', handleMouseUp)
     }
 
     const handleContainerClick = (event: MouseEvent<HTMLDivElement>) => {
-        if (dragRef.current) {
+        if (hasDraggedRef.current || dragRef.current) {
             return
         }
 
@@ -295,68 +313,74 @@ export default function DesktopIcons({ iconScale = 1, refreshKey = 0, labelTone 
 
     return (
         <div
-            ref={containerRef}
+            ref={desktopSurfaceRef}
             onMouseDown={handleContainerMouseDown}
             onClick={handleContainerClick}
-            className="absolute left-3 top-2 z-20 grid grid-cols-1 gap-2 sm:left-5 sm:top-5 sm:gap-3"
-            style={{ transform: `scale(${iconScale})`, transformOrigin: 'top left' }}
+            className="absolute inset-0 select-none overflow-hidden"
         >
-            {allItems.map((item) => (
-                <button
-                    key={item.id}
-                    data-selectable-id={item.id}
-                    onClick={(event) => {
-                        selectIcon(event, item.id)
-                    }}
-                    onDoubleClick={(event) => {
-                        event.stopPropagation()
-                        setSelectedIconIds([item.id])
-                        setSelectionAnchorId(item.id)
-                        launchItem(item)
-                    }}
-                    onKeyDown={(event) => handleIconKeyDown(event, item)}
-                    className={`group flex w-20 flex-col items-center rounded-xl p-2 transition-all active:scale-95 sm:w-24 ${
-                        selectedIconIds.includes(item.id)
-                            ? 'bg-primary/20 ring-2 ring-primary-focus shadow-xs'
-                            : 'hover:bg-white/15'
-                    }`}
-                    aria-label={`Open ${item.label}`}
-                >
-                    {(() => {
-                        let iconAppId = 'folder'
-                        if (!item.isVfs) {
-                            if (item.appId) {
-                                iconAppId = item.appId
-                            } else if (item.id === 'pc') {
-                                iconAppId = 'pc'
+            <div
+                ref={containerRef}
+                className="absolute left-3 top-2 grid grid-cols-1 gap-2 sm:left-5 sm:top-5 sm:gap-3"
+                style={{ transform: `scale(${iconScale})`, transformOrigin: 'top left' }}
+            >
+                {allItems.map((item) => (
+                    <button
+                        key={item.id}
+                        data-selectable-id={item.id}
+                        onClick={(event) => {
+                            selectIcon(event, item.id)
+                        }}
+                        onDoubleClick={(event) => {
+                            event.stopPropagation()
+                            setSelectedIconIds([item.id])
+                            setSelectionAnchorId(item.id)
+                            launchItem(item)
+                        }}
+                        onKeyDown={(event) => handleIconKeyDown(event, item)}
+                        className={`group flex w-20 flex-col items-center rounded-xl p-2 transition-all active:scale-95 sm:w-24 ${
+                            selectedIconIds.includes(item.id)
+                                ? 'bg-primary/20 ring-2 ring-primary-focus shadow-xs'
+                                : 'hover:bg-white/15'
+                        }`}
+                        aria-label={`Open ${item.label}`}
+                    >
+                        {(() => {
+                            let iconAppId = 'folder'
+                            if (!item.isVfs) {
+                                if (item.appId) {
+                                    iconAppId = item.appId
+                                } else if (item.id === 'pc') {
+                                    iconAppId = 'pc'
+                                }
+                            } else if (item.node?.type === VfsNodeType.FILE) {
+                                iconAppId = 'file'
+                            } else {
+                                iconAppId = 'folder'
                             }
-                        } else if (item.node?.type === VfsNodeType.FILE) {
-                            iconAppId = 'file'
-                        } else {
-                            iconAppId = 'folder'
-                        }
 
-                        return (
-                            <div className="relative flex h-12 w-12 items-center justify-center transition-transform group-hover:scale-105">
-                                <ShellAppIcon appId={iconAppId} size="lg" />
-                            </div>
-                        )
-                    })()}
-                    <span className={`mt-1.5 line-clamp-2 max-w-full rounded px-1.5 py-0.5 text-center text-xs leading-tight font-medium ${
-                        selectedIconIds.includes(item.id)
-                            ? 'bg-primary text-white shadow-xs'
-                            : labelTone === 'light'
-                                ? 'bg-black/50 text-white backdrop-blur-xs'
-                                : 'text-ink drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]'
-                    }`}>
-                        {item.label}
-                    </span>
-                </button>
-            ))}
+                            return (
+                                <div className="relative flex h-12 w-12 items-center justify-center transition-transform group-hover:scale-105">
+                                    <ShellAppIcon appId={iconAppId} size="lg" />
+                                </div>
+                            )
+                        })()}
+                        <span className={`mt-1.5 line-clamp-2 max-w-full rounded px-1.5 py-0.5 text-center text-xs leading-tight font-medium ${
+                            selectedIconIds.includes(item.id)
+                                ? 'bg-primary text-white shadow-xs'
+                                : labelTone === 'light'
+                                    ? 'bg-black/50 text-white backdrop-blur-xs'
+                                    : 'text-ink drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]'
+                        }`}>
+                            {item.label}
+                        </span>
+                    </button>
+                ))}
+            </div>
+
             {selectionRect && (
                 <div
                     aria-hidden
-                    className="pointer-events-none fixed z-30 border border-primary-focus bg-[rgba(0,102,204,0.1)]"
+                    className="pointer-events-none fixed z-30 rounded-[3px] border border-primary/70 bg-[rgba(0,102,204,0.18)] shadow-[0_0_12px_rgba(0,102,204,0.12)] backdrop-blur-[0.5px]"
                     style={{
                         left: selectionRect.left,
                         top: selectionRect.top,
