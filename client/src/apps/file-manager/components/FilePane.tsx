@@ -186,7 +186,7 @@ export default function FilePane() {
                 {selectionRect && (
                     <div
                         aria-hidden
-                        className="pointer-events-none fixed z-30 border border-primary-focus bg-[rgba(0,102,204,0.1)]"
+                        className="pointer-events-none fixed z-30 rounded-[3px] border border-primary/70 bg-[rgba(0,102,204,0.18)] shadow-[0_0_12px_rgba(0,102,204,0.12)] backdrop-blur-[0.5px]"
                         style={{
                             left: selectionRect.left,
                             top: selectionRect.top,
