@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
     Box,
     Braces,
@@ -20,6 +20,7 @@ import {
     X,
 } from 'lucide-react'
 import Window from '../../components/system/Window'
+import { useWindowStore } from '../../stores/windowStore'
 
 type StudioFile = {
     name: string
@@ -106,6 +107,7 @@ function diagnosticsFor(file: StudioFile) {
 }
 
 export default function StudioApp({ id }: { id: string }) {
+    const isFocused = useWindowStore((state) => Boolean(state.windows[id]?.state.isFocused))
     const [files, setFiles] = useState(STARTER_FILES)
     const [activePath, setActivePath] = useState('src/App.tsx')
     const [tabs, setTabs] = useState(['src/App.tsx', 'src/styles.css'])
@@ -142,15 +144,15 @@ export default function StudioApp({ id }: { id: string }) {
         setDirty((current) => new Set(current).add(activePath))
     }
 
-    const save = () => {
+    const save = useCallback(() => {
         setDirty((current) => {
             const next = new Set(current)
             next.delete(activePath)
             return next
         })
-    }
+    }, [activePath])
 
-    const run = () => {
+    const run = useCallback(() => {
         if (running) return
         setRunning(true)
         setPanelOpen(true)
@@ -160,9 +162,10 @@ export default function StudioApp({ id }: { id: string }) {
             setRunning(false)
             setLogs((current) => [...current, `✓ ${Object.keys(files).length} modules transformed`, '✓ built in 428ms', '', 'Preview ready on aether://localhost'])
         }, 650)
-    }
+    }, [files, running])
 
     useEffect(() => {
+        if (!isFocused) return undefined
         const onKeyDown = (event: KeyboardEvent) => {
             if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
                 event.preventDefault()
@@ -175,7 +178,7 @@ export default function StudioApp({ id }: { id: string }) {
         }
         window.addEventListener('keydown', onKeyDown)
         return () => window.removeEventListener('keydown', onKeyDown)
-    })
+    }, [isFocused, run, save])
 
     const addScratchFile = () => {
         let suffix = 1

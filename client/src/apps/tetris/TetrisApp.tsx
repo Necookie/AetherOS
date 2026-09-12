@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, ChevronLeft, ChevronRight, Pause, Play, RotateCcw } from 'lucide-react'
 import Window from '../../components/system/Window'
+import { useWindowStore } from '../../stores/windowStore'
 
 const BOARD_WIDTH = 10
 const BOARD_HEIGHT = 20
@@ -107,6 +108,7 @@ function previewCells(name: PieceName) {
 }
 
 export default function TetrisApp({ id }: { id: string }) {
+    const isFocused = useWindowStore((state) => Boolean(state.windows[id]?.state.isFocused))
     const [board, setBoard] = useState<Board>(emptyBoard)
     const [active, setActive] = useState<ActivePiece>(() => spawnPiece(randomPiece()))
     const [next, setNext] = useState<PieceName>(() => randomPiece())
@@ -204,6 +206,7 @@ export default function TetrisApp({ id }: { id: string }) {
     }, [level, move, running])
 
     useEffect(() => {
+        if (!isFocused) return undefined
         const onKeyDown = (event: KeyboardEvent) => {
             if (['ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp', ' '].includes(event.key)) event.preventDefault()
             if (event.key === 'ArrowLeft') move(-1, 0)
@@ -215,7 +218,7 @@ export default function TetrisApp({ id }: { id: string }) {
         }
         window.addEventListener('keydown', onKeyDown)
         return () => window.removeEventListener('keydown', onKeyDown)
-    }, [gameOver, hardDrop, move, rotate])
+    }, [gameOver, hardDrop, isFocused, move, rotate])
 
     const display = useMemo(() => mergedBoard(board, active), [active, board])
 
