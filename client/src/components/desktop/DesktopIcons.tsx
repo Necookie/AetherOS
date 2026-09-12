@@ -1,5 +1,4 @@
 import { DESKTOP_ICONS } from '../../config/desktop'
-import { FileText, Folder, Monitor, Settings, type LucideIcon } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from 'react'
 import { shallow } from 'zustand/shallow'
 import { DEFAULT_APPS } from '../../config/windows'
@@ -16,11 +15,7 @@ import {
 import { fsService } from '../../vfs/vfsService'
 import { VfsNodeType, type VfsNode } from '../../vfs/types'
 import { useFsStore } from '../../stores/fsStore'
-
-const ICON_MAP: Record<string, LucideIcon> = {
-    pc: Monitor,
-    settings: Settings,
-}
+import { ShellAppIcon } from '../../features/shell/model/appIcons'
 
 const DESKTOP_PATH = '/home/user/Desktop'
 
@@ -320,31 +315,39 @@ export default function DesktopIcons({ iconScale = 1, refreshKey = 0, labelTone 
                         launchItem(item)
                     }}
                     onKeyDown={(event) => handleIconKeyDown(event, item)}
-                    className={`group flex w-20 flex-col items-center rounded-lg p-2 transition-colors sm:w-24 ${
+                    className={`group flex w-20 flex-col items-center rounded-xl p-2 transition-all active:scale-95 sm:w-24 ${
                         selectedIconIds.includes(item.id)
-                            ? 'bg-[rgba(0,102,204,0.12)] outline outline-1 outline-primary-focus'
-                            : 'hover:bg-surface'
+                            ? 'bg-primary/20 ring-2 ring-primary-focus shadow-xs'
+                            : 'hover:bg-white/15'
                     }`}
                     aria-label={`Open ${item.label}`}
                 >
                     {(() => {
-                        let Icon: LucideIcon = Folder
+                        let iconAppId = 'folder'
                         if (!item.isVfs) {
-                            Icon = ICON_MAP[item.id] ?? Folder
+                            if (item.appId) {
+                                iconAppId = item.appId
+                            } else if (item.id === 'pc') {
+                                iconAppId = 'pc'
+                            }
                         } else if (item.node?.type === VfsNodeType.FILE) {
-                            Icon = FileText
+                            iconAppId = 'file'
                         } else {
-                            Icon = Folder
+                            iconAppId = 'folder'
                         }
 
                         return (
-                            <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-hairline bg-surface text-ink shadow-sm">
-                                <Icon className="h-6 w-6" strokeWidth={1.75} />
+                            <div className="relative flex h-12 w-12 items-center justify-center transition-transform group-hover:scale-105">
+                                <ShellAppIcon appId={iconAppId} size="lg" />
                             </div>
                         )
                     })()}
-                    <span className={`mt-1.5 line-clamp-2 max-w-full rounded-xs px-1 py-0.5 text-center text-[12px] leading-tight sm:text-[12px] ${
-                        labelTone === 'light' ? 'bg-black/55 text-white' : 'text-ink'
+                    <span className={`mt-1.5 line-clamp-2 max-w-full rounded px-1.5 py-0.5 text-center text-xs leading-tight font-medium ${
+                        selectedIconIds.includes(item.id)
+                            ? 'bg-primary text-white shadow-xs'
+                            : labelTone === 'light'
+                                ? 'bg-black/50 text-white backdrop-blur-xs'
+                                : 'text-ink drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]'
                     }`}>
                         {item.label}
                     </span>

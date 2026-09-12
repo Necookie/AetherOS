@@ -102,7 +102,7 @@ export default function TopBar({
                         setSystemMenuOpen((open) => !open)
                     }}
                 >
-                    <AetherMark className="h-4 w-4" />
+                    <AetherMark className="h-4 w-4 text-primary" />
                     <span className="font-semibold">AetherOS</span>
                 </button>
                 <button

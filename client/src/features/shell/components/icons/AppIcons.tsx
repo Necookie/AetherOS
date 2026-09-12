@@ -612,6 +612,38 @@ export function GenericAppIcon({ className, style }: AppIconSvgProps) {
     )
 }
 
+/** 15. This PC / System Workstation Icon */
+export function SystemPcIcon({ className, style }: AppIconSvgProps) {
+    return (
+        <BaseSquircle id="pc" gradientStops={['#0284C7', '#0F172A']} className={className} style={style}>
+            <g filter="drop-shadow(0 2px 4px rgba(0,0,0,0.3))">
+                {/* Desktop Monitor Bezel */}
+                <rect x="13" y="14" width="38" height="25" rx="3.5" fill="#0C4A6E" stroke="#38BDF8" strokeWidth="1.5" />
+                {/* Inner glowing display */}
+                <rect x="15" y="16" width="34" height="21" rx="2" fill="#0369A1" />
+                {/* Aether Delta Core Emblem on screen */}
+                <path d="M28 31 L32 23 L36 31 M29 29 L35 29" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="32" cy="27" r="1.5" fill="#38BDF8" />
+
+                {/* Stand Neck */}
+                <rect x="29" y="39" width="6" height="6" fill="#94A3B8" />
+                {/* Stand Base */}
+                <rect x="22" y="45" width="20" height="3" rx="1.5" fill="#E2E8F0" />
+            </g>
+        </BaseSquircle>
+    )
+}
+
+/** 16. Dedicated Virtual Folder Icon */
+export function FolderIcon({ className, style }: AppIconSvgProps) {
+    return <ExplorerIcon className={className} style={style} />
+}
+
+/** 17. Dedicated Virtual File Document Icon */
+export function FileDocumentIcon({ className, style }: AppIconSvgProps) {
+    return <DocsIcon className={className} style={style} />
+}
+
 export const APP_ICON_COMPONENTS: Record<string, React.FC<AppIconSvgProps>> = {
     appstore: AppStoreIcon,
     browser: BrowserIcon,
@@ -626,4 +658,7 @@ export const APP_ICON_COMPONENTS: Record<string, React.FC<AppIconSvgProps>> = {
     'os-lab': OsLabIcon,
     mail: MailIcon,
     devtools: DevToolsIcon,
+    pc: SystemPcIcon,
+    folder: FolderIcon,
+    file: FileDocumentIcon,
 }
