@@ -72,4 +72,9 @@ export const APP_MANIFEST: AppManifestEntry[] = [
         title: 'Obsidian Chess',
         defaultBounds: { x: 130, y: 70, width: 1050, height: 700 },
     },
+    {
+        id: 'studio',
+        title: 'Aether Studio',
+        defaultBounds: { x: 90, y: 55, width: 1120, height: 720 },
+    },
 ]
