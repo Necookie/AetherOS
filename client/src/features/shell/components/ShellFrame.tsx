@@ -96,6 +96,13 @@ export default function ShellFrame() {
     const [isQuickSettingsOpen, setQuickSettingsOpen] = useState(false)
     const [isDateTimeOpen, setDateTimeOpen] = useState(false)
     const [isNotificationCenterOpen, setNotificationCenterOpen] = useState(false)
+    const [isWidgetsOpen, setWidgetsOpen] = useState<boolean>(() => {
+        try {
+            return localStorage.getItem('aetheros-widgets-collapsed') !== 'true'
+        } catch {
+            return true
+        }
+    })
     const [isAboutOpen, setAboutOpen] = useState(false)
     const [brightness, setBrightness] = useState(100)
     const [volume, setVolume] = useState(70)
@@ -462,6 +469,18 @@ export default function ShellFrame() {
                 queuedDownloads={downloadSnapshot.queuedCount}
                 unreadNotifications={unreadCount}
                 notificationsOpen={isNotificationCenterOpen}
+                widgetsOpen={isWidgetsOpen}
+                onToggleWidgets={() => {
+                    setWidgetsOpen((prev) => {
+                        const next = !prev
+                        try {
+                            localStorage.setItem('aetheros-widgets-collapsed', String(!next))
+                        } catch {
+                            // ignore
+                        }
+                        return next
+                    })
+                }}
                 activeAccount={activeAccount}
                 accounts={sessionAccounts}
                 onToggleLauncher={() => {
@@ -551,7 +570,20 @@ export default function ShellFrame() {
                     refreshKey={desktopRefreshKey}
                     labelTone={wallpaper.desktopText}
                 />
-                <WidgetBoard />
+                <WidgetBoard
+                    isOpen={isWidgetsOpen}
+                    onToggle={() => {
+                        setWidgetsOpen((prev) => {
+                            const next = !prev
+                            try {
+                                localStorage.setItem('aetheros-widgets-collapsed', String(!next))
+                            } catch {
+                                // ignore
+                            }
+                            return next
+                        })
+                    }}
+                />
             </main>
 
             <div className="pointer-events-none absolute inset-0 z-[var(--ds-z-desktop)]">
