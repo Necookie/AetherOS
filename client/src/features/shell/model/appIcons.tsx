@@ -12,6 +12,7 @@ import {
     StickyNote,
     Store,
     Terminal,
+    Blocks,
     type LucideIcon,
 } from 'lucide-react'
 
@@ -100,6 +101,12 @@ export const APP_ICON_STYLES: Record<string, AppIconStyle> = {
         bg: 'bg-[#3a3a3c]',
         text: 'text-[#ffd60a]',
         border: 'border-[#48484a]',
+    },
+    tetris: {
+        icon: Blocks,
+        bg: 'bg-[#172333]',
+        text: 'text-[#48c6e8]',
+        border: 'border-[#2a3d52]',
     },
 }
 

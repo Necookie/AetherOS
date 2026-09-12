@@ -193,6 +193,21 @@ export const APP_REGISTRY_CATALOG: RegistryAppMetadata[] = [
         ],
     },
     {
+        id: 'tetris',
+        title: 'Falling Light',
+        summary: 'A tactile block-stacking game with crisp controls and a calm nocturnal palette.',
+        category: 'utility',
+        iconId: 'tetris',
+        launchable: true,
+        releases: [
+            {
+                version: '1.0.0',
+                dependencies: [],
+                changelog: 'Playable keyboard and touch controls, scoring, levels, pause, and quick restart.',
+            },
+        ],
+    },
+    {
         id: 'mail',
         title: 'Mail',
         summary: 'Unified inbox with offline queue simulation.',
