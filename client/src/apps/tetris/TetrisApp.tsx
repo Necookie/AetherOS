@@ -110,12 +110,12 @@ function previewCells(name: PieceName) {
 
 function PiecePreview({ name, compact = false }: { name: PieceName | null; compact?: boolean }) {
     return (
-        <div className={`grid grid-cols-4 grid-rows-3 gap-1 bg-[#0b131c] ${compact ? 'h-14 p-2' : 'h-20 p-3'}`}>
+        <div className={`grid grid-cols-4 grid-rows-3 gap-[2px] bg-[#101418] ${compact ? 'h-14 p-2' : 'h-20 p-3'}`}>
             {Array.from({ length: 12 }, (_, index) => {
                 const x = index % 4
                 const y = Math.floor(index / 4)
                 const filled = name ? previewCells(name).some(([px, py]) => px === x && py === y) : false
-                return <div key={index} className={`rounded-[2px] border ${filled && name ? `${CELL_COLORS[PIECE_VALUE[name]]} border-white/15` : 'border-transparent'}`} />
+                return <div key={index} className={filled && name ? CELL_COLORS[PIECE_VALUE[name]] : 'bg-transparent'} />
             })}
         </div>
     )
@@ -269,12 +269,12 @@ export default function TetrisApp({ id }: { id: string }) {
 
     return (
         <Window id={id} title="Falling Light">
-            <div className="tetris-app h-full min-h-0 overflow-hidden bg-[#101821] text-[#edf4f8]">
+            <div className="tetris-app h-full min-h-0 overflow-hidden bg-[#181c20] text-[#edf1f3]">
                 <div className="tetris-layout">
-                    <aside className="tetris-left min-h-0 border border-white/[0.07] bg-[#151f2b] p-4">
+                    <aside className="tetris-left min-h-0 bg-[#20252a] p-4">
                         <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8ea0b2]">Hold</p>
                         <div className={`mt-3 transition-opacity ${canHold ? 'opacity-100' : 'opacity-45'}`}><PiecePreview name={held} /></div>
-                        <button onClick={holdPiece} disabled={!running || !canHold} className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-white/15 px-3 py-2 text-xs font-semibold transition-colors hover:bg-white/5 active:scale-95 disabled:opacity-35">
+                        <button onClick={holdPiece} disabled={!running || !canHold} className="mt-3 flex w-full items-center justify-center gap-2 rounded-[3px] bg-[#2b3137] px-3 py-2 text-xs font-semibold transition-colors hover:bg-[#343b42] active:scale-95 disabled:opacity-35">
                             <Box className="h-3.5 w-3.5" /> Hold piece
                         </button>
                         <div className="mt-6 border-t border-white/[0.08] pt-4 text-[10px] leading-6 text-[#8394a6]">
@@ -287,8 +287,8 @@ export default function TetrisApp({ id }: { id: string }) {
                     </aside>
 
                     <main className="tetris-board-column relative flex min-h-0 min-w-0 flex-col items-center justify-center gap-3">
-                        <div className="tetris-board-shell relative border border-white/10 bg-[#080f16] p-1.5 shadow-[0_18px_45px_rgba(0,0,0,0.32)]">
-                            <div className="grid h-full grid-cols-10 grid-rows-20 gap-[2px]" aria-label="Tetris board">
+                        <div className="tetris-board-shell relative bg-[#0d1115] p-1">
+                            <div className="grid h-full grid-cols-10 grid-rows-20 gap-px" aria-label="Tetris board">
                                 {board.flatMap((row, y) => row.map((settledCell, x) => {
                                     const key = `${x}:${y}`
                                     const isActive = activeCells.has(key)
@@ -297,21 +297,19 @@ export default function TetrisApp({ id }: { id: string }) {
                                     return (
                                         <div
                                             key={key}
-                                            className={`relative min-h-0 min-w-0 rounded-[2px] border ${cell ? `${CELL_COLORS[cell]} border-white/15` : isGhost ? 'border-[#8ea0b2]/55 bg-[#8ea0b2]/10' : 'border-white/[0.035] bg-white/[0.018]'}`}
-                                        >
-                                            {cell > 0 && <span className="absolute inset-[2px] border-l border-t border-white/20" />}
-                                        </div>
+                                            className={`relative min-h-0 min-w-0 ${cell ? CELL_COLORS[cell] : isGhost ? 'border border-[#aab4bc]/65 bg-[#aab4bc]/10' : 'bg-[#171c21]'}`}
+                                        />
                                     )
                                 }))}
                             </div>
 
                             {!running && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-[#080f16]/85 p-4 backdrop-blur-[2px]">
-                                    <div className="w-full bg-[#edf4f8] px-5 py-6 text-center text-[#111923]">
+                                <div className="absolute inset-0 flex items-center justify-center bg-[#0d1115]/90 p-4">
+                                    <div className="w-full bg-[#e8ecee] px-5 py-6 text-center text-[#161a1d]">
                                         <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#4f6378]">{gameOver ? 'Stack complete' : score > 0 ? 'Game paused' : 'Falling Light'}</p>
                                         <h2 className="mt-2 text-xl font-semibold tracking-tight">{gameOver ? `${score.toLocaleString()} points` : score > 0 ? 'Hold that thought' : 'Shape the skyline'}</h2>
                                         <p className="mx-auto mt-2 max-w-[25ch] text-xs leading-relaxed text-[#526173]">{gameOver ? `You cleared ${lines} lines. Ready for a cleaner run?` : 'Stack cleanly, plan ahead, and chase the light.'}</p>
-                                        <button onClick={score > 0 && !gameOver ? () => setRunning(true) : reset} className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#0066cc] px-5 py-2 text-xs font-semibold text-white transition-transform active:scale-95">
+                                        <button onClick={score > 0 && !gameOver ? () => setRunning(true) : reset} className="mt-4 inline-flex items-center gap-2 rounded-[3px] bg-[#2f70a5] px-5 py-2 text-xs font-semibold text-[#f2f5f6] transition-colors hover:bg-[#286492] active:scale-95">
                                             <Play className="h-3.5 w-3.5 fill-current" /> {score > 0 && !gameOver ? 'Resume' : 'Start game'}
                                         </button>
                                     </div>
@@ -320,16 +318,16 @@ export default function TetrisApp({ id }: { id: string }) {
                         </div>
 
                         <div className="tetris-controls flex items-center justify-center gap-1.5 text-[#b2bfcb]">
-                            <button onClick={() => move(-1, 0)} className="rounded-md border border-white/10 bg-[#172333] p-2.5 hover:bg-white/5 active:scale-95" aria-label="Move left"><ChevronLeft className="h-4 w-4" /></button>
-                            <button onClick={rotate} className="rounded-md border border-white/10 bg-[#172333] px-3 py-2 text-sm font-semibold hover:bg-white/5 active:scale-95" aria-label="Rotate">↻</button>
-                            <button onClick={() => move(1, 0)} className="rounded-md border border-white/10 bg-[#172333] p-2.5 hover:bg-white/5 active:scale-95" aria-label="Move right"><ChevronRight className="h-4 w-4" /></button>
-                            <button onClick={() => move(0, 1)} className="rounded-md border border-white/10 bg-[#172333] p-2.5 hover:bg-white/5 active:scale-95" aria-label="Soft drop"><ChevronDown className="h-4 w-4" /></button>
-                            <button onClick={hardDrop} className="rounded-md border border-white/10 bg-[#172333] p-2.5 hover:bg-white/5 active:scale-95" aria-label="Hard drop"><ChevronsDown className="h-4 w-4" /></button>
-                            <button onClick={holdPiece} disabled={!running || !canHold} className="rounded-md border border-white/10 bg-[#172333] p-2.5 hover:bg-white/5 active:scale-95 disabled:opacity-35" aria-label="Hold piece"><Box className="h-4 w-4" /></button>
+                            <button onClick={() => move(-1, 0)} className="rounded-[3px] bg-[#2b3137] p-2.5 hover:bg-[#343b42] active:scale-95" aria-label="Move left"><ChevronLeft className="h-4 w-4" /></button>
+                            <button onClick={rotate} className="rounded-[3px] bg-[#2b3137] px-3 py-2 text-sm font-semibold hover:bg-[#343b42] active:scale-95" aria-label="Rotate">↻</button>
+                            <button onClick={() => move(1, 0)} className="rounded-[3px] bg-[#2b3137] p-2.5 hover:bg-[#343b42] active:scale-95" aria-label="Move right"><ChevronRight className="h-4 w-4" /></button>
+                            <button onClick={() => move(0, 1)} className="rounded-[3px] bg-[#2b3137] p-2.5 hover:bg-[#343b42] active:scale-95" aria-label="Soft drop"><ChevronDown className="h-4 w-4" /></button>
+                            <button onClick={hardDrop} className="rounded-[3px] bg-[#2b3137] p-2.5 hover:bg-[#343b42] active:scale-95" aria-label="Hard drop"><ChevronsDown className="h-4 w-4" /></button>
+                            <button onClick={holdPiece} disabled={!running || !canHold} className="rounded-[3px] bg-[#2b3137] p-2.5 hover:bg-[#343b42] active:scale-95 disabled:opacity-35" aria-label="Hold piece"><Box className="h-4 w-4" /></button>
                         </div>
                     </main>
 
-                    <aside className="tetris-right flex min-h-0 flex-col border border-white/[0.07] bg-[#172333] p-4">
+                    <aside className="tetris-right flex min-h-0 flex-col bg-[#20252a] p-4">
                         <div className="tetris-score">
                             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8ea0b2]">Score</p>
                             <p className="mt-1 text-3xl font-semibold tabular-nums tracking-tight">{score.toLocaleString()}</p>
@@ -345,10 +343,10 @@ export default function TetrisApp({ id }: { id: string }) {
                             </div>
                         </div>
                         <div className="tetris-actions mt-auto space-y-2 pt-4">
-                            <button onClick={() => setRunning((value) => !gameOver && !value)} disabled={gameOver || (!running && score === 0)} className="flex w-full items-center justify-center gap-2 rounded-full border border-white/15 px-3 py-2 text-xs font-semibold transition-colors hover:bg-white/5 active:scale-95 disabled:opacity-35">
+                            <button onClick={() => setRunning((value) => !gameOver && !value)} disabled={gameOver || (!running && score === 0)} className="flex w-full items-center justify-center gap-2 rounded-[3px] bg-[#2b3137] px-3 py-2 text-xs font-semibold transition-colors hover:bg-[#343b42] active:scale-95 disabled:opacity-35">
                                 {running ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />} {running ? 'Pause' : 'Resume'}
                             </button>
-                            <button onClick={reset} className="flex w-full items-center justify-center gap-2 rounded-full border border-white/15 px-3 py-2 text-xs font-semibold transition-colors hover:bg-white/5 active:scale-95">
+                            <button onClick={reset} className="flex w-full items-center justify-center gap-2 rounded-[3px] bg-[#2f70a5] px-3 py-2 text-xs font-semibold transition-colors hover:bg-[#286492] active:scale-95">
                                 <RotateCcw className="h-3.5 w-3.5" /> New game
                             </button>
                         </div>
