@@ -6,7 +6,7 @@ import { useKernelStore } from '../stores/useKernelStore'
 import Window from './system/Window'
 
 const tabClasses = (active: boolean) =>
-    `rounded-sm px-3 py-1.5 text-xs font-semibold transition-colors ${active ? 'bg-tile-2 text-on-dark border border-white/10' : 'text-on-dark-muted hover:bg-tile-2 hover:text-on-dark'}`
+    `rounded-md px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 ${active ? 'bg-primary text-white shadow-xs' : 'text-on-dark-muted hover:bg-tile-2 hover:text-on-dark'}`
 
 function severityClass(value: number) {
     if (value >= 85) {

@@ -64,8 +64,8 @@ function SectionButton({
     return (
         <button
             onClick={onClick}
-            className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors ${
-                active ? 'bg-[rgba(0,102,204,0.1)] text-ink' : 'text-ink-muted hover:bg-canvas'
+            className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all active:scale-95 ${
+                active ? 'bg-primary text-white shadow-xs' : 'text-ink-muted hover:bg-canvas hover:text-ink'
             }`}
         >
             <Icon className="h-4 w-4" />
