@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { BatteryCharging, Bell, ChevronDown, Download, Maximize2, Minimize2, Search, UserCircle2, Volume2, Wifi } from 'lucide-react'
+import { BatteryCharging, Bell, ChevronDown, Download, Layers, Maximize2, Minimize2, Search, UserCircle2, Volume2, Wifi } from 'lucide-react'
 import type { AccountProfile } from '../../accounts/types'
 import AetherMark from '../../../components/brand/AetherMark'
 import { toggleFullscreen, useFullscreen } from '../../../services/fullscreenService'
@@ -12,6 +12,7 @@ interface TopBarProps {
     queuedDownloads: number
     unreadNotifications: number
     notificationsOpen: boolean
+    widgetsOpen?: boolean
     activeAccount: AccountProfile
     accounts: AccountProfile[]
     onToggleLauncher: () => void
@@ -19,6 +20,7 @@ interface TopBarProps {
     onToggleQuickSettings: () => void
     onToggleDateTime: () => void
     onToggleNotifications: () => void
+    onToggleWidgets?: () => void
     onLockSession: () => void
     onLogout: () => void
     onSwitchUser: (userId: string) => void
@@ -36,6 +38,7 @@ export default function TopBar({
     queuedDownloads,
     unreadNotifications,
     notificationsOpen,
+    widgetsOpen,
     activeAccount,
     accounts,
     onToggleLauncher,
@@ -43,6 +46,7 @@ export default function TopBar({
     onToggleQuickSettings,
     onToggleDateTime,
     onToggleNotifications,
+    onToggleWidgets,
     onLockSession,
     onLogout,
     onSwitchUser,
@@ -256,6 +260,16 @@ export default function TopBar({
                         </span>
                     ) : null}
                 </button>
+                {onToggleWidgets && (
+                    <button
+                        className={`relative rounded p-1 transition-transform active:scale-95 ${widgetsOpen ? 'bg-tile-2 text-primary-focus' : 'hover:bg-tile-1'}`}
+                        onClick={onToggleWidgets}
+                        aria-label="Toggle Widgets Drawer"
+                        title={widgetsOpen ? 'Hide Widgets Drawer' : 'Show Widgets Drawer'}
+                    >
+                        <Layers className="h-3.5 w-3.5" />
+                    </button>
+                )}
                 <button
                     className="rounded px-2 py-0.5 transition-transform active:scale-95 hover:bg-tile-1"
                     onClick={onToggleDateTime}
