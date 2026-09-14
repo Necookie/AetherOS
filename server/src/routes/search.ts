@@ -5,6 +5,9 @@ import { searchWeb } from '../services/searchService'
 
 export async function searchRoute(fastify: FastifyInstance) {
     fastify.get('/search', {
+        config: {
+            rateLimit: { max: 30, timeWindow: '1 minute' },
+        },
         schema: {
             querystring: {
                 type: 'object',

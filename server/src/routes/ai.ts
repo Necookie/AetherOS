@@ -5,6 +5,9 @@ import { getAiReply } from '../services/aiService'
 
 export async function aiRoute(fastify: FastifyInstance) {
     fastify.post('/ai', {
+        config: {
+            rateLimit: { max: 20, timeWindow: '1 minute' },
+        },
         schema: {
             body: {
                 type: 'object',
