@@ -12,7 +12,7 @@ class MockWorker {
 }
 
 const workers: MockWorker[] = []
-const WorkerMock = vi.fn(() => {
+const WorkerMock = vi.fn(function WorkerMockConstructor() {
     const instance = new MockWorker()
     workers.push(instance)
     return instance

@@ -7,7 +7,7 @@
         "dev": "vite",
         "typecheck": "tsc --noEmit",
         "build": "npm run typecheck && vite build",
-        "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+        "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
         "test": "vitest run",
         "preview": "vite preview"
     },
@@ -20,27 +20,22 @@
         "@tiptap/pm": "^3.31.3",
         "@tiptap/react": "^3.31.3",
         "@tiptap/starter-kit": "^3.31.3",
+        "@xterm/addon-fit": "^0.11.0",
+        "@xterm/xterm": "^6.0.0",
         "lucide-react": "^0.300.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
-        "xterm": "^5.3.0",
-        "xterm-addon-fit": "^0.8.0",
         "zustand": "^4.4.7"
     },
     "devDependencies": {
         "@types/react": "^18.2.43",
         "@types/react-dom": "^18.2.17",
-        "@typescript-eslint/eslint-plugin": "^6.14.0",
-        "@typescript-eslint/parser": "^6.14.0",
-        "@vitejs/plugin-react": "^4.2.1",
-        "autoprefixer": "^10.4.16",
-        "eslint": "^8.55.0",
-        "eslint-plugin-react-hooks": "^4.6.0",
-        "eslint-plugin-react-refresh": "^0.4.5",
-        "postcss": "^8.4.32",
+        "@vitejs/plugin-react": "^6.1.1",
+        "autoprefixer": "^10.6.0",
+        "postcss": "^8.5.28",
         "tailwindcss": "^3.4.0",
         "typescript": "^5.2.2",
-        "vite": "^5.4.19",
-        "vitest": "^1.6.1"
+        "vite": "^8.3.0",
+        "vitest": "^5.0.0"
     }
 }
