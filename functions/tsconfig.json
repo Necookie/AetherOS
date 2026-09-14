@@ -13,6 +13,7 @@
         "./**/*.ts",
         "../server/src/services/aiService.ts",
         "../server/src/services/openaiClient.ts",
+        "../server/src/services/providerFetch.ts",
         "../server/src/services/searchService.ts"
     ]
 }
