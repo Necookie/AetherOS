@@ -66,7 +66,7 @@ export default [
         files: ['server/**/*.ts'],
         languageOptions: {
             parserOptions: {
-                project: './server/tsconfig.json',
+                project: './server/tsconfig.test.json',
                 tsconfigRootDir: rootDir,
             },
         },

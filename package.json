@@ -23,7 +23,8 @@
     "types:cloudflare": "wrangler types --config wrangler.pages.jsonc --include-runtime false",
     "lint": "npm run lint:functions && npm run lint --workspace=client && npm run lint --workspace=server",
     "lint:functions": "eslint functions --report-unused-disable-directives --max-warnings 0",
-    "test": "npm run test --workspace=client"
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260911.1",
