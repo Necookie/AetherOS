@@ -195,7 +195,7 @@ export const APP_REGISTRY_CATALOG: RegistryAppMetadata[] = [
     {
         id: 'tetris',
         title: 'Falling Light',
-        summary: 'A tactile block-stacking game with crisp controls and a calm nocturnal palette.',
+        summary: 'A clean block-stacking game with crisp controls and a calm nocturnal palette.',
         category: 'utility',
         iconId: 'tetris',
         launchable: true,
@@ -210,7 +210,7 @@ export const APP_REGISTRY_CATALOG: RegistryAppMetadata[] = [
     {
         id: 'chess',
         title: 'Obsidian Chess',
-        summary: 'A dimensional chess room with guided legal moves, captures, and a tactile board.',
+        summary: 'A focused chess game with a clean board, guided legal moves, and captures.',
         category: 'utility',
         iconId: 'chess',
         launchable: true,
