@@ -28,12 +28,15 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260911.1",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
     "@typescript-eslint/eslint-plugin": "^8.70.0",
     "@typescript-eslint/parser": "^8.70.0",
+    "@vitest/coverage-v8": "^5.0.0",
     "concurrently": "^8.2.2",
     "eslint": "^10.10.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^16.4.0",
+    "vitest": "^5.0.0",
     "wrangler": "^4.131.0"
   }
 }
