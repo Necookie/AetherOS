@@ -93,7 +93,7 @@ export default function FilePane() {
             hitIds,
             mode: dragState.mode,
         });
-        setSelection(nextSelection, nextSelection.at(-1) ?? null);
+        setSelection(nextSelection, nextSelection[nextSelection.length - 1] ?? null);
     }, [setSelection]);
 
     const handleMouseMove = useCallback((event: globalThis.MouseEvent) => {
