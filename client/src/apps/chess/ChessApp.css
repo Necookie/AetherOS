@@ -1,0 +1,38 @@
+.chess-app {
+  container: chess-window / inline-size;
+}
+
+@container chess-window (max-width: 42rem) {
+  .chess-app {
+    overflow-y: auto;
+  }
+
+  .chess-layout {
+    flex-direction: column;
+    height: auto;
+    min-height: 100%;
+  }
+
+  .chess-board-area {
+    min-height: 25rem;
+    padding: var(--ds-space-6);
+  }
+
+  .chess-sidebar {
+    width: 100%;
+    min-height: 21rem;
+    border-left: 0;
+    border-top: 1px solid #c7c6c0;
+  }
+}
+
+@container chess-window (max-width: 28rem) {
+  .chess-board-area {
+    min-height: 22rem;
+    padding: var(--ds-space-5);
+  }
+
+  .chess-sidebar {
+    min-height: 19rem;
+  }
+}

@@ -1,0 +1,92 @@
+.tetris-app {
+  container: tetris-window / inline-size;
+}
+
+.tetris-layout {
+  display: grid;
+  grid-template-columns: minmax(8.5rem, 0.5fr) minmax(16rem, 22.5rem) minmax(11.5rem, 0.65fr);
+  justify-content: center;
+  gap: var(--ds-space-5);
+  height: 100%;
+  padding: var(--ds-space-5);
+}
+
+.tetris-board-shell {
+  height: calc(100% - 3.25rem);
+  max-height: 42rem;
+  aspect-ratio: 1 / 2;
+}
+
+@container tetris-window (max-width: 48rem) {
+  .tetris-layout {
+    grid-template-columns: minmax(15rem, 22rem) minmax(10.5rem, 12rem);
+    gap: var(--ds-space-3);
+    padding: var(--ds-space-3);
+  }
+
+  .tetris-left {
+    display: none;
+  }
+}
+
+@container tetris-window (max-width: 32rem) {
+  .tetris-app {
+    overflow-y: auto;
+  }
+
+  .tetris-layout {
+    grid-template-columns: minmax(14rem, 1fr);
+    grid-template-rows: auto minmax(31rem, 1fr);
+    height: auto;
+    min-height: 100%;
+    gap: var(--ds-space-2);
+    padding: var(--ds-space-2);
+  }
+
+  .tetris-right {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    align-items: center;
+    gap: var(--ds-space-3);
+    min-height: 4.5rem;
+    padding: var(--ds-space-3);
+  }
+
+  .tetris-score p:last-child {
+    margin-top: 0;
+    font-size: 1.25rem;
+  }
+
+  .tetris-stats {
+    margin-top: 0;
+    padding-block: 0;
+    border: 0;
+  }
+
+  .tetris-stats p:last-child {
+    margin-top: 0;
+    font-size: 0.875rem;
+  }
+
+  .tetris-queue {
+    display: none;
+  }
+
+  .tetris-actions {
+    display: flex;
+    gap: var(--ds-space-2);
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  .tetris-actions button {
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    font-size: 0;
+  }
+
+  .tetris-board-column {
+    min-height: 31rem;
+  }
+}

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronDown, ChevronLeft, ChevronRight, Pause, Play, RotateCcw } from 'lucide-react'
+import { Box, ChevronDown, ChevronLeft, ChevronRight, ChevronsDown, Pause, Play, RotateCcw } from 'lucide-react'
 import Window from '../../components/system/Window'
 import { useWindowStore } from '../../stores/windowStore'
+import './TetrisApp.css'
 
 const BOARD_WIDTH = 10
 const BOARD_HEIGHT = 20
@@ -107,31 +108,47 @@ function previewCells(name: PieceName) {
     return PIECES[name][0]
 }
 
+function PiecePreview({ name, compact = false }: { name: PieceName | null; compact?: boolean }) {
+    return (
+        <div className={`grid grid-cols-4 grid-rows-3 gap-[2px] bg-[#101418] ${compact ? 'h-14 p-2' : 'h-20 p-3'}`}>
+            {Array.from({ length: 12 }, (_, index) => {
+                const x = index % 4
+                const y = Math.floor(index / 4)
+                const filled = name ? previewCells(name).some(([px, py]) => px === x && py === y) : false
+                return <div key={index} className={filled && name ? CELL_COLORS[PIECE_VALUE[name]] : 'bg-transparent'} />
+            })}
+        </div>
+    )
+}
+
 export default function TetrisApp({ id }: { id: string }) {
     const isFocused = useWindowStore((state) => Boolean(state.windows[id]?.state.isFocused))
     const [board, setBoard] = useState<Board>(emptyBoard)
     const [active, setActive] = useState<ActivePiece>(() => spawnPiece(randomPiece()))
-    const [next, setNext] = useState<PieceName>(() => randomPiece())
+    const [queue, setQueue] = useState<PieceName[]>(() => [randomPiece(), randomPiece(), randomPiece()])
+    const [held, setHeld] = useState<PieceName | null>(null)
+    const [canHold, setCanHold] = useState(true)
     const [score, setScore] = useState(0)
     const [lines, setLines] = useState(0)
     const [running, setRunning] = useState(false)
     const [gameOver, setGameOver] = useState(false)
     const boardRef = useRef(board)
     const activeRef = useRef(active)
-    const nextRef = useRef(next)
+    const queueRef = useRef(queue)
 
     useEffect(() => { boardRef.current = board }, [board])
     useEffect(() => { activeRef.current = active }, [active])
-    useEffect(() => { nextRef.current = next }, [next])
+    useEffect(() => { queueRef.current = queue }, [queue])
 
     const level = Math.floor(lines / 10) + 1
 
     const reset = useCallback(() => {
-        const first = randomPiece()
-        const upcoming = randomPiece()
+        const pieces = [randomPiece(), randomPiece(), randomPiece(), randomPiece()]
         setBoard(emptyBoard())
-        setActive(spawnPiece(first))
-        setNext(upcoming)
+        setActive(spawnPiece(pieces[0]))
+        setQueue(pieces.slice(1))
+        setHeld(null)
+        setCanHold(true)
         setScore(0)
         setLines(0)
         setGameOver(false)
@@ -142,8 +159,8 @@ export default function TetrisApp({ id }: { id: string }) {
         const landed = mergedBoard(boardRef.current, piece)
         const result = clearLines(landed)
         const lineScores = [0, 100, 300, 500, 800]
-        const incoming = spawnPiece(nextRef.current)
-        const upcoming = randomPiece()
+        const incoming = spawnPiece(queueRef.current[0])
+        const nextQueue = [...queueRef.current.slice(1), randomPiece()]
 
         setBoard(result.board)
         boardRef.current = result.board
@@ -151,10 +168,11 @@ export default function TetrisApp({ id }: { id: string }) {
             setLines((value) => value + result.cleared)
             setScore((value) => value + lineScores[result.cleared] * level)
         }
-        setNext(upcoming)
-        nextRef.current = upcoming
+        setQueue(nextQueue)
+        queueRef.current = nextQueue
         setActive(incoming)
         activeRef.current = incoming
+        setCanHold(true)
 
         if (collides(result.board, incoming)) {
             setRunning(false)
@@ -199,6 +217,26 @@ export default function TetrisApp({ id }: { id: string }) {
         lockPiece(dropped)
     }, [lockPiece, running])
 
+    const holdPiece = useCallback(() => {
+        if (!running || !canHold) return
+
+        const currentName = activeRef.current.name
+        let incoming: ActivePiece
+        if (held) {
+            incoming = spawnPiece(held)
+        } else {
+            incoming = spawnPiece(queueRef.current[0])
+            const nextQueue = [...queueRef.current.slice(1), randomPiece()]
+            setQueue(nextQueue)
+            queueRef.current = nextQueue
+        }
+
+        setHeld(currentName)
+        setActive(incoming)
+        activeRef.current = incoming
+        setCanHold(false)
+    }, [canHold, held, running])
+
     useEffect(() => {
         if (!running) return undefined
         const timer = window.setInterval(() => move(0, 1), Math.max(160, 760 - (level - 1) * 60))
@@ -214,81 +252,105 @@ export default function TetrisApp({ id }: { id: string }) {
             if (event.key === 'ArrowDown') move(0, 1)
             if (event.key === 'ArrowUp') rotate()
             if (event.key === ' ') hardDrop()
+            if (event.key.toLowerCase() === 'c') holdPiece()
             if (event.key.toLowerCase() === 'p') setRunning((value) => !gameOver && !value)
         }
         window.addEventListener('keydown', onKeyDown)
         return () => window.removeEventListener('keydown', onKeyDown)
-    }, [gameOver, hardDrop, isFocused, move, rotate])
+    }, [gameOver, hardDrop, holdPiece, isFocused, move, rotate])
 
-    const display = useMemo(() => mergedBoard(board, active), [active, board])
+    const activeCells = useMemo(() => new Set(cellsFor(active).map(([x, y]) => `${x}:${y}`)), [active])
+    const ghost = useMemo(() => {
+        let landing = active
+        while (!collides(board, { ...landing, y: landing.y + 1 })) landing = { ...landing, y: landing.y + 1 }
+        return landing
+    }, [active, board])
+    const ghostCells = useMemo(() => new Set(cellsFor(ghost).map(([x, y]) => `${x}:${y}`)), [ghost])
 
     return (
         <Window id={id} title="Falling Light">
-            <div className="flex h-full min-h-0 bg-[#111923] text-[#edf4f8]">
-                <main className="relative flex min-w-0 flex-1 items-center justify-center overflow-hidden px-5 py-4">
-                    <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[#172333]" />
-                    <div className="relative h-full max-h-[620px] aspect-[1/2] border border-white/10 bg-[#0a1119] p-1.5 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
-                        <div className="grid h-full grid-cols-10 grid-rows-20 gap-[2px]" aria-label="Tetris board">
-                            {display.flatMap((row, y) => row.map((cell, x) => (
-                                <div
-                                    key={`${x}-${y}`}
-                                    className={`relative min-h-0 min-w-0 rounded-[2px] border ${cell ? `${CELL_COLORS[cell]} border-white/15` : 'border-white/[0.035] bg-white/[0.018]'}`}
-                                >
-                                    {cell > 0 && <span className="absolute inset-[2px] border-l border-t border-white/20" />}
-                                </div>
-                            )))}
+            <div className="tetris-app h-full min-h-0 overflow-hidden bg-[#181c20] text-[#edf1f3]">
+                <div className="tetris-layout">
+                    <aside className="tetris-left min-h-0 bg-[#20252a] p-4">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8ea0b2]">Hold</p>
+                        <div className={`mt-3 transition-opacity ${canHold ? 'opacity-100' : 'opacity-45'}`}><PiecePreview name={held} /></div>
+                        <button onClick={holdPiece} disabled={!running || !canHold} className="mt-3 flex w-full items-center justify-center gap-2 rounded-[3px] bg-[#2b3137] px-3 py-2 text-xs font-semibold transition-colors hover:bg-[#343b42] active:scale-95 disabled:opacity-35">
+                            <Box className="h-3.5 w-3.5" /> Hold piece
+                        </button>
+                        <div className="mt-6 border-t border-white/[0.08] pt-4 text-[10px] leading-6 text-[#8394a6]">
+                            <p className="font-semibold uppercase tracking-[0.16em] text-[#b6c2cd]">Keys</p>
+                            <p><span className="text-[#edf4f8]">← →</span> move</p>
+                            <p><span className="text-[#edf4f8]">↑</span> rotate</p>
+                            <p><span className="text-[#edf4f8]">Space</span> hard drop</p>
+                            <p><span className="text-[#edf4f8]">C</span> hold</p>
                         </div>
+                    </aside>
 
-                        {!running && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-[#0a1119]/80 p-5 backdrop-blur-[2px]">
-                                <div className="w-full bg-[#edf4f8] px-5 py-6 text-center text-[#111923]">
-                                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#4f6378]">{gameOver ? 'Stack complete' : score > 0 ? 'Game paused' : 'Falling Light'}</p>
-                                    <h2 className="mt-2 text-2xl font-semibold tracking-tight">{gameOver ? `${score.toLocaleString()} points` : score > 0 ? 'Hold that thought' : 'Shape the skyline'}</h2>
-                                    <p className="mx-auto mt-2 max-w-[26ch] text-sm leading-relaxed text-[#526173]">{gameOver ? `You cleared ${lines} lines. Ready for a cleaner run?` : 'A precise, quiet take on the block-stacking classic.'}</p>
-                                    <button onClick={score > 0 && !gameOver ? () => setRunning(true) : reset} className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#0066cc] px-5 py-2 text-sm font-semibold text-white transition-transform active:scale-95">
-                                        <Play className="h-4 w-4 fill-current" /> {score > 0 && !gameOver ? 'Resume' : 'Start game'}
-                                    </button>
-                                </div>
+                    <main className="tetris-board-column relative flex min-h-0 min-w-0 flex-col items-center justify-center gap-3">
+                        <div className="tetris-board-shell relative bg-[#0d1115] p-1">
+                            <div className="grid h-full grid-cols-10 grid-rows-20 gap-px" aria-label="Tetris board">
+                                {board.flatMap((row, y) => row.map((settledCell, x) => {
+                                    const key = `${x}:${y}`
+                                    const isActive = activeCells.has(key)
+                                    const isGhost = running && !isActive && !settledCell && ghostCells.has(key)
+                                    const cell = settledCell || (isActive ? PIECE_VALUE[active.name] : 0)
+                                    return (
+                                        <div
+                                            key={key}
+                                            className={`relative min-h-0 min-w-0 ${cell ? CELL_COLORS[cell] : isGhost ? 'border border-[#aab4bc]/65 bg-[#aab4bc]/10' : 'bg-[#171c21]'}`}
+                                        />
+                                    )
+                                }))}
                             </div>
-                        )}
-                    </div>
-                </main>
 
-                <aside className="flex w-52 shrink-0 flex-col border-l border-white/10 bg-[#172333] p-5">
-                    <div>
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8ea0b2]">Score</p>
-                        <p className="mt-1 text-3xl font-semibold tabular-nums tracking-tight">{score.toLocaleString()}</p>
-                    </div>
-                    <div className="mt-5 grid grid-cols-2 gap-3 border-y border-white/10 py-4">
-                        <div><p className="text-[10px] uppercase tracking-wider text-[#8ea0b2]">Lines</p><p className="mt-1 text-lg font-semibold tabular-nums">{lines}</p></div>
-                        <div><p className="text-[10px] uppercase tracking-wider text-[#8ea0b2]">Level</p><p className="mt-1 text-lg font-semibold tabular-nums">{level}</p></div>
-                    </div>
-                    <div className="mt-5">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8ea0b2]">Up next</p>
-                        <div className="mt-3 grid h-20 grid-cols-4 grid-rows-3 gap-1 bg-[#0e1721] p-3">
-                            {Array.from({ length: 12 }, (_, index) => {
-                                const x = index % 4
-                                const y = Math.floor(index / 4)
-                                const filled = previewCells(next).some(([px, py]) => px === x && py === y)
-                                return <div key={index} className={`rounded-[2px] border ${filled ? `${CELL_COLORS[PIECE_VALUE[next]]} border-white/15` : 'border-transparent'}`} />
-                            })}
+                            {!running && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-[#0d1115]/90 p-4">
+                                    <div className="w-full bg-[#e8ecee] px-5 py-6 text-center text-[#161a1d]">
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#4f6378]">{gameOver ? 'Stack complete' : score > 0 ? 'Game paused' : 'Falling Light'}</p>
+                                        <h2 className="mt-2 text-xl font-semibold tracking-tight">{gameOver ? `${score.toLocaleString()} points` : score > 0 ? 'Hold that thought' : 'Shape the skyline'}</h2>
+                                        <p className="mx-auto mt-2 max-w-[25ch] text-xs leading-relaxed text-[#526173]">{gameOver ? `You cleared ${lines} lines. Ready for a cleaner run?` : 'Stack cleanly, plan ahead, and chase the light.'}</p>
+                                        <button onClick={score > 0 && !gameOver ? () => setRunning(true) : reset} className="mt-4 inline-flex items-center gap-2 rounded-[3px] bg-[#2f70a5] px-5 py-2 text-xs font-semibold text-[#f2f5f6] transition-colors hover:bg-[#286492] active:scale-95">
+                                            <Play className="h-3.5 w-3.5 fill-current" /> {score > 0 && !gameOver ? 'Resume' : 'Start game'}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    </div>
-                    <div className="mt-auto space-y-2 pt-5">
-                        <button onClick={() => setRunning((value) => !gameOver && !value)} disabled={gameOver || score === 0} className="flex w-full items-center justify-center gap-2 rounded-full border border-white/15 px-3 py-2 text-xs font-semibold transition-colors hover:bg-white/5 active:scale-95 disabled:opacity-35">
-                            {running ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />} {running ? 'Pause' : 'Resume'}
-                        </button>
-                        <button onClick={reset} className="flex w-full items-center justify-center gap-2 rounded-full border border-white/15 px-3 py-2 text-xs font-semibold transition-colors hover:bg-white/5 active:scale-95">
-                            <RotateCcw className="h-3.5 w-3.5" /> New game
-                        </button>
-                    </div>
-                </aside>
 
-                <div className="absolute bottom-4 left-5 hidden items-center gap-1 text-[#8ea0b2] lg:flex">
-                    <button onClick={() => move(-1, 0)} className="rounded-md border border-white/10 bg-[#172333] p-2 active:scale-95" aria-label="Move left"><ChevronLeft className="h-4 w-4" /></button>
-                    <button onClick={rotate} className="rounded-md border border-white/10 bg-[#172333] p-2 text-xs font-semibold active:scale-95" aria-label="Rotate">↻</button>
-                    <button onClick={() => move(1, 0)} className="rounded-md border border-white/10 bg-[#172333] p-2 active:scale-95" aria-label="Move right"><ChevronRight className="h-4 w-4" /></button>
-                    <button onClick={() => move(0, 1)} className="rounded-md border border-white/10 bg-[#172333] p-2 active:scale-95" aria-label="Soft drop"><ChevronDown className="h-4 w-4" /></button>
+                        <div className="tetris-controls flex items-center justify-center gap-1.5 text-[#b2bfcb]">
+                            <button onClick={() => move(-1, 0)} className="rounded-[3px] bg-[#2b3137] p-2.5 hover:bg-[#343b42] active:scale-95" aria-label="Move left"><ChevronLeft className="h-4 w-4" /></button>
+                            <button onClick={rotate} className="rounded-[3px] bg-[#2b3137] px-3 py-2 text-sm font-semibold hover:bg-[#343b42] active:scale-95" aria-label="Rotate">↻</button>
+                            <button onClick={() => move(1, 0)} className="rounded-[3px] bg-[#2b3137] p-2.5 hover:bg-[#343b42] active:scale-95" aria-label="Move right"><ChevronRight className="h-4 w-4" /></button>
+                            <button onClick={() => move(0, 1)} className="rounded-[3px] bg-[#2b3137] p-2.5 hover:bg-[#343b42] active:scale-95" aria-label="Soft drop"><ChevronDown className="h-4 w-4" /></button>
+                            <button onClick={hardDrop} className="rounded-[3px] bg-[#2b3137] p-2.5 hover:bg-[#343b42] active:scale-95" aria-label="Hard drop"><ChevronsDown className="h-4 w-4" /></button>
+                            <button onClick={holdPiece} disabled={!running || !canHold} className="rounded-[3px] bg-[#2b3137] p-2.5 hover:bg-[#343b42] active:scale-95 disabled:opacity-35" aria-label="Hold piece"><Box className="h-4 w-4" /></button>
+                        </div>
+                    </main>
+
+                    <aside className="tetris-right flex min-h-0 flex-col bg-[#20252a] p-4">
+                        <div className="tetris-score">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8ea0b2]">Score</p>
+                            <p className="mt-1 text-3xl font-semibold tabular-nums tracking-tight">{score.toLocaleString()}</p>
+                        </div>
+                        <div className="tetris-stats mt-4 grid grid-cols-2 gap-3 border-y border-white/10 py-3">
+                            <div><p className="text-[10px] uppercase tracking-wider text-[#8ea0b2]">Lines</p><p className="mt-1 text-lg font-semibold tabular-nums">{lines}</p></div>
+                            <div><p className="text-[10px] uppercase tracking-wider text-[#8ea0b2]">Level</p><p className="mt-1 text-lg font-semibold tabular-nums">{level}</p></div>
+                        </div>
+                        <div className="tetris-queue mt-4 min-h-0">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8ea0b2]">Next queue</p>
+                            <div className="mt-3 space-y-2">
+                                {queue.map((name, index) => <div key={`${name}-${index}`} className={index > 0 ? 'opacity-65' : ''}><PiecePreview name={name} compact={index > 0} /></div>)}
+                            </div>
+                        </div>
+                        <div className="tetris-actions mt-auto space-y-2 pt-4">
+                            <button onClick={() => setRunning((value) => !gameOver && !value)} disabled={gameOver || (!running && score === 0)} className="flex w-full items-center justify-center gap-2 rounded-[3px] bg-[#2b3137] px-3 py-2 text-xs font-semibold transition-colors hover:bg-[#343b42] active:scale-95 disabled:opacity-35">
+                                {running ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />} {running ? 'Pause' : 'Resume'}
+                            </button>
+                            <button onClick={reset} className="flex w-full items-center justify-center gap-2 rounded-[3px] bg-[#2f70a5] px-3 py-2 text-xs font-semibold transition-colors hover:bg-[#286492] active:scale-95">
+                                <RotateCcw className="h-3.5 w-3.5" /> New game
+                            </button>
+                        </div>
+                    </aside>
                 </div>
             </div>
         </Window>
