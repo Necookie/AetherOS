@@ -17,8 +17,9 @@
     "typecheck:functions": "tsc --noEmit -p functions/tsconfig.json",
     "build": "npm run build --workspace=client && npm run build --workspace=server",
     "build:cloudflare": "npm run build --workspace=client",
-    "dev:cloudflare": "npm run build:cloudflare && wrangler pages dev client/dist",
-    "deploy:cloudflare": "npm run build:cloudflare && wrangler pages deploy client/dist --project-name aetheros --commit-dirty=true",
+    "dev:cloudflare": "npm run build:cloudflare && wrangler pages dev",
+    "deploy:cloudflare": "npm run build:cloudflare && wrangler pages deploy --commit-dirty=true",
+    "types:cloudflare": "wrangler types --include-runtime false",
     "lint": "npm run lint:functions && npm run lint --workspace=client && npm run lint --workspace=server",
     "lint:functions": "eslint functions --report-unused-disable-directives --max-warnings 0",
     "test": "npm run test --workspace=client"
