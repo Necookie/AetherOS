@@ -1,4 +1,5 @@
 import { createApiUrl } from './apiUrl'
+import { fetchApi, getApiError } from './request'
 
 export interface BrowserSearchResult {
     id: string
@@ -16,10 +17,12 @@ export interface BrowserSearchResponse {
 }
 
 export async function querySearch(query: string): Promise<BrowserSearchResponse> {
-    const response = await fetch(createApiUrl(`/api/search?q=${encodeURIComponent(query)}`))
+    const response = await fetchApi(createApiUrl(`/api/search?q=${encodeURIComponent(query)}`), {
+        headers: { Accept: 'application/json' },
+    })
 
     if (!response.ok) {
-        throw new Error(`Search request failed: ${response.status}`)
+        throw new Error(await getApiError(response, `Search request failed (${response.status}).`))
     }
 
     return response.json()
