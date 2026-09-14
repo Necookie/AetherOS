@@ -1,4 +1,4 @@
-import { Component, type ComponentType, type ReactNode, Suspense, lazy, useMemo, useState } from 'react'
+import { Component, type ComponentType, type ReactNode, Suspense, lazy, useState } from 'react'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import Window from './Window'
 import { useWindowStore } from '../../stores/windowStore'
@@ -144,35 +144,33 @@ export function createRecoverableLazyWindow(
     appTitle: string,
     loader: WindowAppLoader,
 ): ComponentType<{ id: string }> {
+    const createLazyWindowApp = () => lazy(async () => {
+        try {
+            return await loader()
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err)
+            if (isChunkLoadError(msg)) {
+                const reloadKey = `aetheros_chunk_auto_reload_${appTitle}`
+                const alreadyReloaded = sessionStorage.getItem(reloadKey)
+                if (!alreadyReloaded) {
+                    sessionStorage.setItem(reloadKey, 'true')
+                    window.location.reload()
+                }
+            }
+            throw err
+        }
+    })
+
     function RecoverableLazyWindow({ id }: { id: string }) {
         const closeWindow = useWindowStore((state) => state.closeWindow)
-        const [attempt, setAttempt] = useState(0)
-
-        const LazyWindowApp = useMemo(() => {
-            return lazy(async () => {
-                try {
-                    return await loader()
-                } catch (err) {
-                    const msg = err instanceof Error ? err.message : String(err)
-                    if (isChunkLoadError(msg)) {
-                        const reloadKey = `aetheros_chunk_auto_reload_${appTitle}`
-                        const alreadyReloaded = sessionStorage.getItem(reloadKey)
-                        if (!alreadyReloaded) {
-                            sessionStorage.setItem(reloadKey, 'true')
-                            window.location.reload()
-                        }
-                    }
-                    throw err
-                }
-            })
-        }, [attempt])
+        const [LazyWindowApp, setLazyWindowApp] = useState(createLazyWindowApp)
 
         return (
             <WindowRecoveryBoundaryInner
                 windowId={id}
                 appTitle={appTitle}
                 onClose={() => closeWindow(id)}
-                onRetry={() => setAttempt((a) => a + 1)}
+                onRetry={() => setLazyWindowApp(createLazyWindowApp)}
             >
                 <Suspense fallback={<WindowLoadingFallback windowId={id} appTitle={appTitle} />}>
                     <LazyWindowApp id={id} />
