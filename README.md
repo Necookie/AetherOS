@@ -196,9 +196,10 @@ Useful commands:
 ```bash
 npm run dev:cloudflare
 npm run deploy:cloudflare
+npm run types:cloudflare
 ```
 
-For Git-based Cloudflare builds, use `npm run build:cloudflare` as the build command and `client/dist` as the output directory. The existing `aetheros.necookie.dev` custom domain remains attached to the Pages project.
+`wrangler.jsonc` is the source of truth for the Pages runtime, output directory, compatibility date, and observability settings. Rerun `npm run types:cloudflare` after changing bindings. For Git-based Cloudflare builds, use `npm run build:cloudflare` as the build command and `client/dist` as the output directory. The existing `aetheros.necookie.dev` custom domain remains attached to the Pages project.
 
 Configure Cloudflare rate-limiting rules for `/api/search` and `/api/ai` to protect provider quotas. No request state is kept in the Pages Functions isolate.
 
