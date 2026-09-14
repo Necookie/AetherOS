@@ -82,7 +82,7 @@ function legalMoves(board: Board, from: string): string[] {
             const two = square(x, y + direction * 2)
             if (y === startRank && !board[two]) moves.push(two)
         }
-        ;[-1, 1].forEach((dx) => {
+        [-1, 1].forEach((dx) => {
             if (!isInside(x + dx, y + direction)) return
             const target = square(x + dx, y + direction)
             if (board[target] && board[target].color !== piece.color) moves.push(target)
