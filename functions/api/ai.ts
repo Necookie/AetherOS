@@ -1,32 +1,34 @@
 import { getAiReply } from '../../server/src/services/aiService'
-import { jsonResponse, type PagesEnv } from '../_shared'
+import { parseAiRequestBody } from '../../server/src/apiContracts'
+import { createRequestId, jsonResponse, methodNotAllowed, readJsonBody, type PagesEnv } from '../_shared'
 
-const MAX_MESSAGE_LENGTH = 4_000
-
-export const onRequestPost: PagesFunction<PagesEnv> = async ({ request, env }) => {
-    let body: { message?: unknown }
-    try {
-        body = await request.json<{ message?: unknown }>()
-    } catch {
-        return jsonResponse({ error: 'Request body must be valid JSON.' }, 400)
+export const onRequest: PagesFunction<PagesEnv> = async ({ request, env }) => {
+    const requestId = createRequestId()
+    if (request.method !== 'POST') {
+        return methodNotAllowed(requestId, 'POST')
     }
 
-    if (typeof body.message !== 'string' || !body.message.trim()) {
-        return jsonResponse({ error: 'Message is required.' }, 400)
+    const body = await readJsonBody(request)
+    if (!body.ok) {
+        return jsonResponse({ error: body.error, requestId }, { status: body.status, requestId })
     }
 
-    const message = body.message.trim()
-    if (message.length > MAX_MESSAGE_LENGTH) {
-        return jsonResponse({ error: 'Message is too long.' }, 400)
+    const parsed = parseAiRequestBody(body.value)
+    if (!parsed.ok) {
+        return jsonResponse({ error: parsed.error, requestId }, { status: 400, requestId })
     }
 
     try {
-        return jsonResponse(await getAiReply(message, env.OPENAI_API_KEY))
+        return jsonResponse(await getAiReply(parsed.value.message, env.OPENAI_API_KEY), { requestId })
     } catch (error) {
         console.error(JSON.stringify({
             message: 'AI request failed',
+            requestId,
             error: error instanceof Error ? error.message : String(error),
         }))
-        return jsonResponse({ error: 'Failed to process AI request.' }, 500)
+        return jsonResponse(
+            { error: 'AI provider is unavailable.', requestId },
+            { status: 502, requestId },
+        )
     }
 }

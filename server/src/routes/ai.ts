@@ -1,20 +1,34 @@
 import { FastifyInstance } from 'fastify'
+import { MAX_AI_MESSAGE_LENGTH, parseAiRequestBody } from '../apiContracts'
 import { env } from '../config/env'
 import { getAiReply } from '../services/aiService'
 
-interface AiRequestBody {
-    message: string
-    context?: any
-}
-
 export async function aiRoute(fastify: FastifyInstance) {
-    fastify.post('/ai', async (request, reply) => {
+    fastify.post('/ai', {
+        config: {
+            rateLimit: { max: 20, timeWindow: '1 minute' },
+        },
+        schema: {
+            body: {
+                type: 'object',
+                additionalProperties: false,
+                required: ['message'],
+                properties: {
+                    message: { type: 'string', minLength: 1, maxLength: MAX_AI_MESSAGE_LENGTH },
+                },
+            },
+        },
+    }, async (request, reply) => {
+        const parsed = parseAiRequestBody(request.body)
+        if (!parsed.ok) {
+            return reply.status(400).send({ error: parsed.error, requestId: request.id })
+        }
+
         try {
-            const { message } = request.body as AiRequestBody
-            return reply.send(await getAiReply(message, env.openaiApiKey))
-        } catch (err: any) {
-            fastify.log.error(err)
-            return reply.status(500).send({ error: 'Failed to process AI request.' })
+            return reply.send(await getAiReply(parsed.value.message, env.openaiApiKey))
+        } catch (error) {
+            request.log.error({ err: error, requestId: request.id }, 'AI request failed')
+            return reply.status(502).send({ error: 'AI provider is unavailable.', requestId: request.id })
         }
     })
 }

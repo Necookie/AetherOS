@@ -1,19 +1,23 @@
 import { createApiUrl } from './apiUrl'
+import { fetchApi, getApiError } from './request'
 
 export interface AiResponse {
     reply: string
-    mode: string
+    mode: 'live' | 'mock'
 }
 
 export async function queryAi(message: string): Promise<AiResponse> {
-    const res = await fetch(createApiUrl('/api/ai'), {
+    const res = await fetchApi(createApiUrl('/api/ai'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ message })
     })
 
     if (!res.ok) {
-        throw new Error(`AI request failed: ${res.status}`)
+        throw new Error(await getApiError(res, `AI request failed (${res.status}).`))
     }
 
     return res.json()

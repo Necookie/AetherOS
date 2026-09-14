@@ -1,5 +1,9 @@
-import { jsonResponse, type PagesEnv } from '../_shared'
+import { createRequestId, jsonResponse, type PagesEnv } from '../_shared'
 
 export const onRequest: PagesFunction<PagesEnv> = async () => {
-    return jsonResponse({ error: 'API route not found.' }, 404)
+    const requestId = createRequestId()
+    return jsonResponse(
+        { error: 'API route not found.', requestId },
+        { status: 404, requestId },
+    )
 }
