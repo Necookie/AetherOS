@@ -1,27 +1,34 @@
 import { getAiReply } from '../../server/src/services/aiService'
 import { parseAiRequestBody } from '../../server/src/apiContracts'
-import { jsonResponse, type PagesEnv } from '../_shared'
+import { createRequestId, jsonResponse, methodNotAllowed, readJsonBody, type PagesEnv } from '../_shared'
 
-export const onRequestPost: PagesFunction<PagesEnv> = async ({ request, env }) => {
-    let body: unknown
-    try {
-        body = await request.json()
-    } catch {
-        return jsonResponse({ error: 'Request body must be valid JSON.' }, 400)
+export const onRequest: PagesFunction<PagesEnv> = async ({ request, env }) => {
+    const requestId = createRequestId()
+    if (request.method !== 'POST') {
+        return methodNotAllowed(requestId, 'POST')
     }
 
-    const parsed = parseAiRequestBody(body)
+    const body = await readJsonBody(request)
+    if (!body.ok) {
+        return jsonResponse({ error: body.error, requestId }, { status: body.status, requestId })
+    }
+
+    const parsed = parseAiRequestBody(body.value)
     if (!parsed.ok) {
-        return jsonResponse({ error: parsed.error }, 400)
+        return jsonResponse({ error: parsed.error, requestId }, { status: 400, requestId })
     }
 
     try {
-        return jsonResponse(await getAiReply(parsed.value.message, env.OPENAI_API_KEY))
+        return jsonResponse(await getAiReply(parsed.value.message, env.OPENAI_API_KEY), { requestId })
     } catch (error) {
         console.error(JSON.stringify({
             message: 'AI request failed',
+            requestId,
             error: error instanceof Error ? error.message : String(error),
         }))
-        return jsonResponse({ error: 'Failed to process AI request.' }, 500)
+        return jsonResponse(
+            { error: 'AI provider is unavailable.', requestId },
+            { status: 502, requestId },
+        )
     }
 }

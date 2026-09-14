@@ -11,6 +11,7 @@
     },
     "include": [
         "./**/*.ts",
+        "../worker-configuration.d.ts",
         "../server/src/services/aiService.ts",
         "../server/src/services/openaiClient.ts",
         "../server/src/services/providerFetch.ts",
