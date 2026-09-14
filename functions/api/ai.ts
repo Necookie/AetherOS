@@ -1,27 +1,22 @@
 import { getAiReply } from '../../server/src/services/aiService'
+import { parseAiRequestBody } from '../../server/src/apiContracts'
 import { jsonResponse, type PagesEnv } from '../_shared'
 
-const MAX_MESSAGE_LENGTH = 4_000
-
 export const onRequestPost: PagesFunction<PagesEnv> = async ({ request, env }) => {
-    let body: { message?: unknown }
+    let body: unknown
     try {
-        body = await request.json<{ message?: unknown }>()
+        body = await request.json()
     } catch {
         return jsonResponse({ error: 'Request body must be valid JSON.' }, 400)
     }
 
-    if (typeof body.message !== 'string' || !body.message.trim()) {
-        return jsonResponse({ error: 'Message is required.' }, 400)
-    }
-
-    const message = body.message.trim()
-    if (message.length > MAX_MESSAGE_LENGTH) {
-        return jsonResponse({ error: 'Message is too long.' }, 400)
+    const parsed = parseAiRequestBody(body)
+    if (!parsed.ok) {
+        return jsonResponse({ error: parsed.error }, 400)
     }
 
     try {
-        return jsonResponse(await getAiReply(message, env.OPENAI_API_KEY))
+        return jsonResponse(await getAiReply(parsed.value.message, env.OPENAI_API_KEY))
     } catch (error) {
         console.error(JSON.stringify({
             message: 'AI request failed',
