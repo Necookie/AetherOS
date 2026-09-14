@@ -20,12 +20,18 @@
     "dev:cloudflare": "npm run build:cloudflare && wrangler pages dev client/dist",
     "deploy:cloudflare": "npm run build:cloudflare && wrangler pages deploy client/dist --project-name aetheros --commit-dirty=true",
     "lint": "npm run lint:functions && npm run lint --workspace=client && npm run lint --workspace=server",
-    "lint:functions": "eslint functions --ext .ts --report-unused-disable-directives --max-warnings 0",
+    "lint:functions": "eslint functions --report-unused-disable-directives --max-warnings 0",
     "test": "npm run test --workspace=client"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260911.1",
+    "@eslint/js": "^10.0.1",
+    "@typescript-eslint/eslint-plugin": "^8.70.0",
+    "@typescript-eslint/parser": "^8.70.0",
     "concurrently": "^8.2.2",
+    "eslint": "^10.10.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^16.4.0",
     "wrangler": "^4.131.0"
   }
 }
