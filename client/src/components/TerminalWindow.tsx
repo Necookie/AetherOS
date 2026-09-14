@@ -7,7 +7,7 @@ import { useTerminal } from './terminal/useTerminal'
 
 export default function TerminalWindow({ id }: { id: string }) {
     const terminalRef = useRef<HTMLDivElement>(null)
-    const termInstance = useRef<import('xterm').Terminal | null>(null)
+    const termInstance = useRef<import('@xterm/xterm').Terminal | null>(null)
     const fitTerminal = useRef<(() => void) | null>(null)
     const windowData = useWindowStore(selectWindowById(id))
     const runtime = useMemo(() => createTerminalRuntime(), [])
