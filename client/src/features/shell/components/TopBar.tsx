@@ -67,6 +67,8 @@ export default function TopBar({
         () => (accounts || []).filter((account) => account.id !== activeAccount?.id),
         [accounts, activeAccount?.id],
     )
+    const fullDateTime = `${now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })} ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: showSeconds ? '2-digit' : undefined })}`
+    const compactTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -89,11 +91,11 @@ export default function TopBar({
 
     return (
         <header
-            className="absolute left-0 right-0 top-0 z-[var(--ds-z-topbar)] flex h-[var(--shell-topbar-height)] items-center justify-between bg-void px-3 text-on-dark"
+            className="absolute left-0 right-0 top-0 z-[var(--ds-z-topbar)] flex h-[var(--shell-topbar-height)] items-center justify-between gap-1 overflow-hidden bg-void px-2 text-on-dark sm:px-3"
         >
             <div ref={systemMenuRef} className="relative flex items-center gap-2 text-[12px]">
                 <button
-                    className={`flex items-center gap-1.5 rounded px-2 py-0.5 transition-transform active:scale-95 ${
+                    className={`flex h-8 items-center gap-1.5 rounded px-1.5 transition-transform active:scale-95 sm:px-2 ${
                         systemMenuOpen ? 'bg-tile-2' : 'hover:bg-tile-1'
                     }`}
                     aria-label="AetherOS system menu"
@@ -103,7 +105,7 @@ export default function TopBar({
                     }}
                 >
                     <AetherMark className="h-4 w-4 text-primary" />
-                    <span className="font-semibold">AetherOS</span>
+                    <span className="hidden font-semibold sm:inline">AetherOS</span>
                 </button>
                 <button
                     onClick={onToggleLauncher}
@@ -195,37 +197,37 @@ export default function TopBar({
                 )}
             </div>
 
-            <div className="flex items-center gap-1 text-xs">
+            <div className="flex min-w-0 items-center gap-0.5 text-xs sm:gap-1">
                 <button
-                    className="rounded p-1 transition-transform active:scale-95 hover:bg-tile-1"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded transition-transform hover:bg-tile-1 active:scale-95"
                     onClick={onToggleQuickSettings}
                     aria-label="Wi-Fi and network"
                 >
                     <Wifi className="h-3.5 w-3.5" />
                 </button>
                 <button
-                    className="rounded p-1 transition-transform active:scale-95 hover:bg-tile-1"
+                    className="hidden h-8 w-8 shrink-0 items-center justify-center rounded transition-transform hover:bg-tile-1 active:scale-95 sm:flex"
                     onClick={onToggleQuickSettings}
                     aria-label="Sound settings"
                 >
                     <Volume2 className="h-3.5 w-3.5" />
                 </button>
                 <button
-                    className="rounded p-1 transition-transform active:scale-95 hover:bg-tile-1"
+                    className="hidden h-8 w-8 shrink-0 items-center justify-center rounded transition-transform hover:bg-tile-1 active:scale-95 md:flex"
                     onClick={onToggleQuickSettings}
                     aria-label="Battery"
                 >
                     <BatteryCharging className="h-3.5 w-3.5" />
                 </button>
                 <button
-                    className="rounded p-1 transition-transform active:scale-95 hover:bg-tile-1"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded transition-transform hover:bg-tile-1 active:scale-95"
                     onClick={onToggleLauncher}
                     aria-label="Search"
                 >
                     <Search className="h-3.5 w-3.5" />
                 </button>
                 <button
-                    className="rounded p-1 transition-transform active:scale-95 hover:bg-tile-1"
+                    className="hidden h-8 w-8 shrink-0 items-center justify-center rounded transition-transform hover:bg-tile-1 active:scale-95 sm:flex"
                     onClick={() => toggleFullscreen()}
                     aria-label={isFullscreenActive ? 'Exit Fullscreen' : 'Enter Fullscreen'}
                     title={isFullscreenActive ? 'Exit Fullscreen (F11 / Esc)' : 'Enter Fullscreen (F11)'}
@@ -237,7 +239,7 @@ export default function TopBar({
                     )}
                 </button>
                 <button
-                    className="relative rounded p-1 transition-transform active:scale-95 hover:bg-tile-1"
+                    className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded transition-transform hover:bg-tile-1 active:scale-95"
                     onClick={onOpenDownloads}
                     aria-label="Downloads"
                 >
@@ -249,7 +251,7 @@ export default function TopBar({
                     ) : null}
                 </button>
                 <button
-                    className={`relative rounded p-1 transition-transform active:scale-95 ${notificationsOpen ? 'bg-tile-2' : 'hover:bg-tile-1'}`}
+                    className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded transition-transform active:scale-95 ${notificationsOpen ? 'bg-tile-2' : 'hover:bg-tile-1'}`}
                     onClick={onToggleNotifications}
                     aria-label="Notifications"
                 >
@@ -262,7 +264,7 @@ export default function TopBar({
                 </button>
                 {onToggleWidgets && (
                     <button
-                        className={`relative rounded p-1 transition-transform active:scale-95 ${widgetsOpen ? 'bg-tile-2 text-primary-focus' : 'hover:bg-tile-1'}`}
+                        className={`relative hidden h-8 w-8 shrink-0 items-center justify-center rounded transition-transform active:scale-95 lg:flex ${widgetsOpen ? 'bg-tile-2 text-primary-focus' : 'hover:bg-tile-1'}`}
                         onClick={onToggleWidgets}
                         aria-label="Toggle Widgets Drawer"
                         title={widgetsOpen ? 'Hide Widgets Drawer' : 'Show Widgets Drawer'}
@@ -271,17 +273,17 @@ export default function TopBar({
                     </button>
                 )}
                 <button
-                    className="rounded px-2 py-0.5 transition-transform active:scale-95 hover:bg-tile-1"
+                    className="flex h-8 shrink-0 items-center whitespace-nowrap rounded px-1.5 transition-transform hover:bg-tile-1 active:scale-95 sm:px-2"
                     onClick={onToggleDateTime}
                     aria-label="Date and time"
                 >
-                    {now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}{' '}
-                    {now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: showSeconds ? '2-digit' : undefined })}
+                    <span className="sm:hidden">{compactTime}</span>
+                    <span className="hidden sm:inline">{fullDateTime}</span>
                 </button>
 
                 <div ref={accountMenuRef} className="relative ml-1">
                     <button
-                        className={`flex items-center gap-1 rounded px-2 py-0.5 transition-transform active:scale-95 ${
+                        className={`flex h-8 shrink-0 items-center gap-1 rounded px-1.5 transition-transform active:scale-95 sm:px-2 ${
                             menuOpen ? 'bg-tile-2' : 'hover:bg-tile-1'
                         }`}
                         aria-label="Account menu"

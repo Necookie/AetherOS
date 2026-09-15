@@ -209,21 +209,21 @@ export default function ChessApp({ id }: { id: string }) {
                     <div className="p-5">
                         <div className="flex items-start justify-between gap-3">
                             <div>
-                                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#777166]">Live match</p>
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#68635b]">Live match</p>
                                 <h2 className="mt-1 text-xl font-semibold tracking-tight">A quiet duel</h2>
                             </div>
                             <Swords className="mt-0.5 h-5 w-5 text-[#65735b]" />
                         </div>
                         <div className="mt-5 flex items-center gap-3 border-y border-[#d8d1c3] py-4">
                             <div className={`flex h-10 w-10 items-center justify-center rounded-[4px] ${turn === 'white' ? 'bg-[#30312e] text-[#f1f0eb]' : 'bg-[#769656] text-[#252522]'}`}><Crown className="h-5 w-5" /></div>
-                            <div><p className="text-sm font-semibold capitalize">{turn} to move</p><p className="mt-0.5 text-xs text-[#777166]">{selected ? `${targets.length} legal moves` : 'Select a piece'}</p></div>
+                            <div><p className="text-sm font-semibold capitalize">{turn} to move</p><p className="mt-0.5 text-xs text-[#68635b]">{selected ? `${targets.length} legal moves` : 'Select a piece'}</p></div>
                         </div>
                     </div>
 
                     <div className="min-h-0 flex-1 overflow-y-auto border-t border-[#d8d1c3] px-5 py-4">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#777166]">Move ledger</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#68635b]">Move ledger</p>
                         {moves.length === 0 ? (
-                            <div className="mt-5 text-center"><p className="font-serif text-3xl text-[#9b9487]">♙</p><p className="mt-2 text-xs leading-relaxed text-[#777166]">White opens the match.<br />Choose a piece on the board.</p></div>
+                            <div className="mt-5 text-center"><p className="font-serif text-3xl text-[#9b9487]" aria-hidden="true">♙</p><p className="mt-2 text-xs leading-relaxed text-[#68635b]">White opens the match.<br />Choose a piece on the board.</p></div>
                         ) : (
                             <ol className="mt-3 space-y-1.5">
                                 {moves.map((move, index) => <li key={`${move}-${index}`} className="flex gap-2 text-xs"><span className="w-5 text-[#9b9487] tabular-nums">{moves.length - index}.</span><span className="font-semibold text-[#4f4b44]">{move}</span></li>)}

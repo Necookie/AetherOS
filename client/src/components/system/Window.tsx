@@ -163,7 +163,7 @@ export default function Window({ id, title, children }: WindowProps) {
             className={`pointer-events-auto absolute flex flex-col overflow-hidden border
                 ${isTransforming ? 'os-window-dragging' : 'os-window-smooth-motion'}
                 ${isMaximized ? 'rounded-none' : 'rounded-xl'}
-                ${isMinimized ? 'pointer-events-none opacity-0 scale-[0.98]' : isEntering ? 'opacity-0 translate-y-2 scale-[0.985]' : isFocused ? 'brightness-100 opacity-100 translate-y-0 scale-100' : 'opacity-95 translate-y-0 scale-100'}
+                ${isMinimized ? 'pointer-events-none opacity-0 scale-[0.98]' : isEntering ? 'opacity-0 translate-y-2 scale-[0.985]' : 'brightness-100 opacity-100 translate-y-0 scale-100'}
             `}
             style={{
                 left: bounds.x,
@@ -183,7 +183,7 @@ export default function Window({ id, title, children }: WindowProps) {
             onFocusCapture={() => focusWindow(id)}
         >
             <div
-                className="flex h-10 select-none items-center justify-between border-b border-hairline bg-[rgba(245,245,247,0.8)] px-3 backdrop-blur-frosted"
+                className="relative flex h-10 select-none items-center border-b border-hairline bg-[rgba(245,245,247,0.8)] px-3 backdrop-blur-frosted"
                 style={{
                     cursor: isDragging ? 'grabbing' : isMaximized ? 'default' : 'grab',
                 }}
@@ -193,22 +193,26 @@ export default function Window({ id, title, children }: WindowProps) {
                 onPointerCancel={handlePointerUp}
                 onDoubleClick={() => toggleMaximize(id)}
             >
-                <div className="group/controls relative flex items-center gap-2 pl-0.5" data-drag-handle="false">
+                <div className="group/controls absolute left-1 flex items-center" data-drag-handle="false">
                     <button
                         onClick={(e) => { e.stopPropagation(); closeWindow(id) }}
-                        className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#ff5f56] border border-[#e0443e] text-[#4d0000] transition-transform active:scale-90 hover:opacity-90 focus:outline-none"
+                        className="flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-black/5 active:scale-95"
                         title="Close window"
                         aria-label="Close window"
                     >
-                        <X className="h-2 w-2 stroke-[2.5] opacity-70 group-hover/controls:opacity-100 transition-opacity" />
+                        <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#e0443e] bg-[#ff5f56] text-[#4d0000]">
+                            <X className="h-2 w-2 stroke-[2.5] opacity-70 transition-opacity group-hover/controls:opacity-100" />
+                        </span>
                     </button>
                     <button
                         onClick={(e) => { e.stopPropagation(); toggleMinimize(id) }}
-                        className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#febc2e] border border-[#d89e24] text-[#5c3e00] transition-transform active:scale-90 hover:opacity-90 focus:outline-none"
+                        className="flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-black/5 active:scale-95"
                         title="Minimize window"
                         aria-label="Minimize window"
                     >
-                        <Minus className="h-2 w-2 stroke-[2.5] opacity-70 group-hover/controls:opacity-100 transition-opacity" />
+                        <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#d89e24] bg-[#febc2e] text-[#5c3e00]">
+                            <Minus className="h-2 w-2 stroke-[2.5] opacity-70 transition-opacity group-hover/controls:opacity-100" />
+                        </span>
                     </button>
                     <button
                         onMouseEnter={handleMaximizeMouseEnter}
@@ -223,15 +227,17 @@ export default function Window({ id, title, children }: WindowProps) {
 
                             toggleMaximize(id)
                         }}
-                        className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#28c840] border border-[#1aab29] text-[#004d11] transition-transform active:scale-90 hover:opacity-90 focus:outline-none"
+                        className="flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-black/5 active:scale-95"
                         title={isMaximized ? 'Restore window' : 'Maximize window (hover for snap layouts)'}
                         aria-label={isMaximized ? 'Restore window' : 'Maximize window'}
                     >
-                        {isMaximized ? (
-                            <Minimize2 className="h-2 w-2 stroke-[2.5] opacity-70 group-hover/controls:opacity-100 transition-opacity" />
-                        ) : (
-                            <Maximize2 className="h-2 w-2 stroke-[2.5] opacity-70 group-hover/controls:opacity-100 transition-opacity" />
-                        )}
+                        <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#1aab29] bg-[#28c840] text-[#004d11]">
+                            {isMaximized ? (
+                                <Minimize2 className="h-2 w-2 stroke-[2.5] opacity-70 transition-opacity group-hover/controls:opacity-100" />
+                            ) : (
+                                <Maximize2 className="h-2 w-2 stroke-[2.5] opacity-70 transition-opacity group-hover/controls:opacity-100" />
+                            )}
+                        </span>
                     </button>
 
                     <SnapLayoutPopover
@@ -241,11 +247,9 @@ export default function Window({ id, title, children }: WindowProps) {
                     />
                 </div>
 
-                <div className="pointer-events-none flex-1 truncate px-4 text-center text-sm font-semibold text-ink">
+                <div className="pointer-events-none min-w-0 flex-1 truncate px-24 text-center text-sm font-semibold text-ink">
                     {title}
                 </div>
-
-                <div className="w-[52px]" />
             </div>
 
             <div className="relative flex-1 overflow-hidden bg-surface">
