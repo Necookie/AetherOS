@@ -38,7 +38,7 @@
     "concurrently": "^8.2.2",
     "eslint": "^10.10.0",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "globals": "^16.4.0",
+    "globals": "^17.12.0",
     "vitest": "^5.0.0",
     "wrangler": "^4.131.1"
   }
