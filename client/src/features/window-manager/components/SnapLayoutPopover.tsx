@@ -46,8 +46,9 @@ export const SnapLayoutPopover = memo(function SnapLayoutPopover({
                 {/* 1. Full Maximize Layout */}
                 <button
                     onClick={() => handleTile('maximize')}
-                    className="group flex flex-col items-center gap-1.5 rounded-lg border border-hairline bg-tile-1 p-2 transition-all hover:border-primary hover:bg-tile-2 focus:outline-none"
+                    className="group flex flex-col items-center gap-1.5 rounded-lg border border-hairline bg-tile-1 p-2 transition-colors hover:border-primary hover:bg-tile-2 focus-visible:ring-2 focus-visible:ring-primary"
                     title="Maximize window"
+                    aria-label="Maximize window"
                 >
                     <div className="flex h-10 w-full rounded border border-hairline/80 bg-surface group-hover:border-primary/60 group-hover:bg-primary/10 transition-colors" />
                     <span className="text-[10px] font-medium text-muted group-hover:text-ink">Full</span>
@@ -58,13 +59,15 @@ export const SnapLayoutPopover = memo(function SnapLayoutPopover({
                     <div className="flex h-10 w-full gap-1">
                         <button
                             onClick={() => handleTile('left-half')}
-                            className="h-full flex-1 rounded border border-hairline/80 bg-surface hover:border-primary hover:bg-primary/20 transition-all focus:outline-none"
+                            className="h-full flex-1 rounded border border-hairline/80 bg-surface transition-colors hover:border-primary hover:bg-primary/20 focus-visible:ring-2 focus-visible:ring-primary"
                             title="Snap left 50%"
+                            aria-label="Snap left 50%"
                         />
                         <button
                             onClick={() => handleTile('right-half')}
-                            className="h-full flex-1 rounded border border-hairline/80 bg-surface hover:border-primary hover:bg-primary/20 transition-all focus:outline-none"
+                            className="h-full flex-1 rounded border border-hairline/80 bg-surface transition-colors hover:border-primary hover:bg-primary/20 focus-visible:ring-2 focus-visible:ring-primary"
                             title="Snap right 50%"
+                            aria-label="Snap right 50%"
                         />
                     </div>
                     <span className="text-[10px] font-medium text-muted">Split 50/50</span>
@@ -75,23 +78,27 @@ export const SnapLayoutPopover = memo(function SnapLayoutPopover({
                     <div className="grid h-10 w-full grid-cols-2 gap-1">
                         <button
                             onClick={() => handleTile('top-left')}
-                            className="rounded border border-hairline/80 bg-surface hover:border-primary hover:bg-primary/20 transition-all focus:outline-none"
+                            className="rounded border border-hairline/80 bg-surface transition-colors hover:border-primary hover:bg-primary/20 focus-visible:ring-2 focus-visible:ring-primary"
                             title="Snap top-left quarter"
+                            aria-label="Snap top-left quarter"
                         />
                         <button
                             onClick={() => handleTile('top-right')}
-                            className="rounded border border-hairline/80 bg-surface hover:border-primary hover:bg-primary/20 transition-all focus:outline-none"
+                            className="rounded border border-hairline/80 bg-surface transition-colors hover:border-primary hover:bg-primary/20 focus-visible:ring-2 focus-visible:ring-primary"
                             title="Snap top-right quarter"
+                            aria-label="Snap top-right quarter"
                         />
                         <button
                             onClick={() => handleTile('bottom-left')}
-                            className="rounded border border-hairline/80 bg-surface hover:border-primary hover:bg-primary/20 transition-all focus:outline-none"
+                            className="rounded border border-hairline/80 bg-surface transition-colors hover:border-primary hover:bg-primary/20 focus-visible:ring-2 focus-visible:ring-primary"
                             title="Snap bottom-left quarter"
+                            aria-label="Snap bottom-left quarter"
                         />
                         <button
                             onClick={() => handleTile('bottom-right')}
-                            className="rounded border border-hairline/80 bg-surface hover:border-primary hover:bg-primary/20 transition-all focus:outline-none"
+                            className="rounded border border-hairline/80 bg-surface transition-colors hover:border-primary hover:bg-primary/20 focus-visible:ring-2 focus-visible:ring-primary"
                             title="Snap bottom-right quarter"
+                            aria-label="Snap bottom-right quarter"
                         />
                     </div>
                     <span className="text-[10px] font-medium text-muted">Quarters</span>
