@@ -204,6 +204,7 @@
 @media (prefers-reduced-motion: reduce) {
   .os-hover-motion,
   .os-window-motion,
+  .os-window-smooth-motion,
   .os-panel-motion,
   .animate-os-window-in,
   .animate-os-minimize,
