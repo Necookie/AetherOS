@@ -203,7 +203,7 @@ export default function StudioApp({ id }: { id: string }) {
                 <header className="flex h-11 shrink-0 items-center justify-between border-b border-white/[0.07] bg-[#20242a] px-3">
                     <div className="flex items-center gap-2.5">
                         <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#0066cc] text-white"><Code2 className="h-4 w-4" /></div>
-                        <div><p className="text-xs font-semibold leading-none">aether-project</p><p className="mt-1 text-[9px] uppercase tracking-[0.16em] text-[#77818d]">Local workspace</p></div>
+                        <div><p className="text-xs font-semibold leading-none">aether-project</p><p className="mt-1 text-[9px] uppercase tracking-[0.16em] text-[#9ca6b1]">Local workspace</p></div>
                     </div>
                     <div className="flex items-center gap-1.5">
                         <button onClick={() => setPanelOpen((value) => !value)} className="rounded-md p-2 text-[#8f99a5] transition-colors hover:bg-white/5 hover:text-white active:scale-95" aria-label="Toggle bottom panel">{panelOpen ? <PanelBottomClose className="h-4 w-4" /> : <PanelBottomOpen className="h-4 w-4" />}</button>
@@ -223,7 +223,7 @@ export default function StudioApp({ id }: { id: string }) {
                     <aside className="w-48 shrink-0 border-r border-white/[0.07] bg-[#20242a]">
                         <div className="flex h-10 items-center justify-between px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9ca6b1]"><span>{searchOpen ? 'Search' : 'Explorer'}</span>{!searchOpen && <button onClick={addScratchFile} className="rounded p-1 hover:bg-white/5" aria-label="New file"><Plus className="h-3.5 w-3.5" /></button>}</div>
                         {searchOpen ? (
-                            <div className="px-2"><input value={query} onChange={(event) => setQuery(event.target.value)} autoFocus placeholder="Search workspace" className="w-full rounded-md border border-white/10 bg-[#171a1f] px-2.5 py-2 text-xs outline-none placeholder:text-[#69737e] focus:border-[#4c9fe8]" /><p className="px-1 pt-3 text-[10px] text-[#77818d]">{visiblePaths.length} files matched</p></div>
+                            <div className="px-2"><input value={query} onChange={(event) => setQuery(event.target.value)} autoFocus placeholder="Search workspace" className="w-full rounded-md border border-white/10 bg-[#171a1f] px-2.5 py-2 text-xs outline-none placeholder:text-[#69737e] focus:border-[#4c9fe8]" /><p className="px-1 pt-3 text-[10px] text-[#9ca6b1]">{visiblePaths.length} files matched</p></div>
                         ) : (
                             <button onClick={() => setFolderOpen((value) => !value)} className="flex w-full items-center gap-1 px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wider text-[#c2c8cf] hover:bg-white/[0.035]">{folderOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}<Folder className="h-3.5 w-3.5 text-[#7d8995]" /> aether-project</button>
                         )}
@@ -263,10 +263,10 @@ export default function StudioApp({ id }: { id: string }) {
                                 </div>
                             ))}
                         </nav>
-                        <div className="flex h-7 shrink-0 items-center gap-1 border-b border-white/[0.05] px-3 text-[10px] text-[#77818d]"><span>aether-project</span><ChevronRight className="h-2.5 w-2.5" /><span>{activePath.replace('/', '  ›  ')}</span></div>
+                        <div className="flex h-7 shrink-0 items-center gap-1 border-b border-white/[0.05] px-3 text-[10px] text-[#9ca6b1]"><span>aether-project</span><ChevronRight className="h-2.5 w-2.5" /><span>{activePath.replace('/', '  ›  ')}</span></div>
 
                         <div className="relative flex min-h-0 flex-1 bg-[#171a1f] font-mono text-[13px] leading-6">
-                            <div className="w-12 shrink-0 select-none overflow-hidden border-r border-white/[0.035] py-3 pr-3 text-right text-[#515b66]" aria-hidden>{lines.map((_, index) => <div key={index}>{index + 1}</div>)}</div>
+                            <div className="w-12 shrink-0 select-none overflow-hidden border-r border-white/[0.035] py-3 pr-3 text-right text-[#8f99a5]" aria-hidden>{lines.map((_, index) => <div key={index}>{index + 1}</div>)}</div>
                             <textarea ref={textareaRef} value={activeFile.content} onChange={(event) => updateContent(event.target.value)} onKeyDown={(event) => {
                                 if (event.key === 'Tab') {
                                     event.preventDefault()
