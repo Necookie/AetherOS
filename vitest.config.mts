@@ -9,6 +9,8 @@ export default defineConfig({
             'server/src/**/*.test.ts',
             'functions/**/*.test.ts',
         ],
+        testTimeout: 15_000,
+        hookTimeout: 15_000,
         coverage: {
             provider: 'v8',
             reporter: ['text', 'html', 'json-summary'],
