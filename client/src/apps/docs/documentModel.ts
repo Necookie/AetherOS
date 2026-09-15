@@ -19,13 +19,16 @@ function createId() {
 }
 
 function decodeHtmlEntities(value: string) {
-    return value
-        .replace(/&nbsp;/g, ' ')
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'")
+    const entities: Record<string, string> = {
+        nbsp: ' ',
+        amp: '&',
+        lt: '<',
+        gt: '>',
+        quot: '"',
+        '#39': "'",
+    }
+
+    return value.replace(/&(nbsp|amp|lt|gt|quot|#39);/g, (_, entity: string) => entities[entity])
 }
 
 function stripTags(value: string) {
@@ -261,7 +264,11 @@ export function markdownToHtml(source: string): string {
 
 function formatInlineMarkdown(text: string): string {
     return text
-        .replace(/&(?!(amp|lt|gt|quot|#39|nbsp);)/g, '&amp;')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
         .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2">$1</a>')
         .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
         .replace(/__([^_]+)__/g, '<strong>$1</strong>')

@@ -1,6 +1,6 @@
 import { SearchEngine } from '../../../types/browser';
 
-const BLOCKED_SCHEMES = ['file:', 'data:', 'javascript:', 'about:', 'chrome:', 'ws:', 'wss:'];
+const BLOCKED_SCHEMES = ['file:', 'data:', 'javascript:', 'vbscript:', 'about:', 'chrome:', 'ws:', 'wss:'];
 
 export const normalizeUrl = (input: string): string => {
     let url = input.trim();
@@ -52,7 +52,7 @@ export const parseInputToUrl = (input: string, defaultEngine: SearchEngine): { u
     try {
         const parsedUrl = new URL(normalized);
 
-        if (BLOCKED_SCHEMES.includes(parsedUrl.protocol)) {
+        if (BLOCKED_SCHEMES.includes(parsedUrl.protocol.toLowerCase())) {
             return { url: '', isSearch: false, isUnsafe: true };
         }
 
