@@ -164,7 +164,7 @@ export default function QuickSettingsFlyout({
                         max={100}
                         value={brightness}
                         onChange={(e) => handleBrightness(Number(e.target.value))}
-                        className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-hairline accent-primary focus:outline-none"
+                        className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-hairline accent-primary"
                     />
                 </div>
 
@@ -172,7 +172,7 @@ export default function QuickSettingsFlyout({
                     <div className="flex items-center justify-between text-xs text-ink-muted">
                         <button
                             onClick={handleToggleMute}
-                            className="flex items-center gap-1.5 text-ink hover:text-primary focus:outline-none"
+                            className="flex min-h-8 items-center gap-1.5 rounded px-1 text-ink hover:text-primary"
                         >
                             {isMuted || volume === 0 ? (
                                 <VolumeX className="h-3.5 w-3.5 text-danger" />
@@ -189,7 +189,7 @@ export default function QuickSettingsFlyout({
                         max={100}
                         value={volume}
                         onChange={(e) => handleVolume(Number(e.target.value))}
-                        className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-hairline accent-primary focus:outline-none"
+                        className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-hairline accent-primary"
                     />
                 </div>
             </div>
