@@ -40,6 +40,6 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^16.4.0",
     "vitest": "^5.0.0",
-    "wrangler": "^4.131.0"
+    "wrangler": "^4.131.1"
   }
 }
