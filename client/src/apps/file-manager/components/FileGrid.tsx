@@ -14,11 +14,11 @@ export default function FileGrid({ items }: { items: VfsNode[] }) {
     );
 
     const handleDoubleClick = (node: VfsNode) => {
-        if (node.type === VfsNodeType.DIR) {
-            navigate(currentPath === '/' ? `/${node.name}` : `${currentPath}/${node.name}`);
-        } else {
-            console.log('openFile event triggered for nodeId:', node.id);
+        if (node.type !== VfsNodeType.DIR) {
+            return;
         }
+
+        navigate(currentPath === '/' ? `/${node.name}` : `${currentPath}/${node.name}`);
     };
 
     if (items.length === 0) {
@@ -81,4 +81,3 @@ export default function FileGrid({ items }: { items: VfsNode[] }) {
         </div>
     );
 }
-

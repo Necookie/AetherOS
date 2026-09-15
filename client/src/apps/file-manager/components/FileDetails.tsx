@@ -35,11 +35,11 @@ export default function FileDetails({ items }: { items: VfsNode[] }) {
     };
 
     const handleDoubleClick = (node: VfsNode) => {
-        if (node.type === VfsNodeType.DIR) {
-            navigate(currentPath === '/' ? `/${node.name}` : `${currentPath}/${node.name}`);
+        if (node.type !== VfsNodeType.DIR) {
             return;
         }
-        console.log('openFile event triggered for nodeId:', node.id);
+
+        navigate(currentPath === '/' ? `/${node.name}` : `${currentPath}/${node.name}`);
     };
 
     const renderSortArrow = (column: typeof sortBy) => {
@@ -159,4 +159,3 @@ export default function FileDetails({ items }: { items: VfsNode[] }) {
         </div>
     );
 }
-
