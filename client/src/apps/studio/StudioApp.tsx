@@ -233,8 +233,36 @@ export default function StudioApp({ id }: { id: string }) {
                     </aside>
 
                     <section className="flex min-w-0 flex-1 flex-col">
-                        <div className="flex h-9 shrink-0 overflow-x-auto border-b border-white/[0.07] bg-[#1b1f24]">
-                            {tabs.map((path) => <button key={path} onClick={() => setActivePath(path)} className={`group flex min-w-32 max-w-48 items-center gap-2 border-r border-white/[0.07] px-3 text-xs ${activePath === path ? 'border-t-2 border-t-[#4c9fe8] bg-[#171a1f] text-white' : 'border-t-2 border-t-transparent bg-[#20242a] text-[#8d97a2]'}`}><FileGlyph kind={files[path].icon} /><span className="min-w-0 flex-1 truncate text-left">{files[path].name}</span>{dirty.has(path) ? <Circle className="h-2 w-2 fill-current" /> : <span onClick={(event) => { event.stopPropagation(); closeTab(path) }} className="rounded p-0.5 opacity-0 hover:bg-white/10 group-hover:opacity-100"><X className="h-3 w-3" /></span>}</button>)}
+                        <div className="flex h-9 shrink-0 overflow-x-auto border-b border-white/[0.07] bg-[#1b1f24]" role="tablist" aria-label="Open files">
+                            {tabs.map((path) => (
+                                <div
+                                    key={path}
+                                    className={`group flex min-w-32 max-w-48 items-center border-r border-white/[0.07] text-xs ${activePath === path ? 'border-t-2 border-t-[#4c9fe8] bg-[#171a1f] text-white' : 'border-t-2 border-t-transparent bg-[#20242a] text-[#8d97a2]'}`}
+                                >
+                                    <button
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={activePath === path}
+                                        onClick={() => setActivePath(path)}
+                                        className="flex min-w-0 flex-1 items-center gap-2 self-stretch pl-3 text-left"
+                                    >
+                                        <FileGlyph kind={files[path].icon} />
+                                        <span className="min-w-0 flex-1 truncate">{files[path].name}</span>
+                                    </button>
+                                    {dirty.has(path) ? (
+                                        <Circle className="mr-2 h-2 w-2 shrink-0 fill-current" aria-label="Unsaved changes" />
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => closeTab(path)}
+                                            className="mr-1 flex h-7 w-7 shrink-0 items-center justify-center rounded opacity-0 transition-opacity hover:bg-white/10 focus-visible:opacity-100 group-hover:opacity-100"
+                                            aria-label={`Close ${files[path].name}`}
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
                         </div>
                         <div className="flex h-7 shrink-0 items-center gap-1 border-b border-white/[0.05] px-3 text-[10px] text-[#77818d]"><span>aether-project</span><ChevronRight className="h-2.5 w-2.5" /><span>{activePath.replace('/', '  ›  ')}</span></div>
 
