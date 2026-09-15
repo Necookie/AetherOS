@@ -97,7 +97,7 @@ export default function AppStoreApp({ id }: { id: string }) {
                                 value={query}
                                 onChange={(event) => setQuery(event.target.value)}
                                 placeholder="Search apps, tools, and capabilities..."
-                                className="w-full rounded-pill border border-hairline bg-canvas py-2 pl-10 pr-4 text-sm text-ink placeholder:text-ink-muted-48 focus:border-primary-focus focus:outline-none focus:ring-1 focus:ring-primary-focus transition-all"
+                                className="w-full rounded-pill border border-hairline bg-canvas py-2 pl-10 pr-4 text-sm text-ink placeholder:text-ink-muted-48 focus:border-primary-focus focus:outline-none focus:ring-1 focus:ring-primary-focus transition-colors"
                             />
                         </div>
 
@@ -107,7 +107,7 @@ export default function AppStoreApp({ id }: { id: string }) {
                                 <button
                                     key={cat.id}
                                     onClick={() => setSelectedCategory(cat.id)}
-                                    className={`rounded-pill px-3 py-1 text-xs font-semibold transition-all active:scale-95 ${
+                                    className={`rounded-pill px-3 py-1 text-xs font-semibold transition-colors active:scale-95 ${
                                         selectedCategory === cat.id
                                             ? 'bg-primary text-white shadow-xs'
                                             : 'border border-hairline bg-canvas text-ink-muted hover:bg-parchment'
@@ -136,7 +136,7 @@ export default function AppStoreApp({ id }: { id: string }) {
                         return (
                             <article
                                 key={app.id}
-                                className="flex flex-col justify-between rounded-lg border border-hairline bg-canvas p-4 transition-all hover:border-primary/40 hover:shadow-xs"
+                                className="flex flex-col justify-between rounded-lg border border-hairline bg-canvas p-4 transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-xs"
                             >
                                 <div>
                                     {/* App Header with Tile Icon */}
@@ -191,8 +191,8 @@ export default function AppStoreApp({ id }: { id: string }) {
                                             </div>
                                             <div className="mt-1.5 h-1.5 w-full rounded-full bg-hairline overflow-hidden">
                                                 <div
-                                                    className="h-full rounded-full bg-primary transition-all duration-300"
-                                                    style={{ width: `${operation.progress}%` }}
+                                                    className="h-full w-full origin-left rounded-full bg-primary transition-transform duration-300"
+                                                    style={{ transform: `scaleX(${operation.progress / 100})` }}
                                                 />
                                             </div>
                                         </div>
@@ -218,7 +218,7 @@ export default function AppStoreApp({ id }: { id: string }) {
                                             <button
                                                 onClick={() => void installApp(app.id)}
                                                 disabled={isBusy}
-                                                className="inline-flex items-center gap-1.5 rounded-pill bg-primary px-4 py-1.5 text-xs font-semibold text-white shadow-xs transition-all hover:opacity-90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                                                className="inline-flex items-center gap-1.5 rounded-pill bg-primary px-4 py-1.5 text-xs font-semibold text-white shadow-xs transition-opacity hover:opacity-90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                                             >
                                                 <DownloadCloud className="h-3.5 w-3.5" />
                                                 Get
@@ -227,7 +227,7 @@ export default function AppStoreApp({ id }: { id: string }) {
                                             <button
                                                 onClick={() => void updateApp(app.id)}
                                                 disabled={isBusy}
-                                                className="inline-flex items-center gap-1.5 rounded-pill bg-primary px-4 py-1.5 text-xs font-semibold text-white shadow-xs transition-all hover:opacity-90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                                                className="inline-flex items-center gap-1.5 rounded-pill bg-primary px-4 py-1.5 text-xs font-semibold text-white shadow-xs transition-opacity hover:opacity-90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                                             >
                                                 <RefreshCw className="h-3.5 w-3.5" />
                                                 Update
@@ -262,7 +262,7 @@ export default function AppStoreApp({ id }: { id: string }) {
                                                             await uninstallApp(app.id)
                                                         }}
                                                         disabled={isBusy}
-                                                        className="rounded-md bg-danger px-2.5 py-1 text-xs font-semibold text-white transition-all active:scale-95 disabled:opacity-50"
+                                                        className="rounded-md bg-danger px-2.5 py-1 text-xs font-semibold text-white transition-colors active:scale-95 disabled:opacity-50"
                                                     >
                                                         Confirm
                                                     </button>
@@ -295,4 +295,3 @@ export default function AppStoreApp({ id }: { id: string }) {
         </Window>
     )
 }
-

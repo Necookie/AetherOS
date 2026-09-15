@@ -86,6 +86,7 @@ cp server/.env.example server/.env
 Env values:
 
 - `PORT` defaults to `3000`
+- `CLIENT_ORIGINS` is a comma-separated browser origin allowlist and defaults to `http://localhost:5173`
 - `OPENAI_API_KEY` optional
   - empty -> `mode: "mock"`
   - set -> `mode: "live"`

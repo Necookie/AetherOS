@@ -75,6 +75,10 @@ This project currently focuses on functional OS simulation only.
   - install/update/uninstall simulation
   - dependency and version validation
   - lifecycle hooks
+- Built-in games and tools:
+  - flat responsive Chess board with legal-move feedback and match controls
+  - responsive Tetris with keyboard/mobile controls, scoring, levels, pause, and next-piece preview
+  - Studio editor with file navigation, search, diagnostics, and accessible editor controls
 - Per-user local persistence:
   - session snapshot
   - settings
@@ -196,9 +200,10 @@ Useful commands:
 ```bash
 npm run dev:cloudflare
 npm run deploy:cloudflare
+npm run types:cloudflare
 ```
 
-For Git-based Cloudflare builds, use `npm run build:cloudflare` as the build command and `client/dist` as the output directory. The existing `aetheros.necookie.dev` custom domain remains attached to the Pages project.
+`wrangler.pages.jsonc` is the source of truth for direct Wrangler deployments and local Pages emulation. It is passed explicitly so it does not override the existing Git-connected project's dashboard settings. Rerun `npm run types:cloudflare` after changing bindings. For Git-based Cloudflare builds, use `npm run build:cloudflare` as the build command and `client/dist` as the output directory. The existing `aetheros.necookie.dev` custom domain remains attached to the Pages project.
 
 Configure Cloudflare rate-limiting rules for `/api/search` and `/api/ai` to protect provider quotas. No request state is kept in the Pages Functions isolate.
 
@@ -217,4 +222,4 @@ The following items are already implemented and reflected in the updated checkli
 - Trash flow with restore and permanent delete
 - Task Manager causal impact reporting from simulated app activity
 
-Current work is now centered on the next 10 execution phases listed in `feature_plan.md` and mirrored as implementation prompts in `prompts/phase1.txt` through `prompts/phase10.txt`.
+The next roadmap items are listed in `feature_plan.md`; the repository's active quality baseline is enforced by CI, browser smoke tests, coverage thresholds, and CodeQL.

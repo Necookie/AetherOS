@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "npm@11.11.0",
   "engines": {
-    "node": ">=20.19.0 <25",
+    "node": ">=22.12.0 <25",
     "npm": ">=10"
   },
   "workspaces": [
@@ -15,17 +15,31 @@
     "dev": "concurrently \"npm run dev --workspace=client\" \"npm run dev --workspace=server\"",
     "typecheck": "npm run typecheck:functions && npm run typecheck --workspace=client && npm run typecheck --workspace=server",
     "typecheck:functions": "tsc --noEmit -p functions/tsconfig.json",
-    "build": "npm run build --workspace=client && npm run build --workspace=server",
+    "build": "npm run build --workspace=client && npm run build --workspace=server && npm run build:functions",
+    "build:functions": "wrangler pages functions build functions --outdir .wrangler/functions --project-directory . --build-output-directory client/dist",
     "build:cloudflare": "npm run build --workspace=client",
-    "dev:cloudflare": "npm run build:cloudflare && wrangler pages dev client/dist",
-    "deploy:cloudflare": "npm run build:cloudflare && wrangler pages deploy client/dist --project-name aetheros --commit-dirty=true",
+    "dev:cloudflare": "npm run build:cloudflare && wrangler pages dev --config wrangler.pages.jsonc",
+    "deploy:cloudflare": "npm run build:cloudflare && wrangler pages deploy --config wrangler.pages.jsonc --commit-dirty=true",
+    "types:cloudflare": "wrangler types --config wrangler.pages.jsonc --include-runtime false",
     "lint": "npm run lint:functions && npm run lint --workspace=client && npm run lint --workspace=server",
-    "lint:functions": "eslint functions --ext .ts --report-unused-disable-directives --max-warnings 0",
-    "test": "npm run test --workspace=client"
+    "lint:functions": "eslint functions --report-unused-disable-directives --max-warnings 0",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@cloudflare/workers-types": "^5.20260911.1",
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
+    "@typescript-eslint/eslint-plugin": "^8.70.0",
+    "@typescript-eslint/parser": "^8.70.0",
+    "@vitest/coverage-v8": "^5.0.0",
     "concurrently": "^8.2.2",
+    "eslint": "^10.10.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^16.4.0",
+    "vitest": "^5.0.0",
     "wrangler": "^4.131.0"
   }
 }

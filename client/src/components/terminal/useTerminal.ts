@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
-import { Terminal } from 'xterm'
-import { FitAddon } from 'xterm-addon-fit'
-import 'xterm/css/xterm.css'
+import { Terminal } from '@xterm/xterm'
+import { FitAddon } from '@xterm/addon-fit'
+import '@xterm/xterm/css/xterm.css'
 import type { TerminalCommandEngine } from '../../apps/terminal/runtime/engine'
 import type { TerminalSession } from '../../apps/terminal/runtime/session'
 

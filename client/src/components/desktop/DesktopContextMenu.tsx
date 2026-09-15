@@ -169,6 +169,8 @@ export default function DesktopContextMenu({
         })
     }
 
+    const menuItemClass = 'flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition-colors hover:bg-tile-2 hover:text-ink focus-visible:bg-tile-2'
+
     return (
         <div
             ref={menuRef}
@@ -181,7 +183,7 @@ export default function DesktopContextMenu({
                 <button
                     role="menuitem"
                     onClick={handleCreateFolder}
-                    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition-colors hover:bg-tile-2 hover:text-ink focus:outline-none"
+                    className={menuItemClass}
                 >
                     <FolderPlus className="h-4 w-4 text-primary" />
                     <span className="flex-1">New Folder</span>
@@ -189,7 +191,7 @@ export default function DesktopContextMenu({
                 <button
                     role="menuitem"
                     onClick={handleCreateFile}
-                    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition-colors hover:bg-tile-2 hover:text-ink focus:outline-none"
+                    className={menuItemClass}
                 >
                     <FilePlus className="h-4 w-4 text-primary" />
                     <span className="flex-1">New Text Document</span>
@@ -205,7 +207,7 @@ export default function DesktopContextMenu({
                         onClose()
                         onOpenApp('term')
                     }}
-                    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition-colors hover:bg-tile-2 hover:text-ink focus:outline-none"
+                    className={menuItemClass}
                 >
                     <Terminal className="h-4 w-4 opacity-75" />
                     <span className="flex-1">Open Terminal</span>
@@ -216,7 +218,7 @@ export default function DesktopContextMenu({
                         onClose()
                         onOpenApp('explorer')
                     }}
-                    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition-colors hover:bg-tile-2 hover:text-ink focus:outline-none"
+                    className={menuItemClass}
                 >
                     <Folder className="h-4 w-4 opacity-75" />
                     <span className="flex-1">Open File Explorer</span>
@@ -227,7 +229,7 @@ export default function DesktopContextMenu({
                         onClose()
                         onOpenApp('settings')
                     }}
-                    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition-colors hover:bg-tile-2 hover:text-ink focus:outline-none"
+                    className={menuItemClass}
                 >
                     <ImageIcon className="h-4 w-4 opacity-75" />
                     <span className="flex-1">Change Wallpaper...</span>
@@ -240,7 +242,7 @@ export default function DesktopContextMenu({
                 <button
                     role="menuitem"
                     onClick={handleToggleFullscreen}
-                    className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left transition-colors hover:bg-tile-2 hover:text-ink focus:outline-none"
+                    className={`${menuItemClass} justify-between`}
                 >
                     <div className="flex items-center gap-2.5">
                         {isFullscreenActive ? (
@@ -255,7 +257,7 @@ export default function DesktopContextMenu({
                 <button
                     role="menuitem"
                     onClick={handleRefresh}
-                    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition-colors hover:bg-tile-2 hover:text-ink focus:outline-none"
+                    className={menuItemClass}
                 >
                     <RotateCw className="h-4 w-4 opacity-75" />
                     <span className="flex-1">Refresh Desktop</span>
@@ -263,7 +265,7 @@ export default function DesktopContextMenu({
                 <button
                     role="menuitem"
                     onClick={handleTileSideBySide}
-                    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition-colors hover:bg-tile-2 hover:text-ink focus:outline-none"
+                    className={menuItemClass}
                 >
                     <Columns className="h-4 w-4 text-primary" />
                     <span className="flex-1">Tile Windows Side by Side</span>
@@ -274,7 +276,7 @@ export default function DesktopContextMenu({
                         onClose()
                         onOpenApp('settings')
                     }}
-                    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition-colors hover:bg-tile-2 hover:text-ink focus:outline-none"
+                    className={menuItemClass}
                 >
                     <Settings className="h-4 w-4 opacity-75" />
                     <span className="flex-1">System Settings</span>
@@ -285,7 +287,7 @@ export default function DesktopContextMenu({
                         onClose()
                         onOpenAbout()
                     }}
-                    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition-colors hover:bg-tile-2 hover:text-ink focus:outline-none"
+                    className={menuItemClass}
                 >
                     <Info className="h-4 w-4 opacity-75" />
                     <span className="flex-1">About AetherOS</span>

@@ -288,7 +288,7 @@ export default function TetrisApp({ id }: { id: string }) {
 
                     <main className="tetris-board-column relative flex min-h-0 min-w-0 flex-col items-center justify-center gap-3">
                         <div className="tetris-board-shell relative bg-[#0d1115] p-1">
-                            <div className="grid h-full grid-cols-10 grid-rows-20 gap-px" aria-label="Tetris board">
+                            <div className="grid h-full grid-cols-10 grid-rows-20 gap-px" role="img" aria-label="Tetris board">
                                 {board.flatMap((row, y) => row.map((settledCell, x) => {
                                     const key = `${x}:${y}`
                                     const isActive = activeCells.has(key)

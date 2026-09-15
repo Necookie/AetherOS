@@ -2,7 +2,6 @@ import type { DownloadItem } from './types'
 import { VfsNodeType } from '../../vfs/types'
 
 const DEFAULT_DOWNLOADS_DIR = '/home/user/Downloads'
-// eslint-disable-next-line no-control-regex
 const INVALID_NAME_CHARS = /[\\/:*?"<>|\u0000-\u001f]+/g
 
 interface VfsWriteTarget {

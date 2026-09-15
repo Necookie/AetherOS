@@ -19,7 +19,7 @@ export interface WorkspaceInsets {
     left: number
 }
 
-export interface WorkspaceRect extends WindowBounds {}
+export type WorkspaceRect = WindowBounds
 
 export interface SnapRegionMetadata {
     mode: SnapMode

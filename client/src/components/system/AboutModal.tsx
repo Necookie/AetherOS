@@ -35,7 +35,7 @@ export default function AboutModal({
             >
                 <button
                     onClick={onClose}
-                    className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-parchment hover:text-ink focus:outline-none"
+                    className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-parchment hover:text-ink"
                     aria-label="Close dialog"
                 >
                     <X className="h-4 w-4" />

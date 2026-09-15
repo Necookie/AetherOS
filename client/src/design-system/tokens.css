@@ -22,7 +22,7 @@
 
   /* ---- Text ---- */
   --ds-color-text-primary: #1d1d1f; /* Ink */
-  --ds-color-text-muted: #7a7a7a; /* Ink muted 48 */
+  --ds-color-text-muted: #6e6e73; /* Secondary ink, AA on canvas */
   --ds-color-text-on-dark: #ffffff;
   --ds-color-text-on-dark-muted: #cccccc;
   --ds-color-text-on-pearl: #333333; /* Ink muted 80 */

@@ -4,25 +4,21 @@
     "private": true,
     "main": "dist/index.js",
     "scripts": {
-        "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-        "typecheck": "tsc --noEmit",
+        "dev": "tsx watch src/index.ts",
+        "typecheck": "tsc --noEmit -p tsconfig.test.json",
         "build": "tsc",
         "start": "node dist/index.js",
-        "lint": "eslint . --ext .ts"
+        "lint": "eslint . --report-unused-disable-directives --max-warnings 0"
     },
     "dependencies": {
-        "@fastify/cors": "^8.5.0",
-        "@fastify/rate-limit": "^9.1.0",
-        "dotenv": "^16.3.1",
-        "fastify": "^4.29.1",
-        "openai": "^4.24.1"
+        "@fastify/cors": "^11.3.0",
+        "@fastify/rate-limit": "^11.2.0",
+        "dotenv": "^17.4.2",
+        "fastify": "^5.12.4"
     },
     "devDependencies": {
-        "@types/node": "^20.10.5",
-        "@typescript-eslint/eslint-plugin": "^6.15.0",
-        "@typescript-eslint/parser": "^6.15.0",
-        "eslint": "^8.56.0",
-        "ts-node-dev": "^2.0.0",
+        "@types/node": "^24.10.0",
+        "tsx": "^4.23.13",
         "typescript": "^5.3.3"
     }
 }

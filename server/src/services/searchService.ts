@@ -1,3 +1,5 @@
+import { fetchProvider } from './providerFetch'
+
 export interface SearchResult {
     id: string
     title: string
@@ -55,7 +57,7 @@ function createMockResults(query: string): SearchResult[] {
 }
 
 async function fetchTavilyResults(query: string, apiKey: string): Promise<SearchResult[]> {
-    const response = await fetch('https://api.tavily.com/search', {
+    const response = await fetchProvider('https://api.tavily.com/search', {
         method: 'POST',
         headers: {
             Accept: 'application/json',
@@ -66,7 +68,7 @@ async function fetchTavilyResults(query: string, apiKey: string): Promise<Search
             query,
             topic: 'general',
             search_depth: 'basic',
-            max_results: 8,
+            max_results: 6,
             include_answer: false,
             include_images: false,
             include_raw_content: false,
@@ -87,7 +89,7 @@ async function fetchTavilyResults(query: string, apiKey: string): Promise<Search
 
     return (payload.results ?? [])
         .filter((entry) => entry.title && entry.url)
-        .slice(0, 8)
+        .slice(0, 6)
         .map((entry, index) => ({
             id: `live-${index + 1}`,
             title: entry.title!,
