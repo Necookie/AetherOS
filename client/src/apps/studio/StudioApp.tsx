@@ -233,7 +233,7 @@ export default function StudioApp({ id }: { id: string }) {
                     </aside>
 
                     <section className="flex min-w-0 flex-1 flex-col">
-                        <div className="flex h-9 shrink-0 overflow-x-auto border-b border-white/[0.07] bg-[#1b1f24]" role="tablist" aria-label="Open files">
+                        <nav className="flex h-9 shrink-0 overflow-x-auto border-b border-white/[0.07] bg-[#1b1f24]" aria-label="Open files">
                             {tabs.map((path) => (
                                 <div
                                     key={path}
@@ -241,8 +241,7 @@ export default function StudioApp({ id }: { id: string }) {
                                 >
                                     <button
                                         type="button"
-                                        role="tab"
-                                        aria-selected={activePath === path}
+                                        aria-pressed={activePath === path}
                                         onClick={() => setActivePath(path)}
                                         className="flex min-w-0 flex-1 items-center gap-2 self-stretch pl-3 text-left"
                                     >
@@ -263,7 +262,7 @@ export default function StudioApp({ id }: { id: string }) {
                                     )}
                                 </div>
                             ))}
-                        </div>
+                        </nav>
                         <div className="flex h-7 shrink-0 items-center gap-1 border-b border-white/[0.05] px-3 text-[10px] text-[#77818d]"><span>aether-project</span><ChevronRight className="h-2.5 w-2.5" /><span>{activePath.replace('/', '  ›  ')}</span></div>
 
                         <div className="relative flex min-h-0 flex-1 bg-[#171a1f] font-mono text-[13px] leading-6">
