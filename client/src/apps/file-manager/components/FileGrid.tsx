@@ -31,7 +31,7 @@ export default function FileGrid({ items }: { items: VfsNode[] }) {
     }
 
     return (
-        <div className="flex flex-wrap gap-2.5 content-start p-3 select-none">
+        <div className="flex flex-wrap gap-2.5 content-start p-3 select-none" role="listbox" aria-label="Files" aria-multiselectable="true">
             {items.map((item) => {
                 const isSelected = selectedIds.includes(item.id);
                 const isPendingCut = pendingCutIds.has(item.id);
@@ -42,7 +42,10 @@ export default function FileGrid({ items }: { items: VfsNode[] }) {
                         key={item.id}
                         data-id={item.id}
                         data-selectable-id={item.id}
-                        className={`group relative flex h-32 w-28 cursor-pointer flex-col items-center rounded-lg p-2 transition-all duration-150 active:scale-98 ${
+                        role="option"
+                        aria-selected={isSelected}
+                        tabIndex={0}
+                        className={`group relative flex h-32 w-28 cursor-pointer flex-col items-center rounded-lg p-2 transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-primary active:scale-98 ${
                             isSelected
                                 ? 'bg-primary/10 ring-1.5 ring-primary/50 shadow-2xs'
                                 : 'hover:bg-black/[0.04]'
@@ -54,6 +57,15 @@ export default function FileGrid({ items }: { items: VfsNode[] }) {
                         onDoubleClick={(e) => {
                             e.stopPropagation();
                             handleDoubleClick(item);
+                        }}
+                        onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                                event.preventDefault();
+                                handleDoubleClick(item);
+                            } else if (event.key === ' ') {
+                                event.preventDefault();
+                                selectItem(item.id, event.ctrlKey || event.metaKey, event.shiftKey);
+                            }
                         }}
                         title={item.name}
                     >

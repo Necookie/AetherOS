@@ -99,7 +99,7 @@ export default function FileDetails({ items }: { items: VfsNode[] }) {
             </div>
 
             {/* Table Rows */}
-            <div className="flex-1 pb-4">
+            <div className="flex-1 pb-4" role="listbox" aria-label="Files" aria-multiselectable="true">
                 {items.map((item) => {
                     const isSelected = selectedIds.includes(item.id);
                     const isPendingCut = pendingCutIds.has(item.id);
@@ -110,7 +110,10 @@ export default function FileDetails({ items }: { items: VfsNode[] }) {
                             key={item.id}
                             data-id={item.id}
                             data-selectable-id={item.id}
-                            className={`group flex cursor-pointer items-center border-b border-hairline/30 px-4 py-1.5 transition-colors ${
+                            role="option"
+                            aria-selected={isSelected}
+                            tabIndex={0}
+                            className={`group flex cursor-pointer items-center border-b border-hairline/30 px-4 py-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary ${
                                 isSelected
                                     ? 'bg-primary/10 font-medium text-primary shadow-2xs'
                                     : 'hover:bg-black/[0.03] text-ink'
@@ -122,6 +125,15 @@ export default function FileDetails({ items }: { items: VfsNode[] }) {
                             onDoubleClick={(event) => {
                                 event.stopPropagation();
                                 handleDoubleClick(item);
+                            }}
+                            onKeyDown={(event) => {
+                                if (event.key === 'Enter') {
+                                    event.preventDefault();
+                                    handleDoubleClick(item);
+                                } else if (event.key === ' ') {
+                                    event.preventDefault();
+                                    selectItem(item.id, event.ctrlKey || event.metaKey, event.shiftKey);
+                                }
                             }}
                         >
                             {/* Icon + Name */}
