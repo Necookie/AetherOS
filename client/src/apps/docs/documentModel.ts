@@ -19,17 +19,39 @@ function createId() {
 }
 
 function decodeHtmlEntities(value: string) {
-    return value
-        .replace(/&nbsp;/g, ' ')
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'")
+    const entities: Record<string, string> = {
+        nbsp: ' ',
+        amp: '&',
+        lt: '<',
+        gt: '>',
+        quot: '"',
+        '#39': "'",
+    }
+
+    return value.replace(/&(nbsp|amp|lt|gt|quot|#39);/g, (_, entity: string) => entities[entity])
 }
 
 function stripTags(value: string) {
-    return decodeHtmlEntities(value.replace(/<[^>]+>/g, ''))
+    let output = ''
+    let inTag = false
+
+    for (const character of value) {
+        if (character === '<') {
+            inTag = true
+            continue
+        }
+
+        if (inTag) {
+            if (character === '>') {
+                inTag = false
+            }
+            continue
+        }
+
+        output += character
+    }
+
+    return decodeHtmlEntities(output)
 }
 
 function normalizeText(value: string) {
@@ -102,10 +124,7 @@ function htmlToStructuredText(source: string) {
         return `\n\n${'#'.repeat(Number(level))} ${stripTags(content).trim()}`
     })
     normalized = normalized.replace(/<(p|div)\b[^>]*>([\s\S]*?)<\/\1>/gi, (_, __, content: string) => `\n\n${stripTags(content).trim()}`)
-    normalized = normalized.replace(/<\/?(ul|ol|strong|b|em|i|u|span)[^>]*>/gi, '')
-    normalized = normalized.replace(/<[^>]+>/g, '')
-
-    return decodeHtmlEntities(normalized)
+    return stripTags(normalized)
         .replace(/\n{3,}/g, '\n\n')
         .trim()
 }
@@ -261,7 +280,11 @@ export function markdownToHtml(source: string): string {
 
 function formatInlineMarkdown(text: string): string {
     return text
-        .replace(/&(?!(amp|lt|gt|quot|#39|nbsp);)/g, '&amp;')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
         .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2">$1</a>')
         .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
         .replace(/__([^_]+)__/g, '<strong>$1</strong>')

@@ -1,0 +1,17 @@
+name: Bug report
+description: Report a reproducible problem in AetherOS
+title: "bug: "
+body:
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Tell us exactly what you clicked or entered.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
