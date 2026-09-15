@@ -163,7 +163,7 @@ export default function Window({ id, title, children }: WindowProps) {
             className={`pointer-events-auto absolute flex flex-col overflow-hidden border
                 ${isTransforming ? 'os-window-dragging' : 'os-window-smooth-motion'}
                 ${isMaximized ? 'rounded-none' : 'rounded-xl'}
-                ${isMinimized ? 'pointer-events-none opacity-0 scale-[0.98]' : isEntering ? 'opacity-0 translate-y-2 scale-[0.985]' : isFocused ? 'brightness-100 opacity-100 translate-y-0 scale-100' : 'opacity-95 translate-y-0 scale-100'}
+                ${isMinimized ? 'pointer-events-none opacity-0 scale-[0.98]' : isEntering ? 'opacity-0 translate-y-2 scale-[0.985]' : 'brightness-100 opacity-100 translate-y-0 scale-100'}
             `}
             style={{
                 left: bounds.x,
