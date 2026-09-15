@@ -32,7 +32,26 @@ function decodeHtmlEntities(value: string) {
 }
 
 function stripTags(value: string) {
-    return decodeHtmlEntities(value.replace(/<[^>]+>/g, ''))
+    let output = ''
+    let inTag = false
+
+    for (const character of value) {
+        if (character === '<') {
+            inTag = true
+            continue
+        }
+
+        if (inTag) {
+            if (character === '>') {
+                inTag = false
+            }
+            continue
+        }
+
+        output += character
+    }
+
+    return decodeHtmlEntities(output)
 }
 
 function normalizeText(value: string) {
@@ -105,10 +124,7 @@ function htmlToStructuredText(source: string) {
         return `\n\n${'#'.repeat(Number(level))} ${stripTags(content).trim()}`
     })
     normalized = normalized.replace(/<(p|div)\b[^>]*>([\s\S]*?)<\/\1>/gi, (_, __, content: string) => `\n\n${stripTags(content).trim()}`)
-    normalized = normalized.replace(/<\/?(ul|ol|strong|b|em|i|u|span)[^>]*>/gi, '')
-    normalized = normalized.replace(/<[^>]+>/g, '')
-
-    return decodeHtmlEntities(normalized)
+    return stripTags(normalized)
         .replace(/\n{3,}/g, '\n\n')
         .trim()
 }
