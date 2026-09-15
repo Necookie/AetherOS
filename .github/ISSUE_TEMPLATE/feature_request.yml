@@ -1,0 +1,11 @@
+name: Feature request
+description: Suggest an improvement to the simulator
+title: "feat: "
+body:
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Explain the user problem and the behavior you would like.
+    validations:
+      required: true
