@@ -100,7 +100,9 @@ test('keeps Falling Light usable on a narrow screen', async ({ page }) => {
     const tetris = await installAndOpen(page, 'Falling Light')
     await tetris.getByRole('button', { name: 'Start game' }).click()
 
-    const topbar = page.getByRole('banner')
+    const topbar = page.getByRole('banner').filter({
+        has: page.getByRole('button', { name: 'AetherOS system menu' }),
+    })
     const topbarBounds = await topbar.evaluate((element) => {
         const bounds = element.getBoundingClientRect()
         return { left: bounds.left, right: bounds.right }
@@ -125,5 +127,5 @@ test('keeps Falling Light usable on a narrow screen', async ({ page }) => {
     expect(topbarBounds.right).toBeLessThanOrEqual(layout.viewportWidth)
     expect(layout.documentWidth).toBeLessThanOrEqual(layout.viewportWidth)
     await expect(tetris.getByRole('button', { name: 'Hard drop' })).toBeVisible()
-    await expect(tetris.getByRole('button', { name: 'New game' })).toBeVisible()
+    await expect(tetris.getByRole('button', { name: 'New game' })).toBeInViewport()
 })

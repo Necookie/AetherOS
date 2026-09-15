@@ -36,7 +36,7 @@
 
   .tetris-layout {
     grid-template-columns: minmax(14rem, 1fr);
-    grid-template-rows: auto minmax(31rem, 1fr);
+    grid-template-rows: minmax(31rem, auto) auto;
     height: auto;
     min-height: 100%;
     gap: var(--ds-space-2);
